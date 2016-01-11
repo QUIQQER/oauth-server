@@ -1,0 +1,31 @@
+{
+    "name" : "quiqqer/oauth-server",
+    "type" : "quiqqer-library",
+    "description" : "",
+    "version" : "dev-master",
+    "license" : "MIT",
+
+    "authors" : [{
+        "name": "Henning Leutz",
+        "email": "leutz@pcsg.de",
+        "homepage": "http://www.pcsg.de",
+        "role": "Developer"
+    }],
+
+    "support" : {
+        "email": "support@pcsg.de",
+        "url": "http://www.pcsg.de"
+    },
+
+    "require": {
+        "php" : ">=5.3",
+        "quiqqer/quiqqer" : "*@dev",
+        "league/oauth2-server" : "4.*"
+    },
+
+    "autoload": {
+        "psr-0" : {
+            "QUI" : "src/"
+        }
+    }
+}
