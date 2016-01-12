@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+    <global>
+        <table name="oauth_sessions">
+            <field type="INT( 10 ) NOT NULL PRIMARY KEY">id</field>
+            <field type="text NULL">taxTypeId</field>
+
+            <auto_increment>id</auto_increment>
+        </table>
+
+        <table name="oauth_scopes">
+
+        </table>
+
+        <table name="oauth_clients">
+
+        </table>
+
+        <table name="oauth_access_tokens">
+
+        </table>
+
+        <table name="oauth_refresh_tokens">
+
+        </table>
+
+        <table name="oauth_auth_codes">
+
+        </table>
+
+        <table name="oauth_access_token_scopes">
+
+        </table>
+
+        <table name="oauth_auth_code_scopes">
+
+        </table>
+
+        <table name="oauth_session_scopes">
+
+        </table>
+    </global>
+</database>
