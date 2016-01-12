@@ -2,42 +2,77 @@
 <database>
     <global>
         <table name="oauth_sessions">
-            <field type="INT( 10 ) NOT NULL PRIMARY KEY">id</field>
-            <field type="text NULL">taxTypeId</field>
+            <field type="INT( 10 ) NOT NULL">id</field>
+            <field type="text NULL">owner_type</field>
+            <field type="text NULL">owner_id</field>
+            <field type="text NULL">client_id</field>
+            <field type="text NULL">client_redirect_uri</field>
 
             <auto_increment>id</auto_increment>
         </table>
 
-        <table name="oauth_scopes">
+        <table name="oauth_clients">
+            <field type="text NOT NULL">id</field>
+            <field type="text NULL">secret</field>
+            <field type="text NULL">name</field>
 
+            <primary>id</primary>
         </table>
 
-        <table name="oauth_clients">
+        <table name="oauth_scopes">
+            <field type="text NOT NULL">id</field>
+            <field type="text NULL">description</field>
 
+            <primary>id</primary>
         </table>
 
         <table name="oauth_access_tokens">
+            <field type="text NOT NULL">access_token</field>
+            <field type="INT( 10 )">session_id</field>
+            <field type="INT( 12 )">expire_time</field>
 
+            <primary>access_token</primary>
         </table>
 
         <table name="oauth_refresh_tokens">
+            <field type="text NOT NULL">refresh_token</field>
+            <field type="INT( 12 )">expire_time</field>
+            <field type="text">access_token</field>
 
+            <primary>refresh_token</primary>
         </table>
 
         <table name="oauth_auth_codes">
+            <field type="text NOT NULL">auth_code</field>
+            <field type="INT( 10 )">session_id</field>
+            <field type="INT( 12 )">expire_time</field>
+            <field type="text">client_redirect_uri</field>
 
+            <primary>auth_code</primary>
         </table>
 
         <table name="oauth_access_token_scopes">
+            <field type="INT( 10 ) NOT NULL">id</field>
+            <field type="text NOT NULL">access_token</field>
+            <field type="text NOT NULL">scope</field>
 
+            <auto_increment>id</auto_increment>
         </table>
 
         <table name="oauth_auth_code_scopes">
+            <field type="INT( 10 ) NOT NULL">id</field>
+            <field type="text NOT NULL">auth_code</field>
+            <field type="text NOT NULL">scope</field>
 
+            <auto_increment>id</auto_increment>
         </table>
 
         <table name="oauth_session_scopes">
+            <field type="INT( 10 ) NOT NULL">id</field>
+            <field type="INT( 10 ) NULL">session_id</field>
+            <field type="text NOT NULL">scope</field>
 
+            <auto_increment>id</auto_increment>
         </table>
     </global>
 </database>
