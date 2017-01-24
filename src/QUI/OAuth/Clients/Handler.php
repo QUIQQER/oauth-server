@@ -61,8 +61,69 @@ class Handler
         ));
     }
 
+    /**
+     * Return a client from the user
+     *
+     * @param QUI\Interfaces\Users\User $User
+     * @param $clientId
+     * @return array
+     */
+    public static function getOAuthClientByUser(QUI\Interfaces\Users\User $User, $clientId)
+    {
+        return QUI::getDataBase()->fetch(array(
+            'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
+            'where' => array(
+                'user_id'   => $User->getId(),
+                'client_id' => $clientId
+            )
+        ));
+    }
+
 
     public static function updateOAuthClient($clientId, $data, $User = null)
     {
+        self::checkPermissions('permission.delete.update', $User);
+    }
+
+    /**
+     * Delete a oauth client
+     *
+     * @param $clientId
+     * @param null $User
+     */
+    public static function deleteOAuthClient($clientId, $User = null)
+    {
+        if (is_null($User)) {
+            $User = QUI::getUserBySession();
+        }
+
+        self::checkPermissions('permission.delete.oauth', $User);
+
+
+        QUI::getDataBase()->delete(QUI\OAuth\Setup::getTable('oauth_clients'), array(
+            'client_id' => $clientId
+        ));
+    }
+
+    /**
+     * @param string $permission
+     * @param null $User
+     * @throw QUI\Permissions\Exception
+     */
+    protected static function checkPermissions($permission, $User = null)
+    {
+        if (is_null($User)) {
+            $User = QUI::getUserBySession();
+        }
+
+        if ($User->isSU()) {
+            return;
+        }
+
+        if (QUI::getUsers()->isSystemUser($User)) {
+            return;
+        }
+
+        QUI\Permissions\Permission::checkPermission($permission);
     }
 }

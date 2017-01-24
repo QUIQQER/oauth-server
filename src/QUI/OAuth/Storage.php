@@ -35,8 +35,8 @@ class Storage extends OAuth2\Storage\Pdo
     }
 
     /**
-     * @param $username
-     * @param $password
+     * @param string $username
+     * @param string $password
      * @return bool
      */
     public function checkUserCredentials($username, $password)
@@ -51,7 +51,7 @@ class Storage extends OAuth2\Storage\Pdo
     }
 
     /**
-     * @param $username
+     * @param string $username
      * @return array|bool
      */
     public function getUserDetails($username)
