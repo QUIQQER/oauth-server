@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<locales>
+    <groups name="quiqqer/oauth-server" datatype="js,php">
+        <locale name="package.title">
+            <de><![CDATA[QUIQQER - OAuth Server]]></de>
+            <en><![CDATA[QUIQQER - OAuth Server]]></en>
+        </locale>
+        <locale name="package.title">
+            <de><![CDATA[OAuth Server]]></de>
+            <en><![CDATA[OAuth Server]]></en>
+        </locale>
+
+    </groups>
+</locales>
