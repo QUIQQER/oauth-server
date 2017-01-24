@@ -52,7 +52,6 @@ class RestProvider implements QUI\REST\ProviderInterface
 
 
             $this->post('/resource', function () use ($Server) {
-
             });
         });
     }
