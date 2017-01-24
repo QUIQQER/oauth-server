@@ -1,15 +1,15 @@
 <quiqqer>
     <package>
         <title>
-            <locale group="quiqqer/quiqqer" var="package.title"/>
+            <locale group="quiqqer/oauth-server" var="package.title"/>
         </title>
 
         <description>
-            <locale group="quiqqer/quiqqer" var="package.title"/>
+            <locale group="quiqqer/oauth-server" var="package.title"/>
         </description>
 
         <provider>
-            <desktopSearch src="\QUI\OAuth\RestProvider"/>
+            <rest src="\QUI\OAuth\RestProvider"/>
         </provider>
     </package>
 </quiqqer>

@@ -50,17 +50,9 @@ class Server
             $accessLifeTime = $Config->getValue('general', 'access_lifetime');
         }
 
+        $Storage = new Storage();
 
         // GrantType / Permissions / Auth
-        $Storage = new OAuth2\Storage\Memory([
-            'client_credentials' => [
-                'testClientId' => [
-                    'client_id'     => 'chadicus-app',
-                    'client_secret' => 'password',
-                ],
-            ],
-        ]);
-
         $this->Server = new OAuth2\Server(
             $Storage,
             [
@@ -79,10 +71,19 @@ class Server
                 'allow_public_clients'              => $allowPublicClients,
                 'always_issue_new_refresh_token'    => $alwaysIssueNewRefreshToken,
                 'unset_refresh_token_after_use'     => $unsetRefreshTokenAfterUse
-            ],
-            [
-                new OAuth2\GrantType\ClientCredentials($Storage)
             ]
         );
+
+        $this->Server->addGrantType(new OAuth2\GrantType\ClientCredentials($Storage));
+    }
+
+    /**
+     * Return the oauth server
+     *
+     * @return OAuth2\Server
+     */
+    public function getServer()
+    {
+        return $this->Server;
     }
 }

@@ -1,0 +1,11 @@
+<user>
+
+    <window>
+        <tab name="OAuthClients">
+            <text>OAuth Clients</text>
+            <image>fa fa-key</image>
+            <template>OPT_DIR/quiqqer/oauth-server/template/oauthClients.html</template>
+        </tab>
+    </window>
+
+</user>
