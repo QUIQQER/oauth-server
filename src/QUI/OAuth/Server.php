@@ -12,6 +12,7 @@ use QUI;
  * oauth server for QUIQQER
  *
  * @package QUI\OAuth
+ * @deprecated
  */
 class Serrver
 {
@@ -43,18 +44,15 @@ class Serrver
 
     public function oauth()
     {
-
     }
 
 
     public function signin()
     {
-
     }
 
 
     public function accessToken()
     {
-
     }
 }

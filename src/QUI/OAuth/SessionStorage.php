@@ -17,6 +17,7 @@ use League\OAuth2\Server\Storage\SessionInterface;
  * Class SessionStorage
  *
  * @package QUI\OAuth
+ * @deprecated
  */
 class SessionStorage extends AbstractStorage implements SessionInterface
 {
