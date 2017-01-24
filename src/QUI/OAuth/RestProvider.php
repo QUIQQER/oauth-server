@@ -25,12 +25,10 @@ class RestProvider implements QUI\REST\ProviderInterface
         $Slim->group('/oauth', function () {
             /* @var $this \Slim\App */
             $this->get('/authorize', function () {
-
             });
 
             /* @var $this \Slim\App */
             $this->get('/token', function () {
-
             });
         });
     }
