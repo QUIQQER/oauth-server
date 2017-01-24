@@ -21,6 +21,5 @@ class Handler
      */
     public static function createOauthClient(User $User, $name = '')
     {
-
     }
 }
