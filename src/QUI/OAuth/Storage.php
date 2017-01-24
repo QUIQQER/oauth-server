@@ -26,7 +26,7 @@ class Storage extends OAuth2\Storage\Pdo
             'access_token_table'  => Setup::getTable('oauth_access_tokens'),
             'refresh_token_table' => Setup::getTable('oauth_refresh_tokens'),
             'code_table'          => Setup::getTable('oauth_authorization_codes'),
-            'user_table'          => Setup::getTable('oauth_users'),
+            'user_table'          => QUI::getUsers()->table(),
             'jwt_table'           => Setup::getTable('oauth_jwt'),
             'jti_table'           => Setup::getTable('oauth_jti'),
             'scope_table'         => Setup::getTable('oauth_scopes'),
@@ -62,6 +62,8 @@ class Storage extends OAuth2\Storage\Pdo
             return false;
         }
 
-        return $User->getAttributes();
+        return array_merge(array(
+            'user_id' => $User->getId()
+        ), $User->getAttributes());
     }
 }
