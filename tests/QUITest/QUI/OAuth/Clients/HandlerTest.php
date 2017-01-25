@@ -17,13 +17,16 @@ class HandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertNotEmpty($oauthClientId);
 
         // make a oauth request
+        $REST       = QUI\REST\Server::getInstance();
+        $apiAddress = $REST->getAddress();
+
         $oauthClient = QUI\OAuth\Clients\Handler::getOAuthClient($oauthClientId, $SystemUser);
 
         $clientID     = $oauthClient['client_id'];
         $clientSecret = $oauthClient['client_secret'];
 
         $curl = "curl -u {$clientID}:{$clientSecret} ";
-        $curl .= "http://rest.hen.pcsg/api/oauth/token -d 'grant_type=client_credentials'";
+        $curl .= "{$apiAddress}oauth/token -d 'grant_type=client_credentials'";
 
         $result = shell_exec($curl);
         $result = json_decode($result, true);
@@ -34,7 +37,7 @@ class HandlerTest extends \PHPUnit_Framework_TestCase
             $accessKey = $result['access_token'];
 
             $result = shell_exec(
-                "curl http://rest.hen.pcsg/api/oauth/authorize -d 'access_token={$accessKey}'"
+                "curl {$apiAddress}oauth/authorize -d 'access_token={$accessKey}'"
             );
 
             $result = json_decode($result, true);
