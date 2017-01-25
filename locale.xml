@@ -9,6 +9,15 @@
             <de><![CDATA[OAuth Server]]></de>
             <en><![CDATA[OAuth Server]]></en>
         </locale>
+
+        <locale name="client_id">
+            <de><![CDATA[Client-ID]]></de>
+            <en><![CDATA[Client-ID]]></en>
+        </locale>
+        <locale name="client_secret">
+            <de><![CDATA[Client-Secret]]></de>
+            <en><![CDATA[Client-Secret]]></en>
+        </locale>
     </groups>
 
     <groups name="quiqqer/oauth-server" datatype="js">
@@ -23,6 +32,11 @@
         <locale name="control.user.clients.button.delete">
             <de><![CDATA[Client löschen]]></de>
             <en><![CDATA[Delete Client]]></en>
+        </locale>
+
+        <locale name="control.user.clients.window.edit.title">
+            <de><![CDATA[Client: [clientId]]]></de>
+            <en><![CDATA[Client: [clientId]]]></en>
         </locale>
 
         <locale name="control.user.clients.window.delete.title">

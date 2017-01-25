@@ -7,6 +7,8 @@
  * @require controls/grid/Grid
  * @require Ajax
  * @require Locale
+ * @require Mustache
+ * @require text!package/quiqqer/oauth-server/bin/backend/UserClients.Client.html
  */
 define('package/quiqqer/oauth-server/bin/backend/UserClients', [
 
@@ -16,9 +18,13 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
 
     'controls/grid/Grid',
     'Ajax',
-    'Locale'
+    'Locale',
+    'Mustache',
 
-], function (QUI, QUIControl, QUIConfirm, Grid, QUIAjax, QUILocale) {
+    'text!package/quiqqer/oauth-server/bin/backend/UserClients.Client.html',
+    'css!package/quiqqer/oauth-server/bin/backend/UserClients.css'
+
+], function (QUI, QUIControl, QUIConfirm, Grid, QUIAjax, QUILocale, Mustache, templateClient) {
     "use strict";
 
     var lg = 'quiqqer/oauth-server';
@@ -31,7 +37,8 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
         Binds: [
             'refresh',
             'createClient',
-            'openDeleteDialog'
+            'openDeleteDialog',
+            'openEditDialog'
         ],
 
         initialize: function (options) {
@@ -98,9 +105,9 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
                     header: QUILocale.get('quiqqer/system', 'name'),
                     dataIndex: 'name',
                     dataType: 'string',
-                    width: 100
+                    width: 200
                 }, {
-                    header: QUILocale.get(lg, 'control.user.clients.header.client_id'),
+                    header: QUILocale.get(lg, 'client_id'),
                     dataIndex: 'client_id',
                     dataType: 'string',
                     width: 400
@@ -108,7 +115,7 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
             });
 
             this.$Grid.setHeight(
-                PanelContent.getSize().y - 20
+                PanelContent.getSize().y - 40
             );
 
             this.$Grid.addEvents({
@@ -135,6 +142,7 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
 
         /**
          * Refresh the list
+         *
          * @returns {Promise}
          */
         refresh: function () {
@@ -153,7 +161,7 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
         },
 
         /**
-         * Create a new Client
+         * Create a new client
          *
          * @returns {Promise}
          */
@@ -171,7 +179,7 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
         },
 
         /**
-         * Delete a Client
+         * Delete a client
          *
          * @param {String} clientId - ID of the client
          * @returns {Promise}
@@ -190,6 +198,41 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
             });
         },
 
+        /**
+         * Return the client data
+         *
+         * @param {String} clientId - ID of the client
+         * @returns {Promise}
+         */
+        getClient: function (clientId) {
+            var self = this;
+
+            return new Promise(function (resolve, reject) {
+                QUIAjax.get('package_quiqqer_oauth-server_ajax_client_get', resolve, {
+                    'package': 'quiqqer/oauth-server',
+                    clientId: clientId,
+                    onError: reject
+                });
+            });
+        },
+
+        /**
+         * Delete a Client
+         *
+         * @param {String} clientId - ID of the client
+         * @param {Object} data - New data for the client
+         * @returns {Promise}
+         */
+        updateClient: function (clientId, data) {
+            return new Promise(function (resolve, reject) {
+                QUIAjax.post('package_quiqqer_oauth-server_ajax_client_update', resolve, {
+                    'package': 'quiqqer/oauth-server',
+                    clientId: clientId,
+                    data: JSON.encode(data),
+                    onError: reject
+                });
+            });
+        },
 
         /**
          * Dialogs
@@ -207,6 +250,7 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
                 icon: 'fa fa-trash',
                 maxWidth: 600,
                 maxHeight: 400,
+                autoclose: false,
                 events: {
                     onOpen: function (Win) {
                         var Content = Win.getContent();
@@ -231,10 +275,66 @@ define('package/quiqqer/oauth-server/bin/backend/UserClients', [
         },
 
         /**
-         *
+         * Opens the edit dialog
          */
         openEditDialog: function () {
+            var self = this,
+                data = this.$Grid.getSelectedData()[0];
 
+            new QUIConfirm({
+                title: QUILocale.get(lg, 'control.user.clients.window.edit.title', {
+                    clientId: data.client_id
+                }),
+                icon: 'fa fa-edit',
+                maxWidth: 600,
+                maxHeight: 400,
+                events: {
+                    onOpen: function (Win) {
+                        var Content = Win.getContent();
+
+                        Win.Loader.show();
+                        Content.set('html', '');
+
+                        self.getClient(data.client_id).then(function (clientData) {
+
+                            console.log(clientData);
+
+                            Content.set('html', Mustache.render(templateClient, {
+                                textClientId: QUILocale.get(lg, 'client_id'),
+                                textClientSecret: QUILocale.get(lg, 'client_secret'),
+                                textName: QUILocale.get('quiqqer/system', 'name'),
+                                textCDate: QUILocale.get('quiqqer/system', 'c_date'),
+                                clientId: clientData.client_id,
+                                clientSecret: clientData.client_secret.trim(),
+                                name: clientData.name,
+                                c_date: new Date(parseInt(clientData.c_date * 1000)).toISOString()
+                            }));
+
+                            Win.Loader.hide();
+                        });
+                    },
+
+                    onSubmit: function (Win) {
+                        var Content = Win.getContent();
+
+                        Win.Loader.show();
+
+                        self.updateClient(data.client_id, {
+                            name: Content.getElement('[name="name"]').value
+                        }).then(function () {
+                            return self.refresh();
+                        }).then(function () {
+                            Win.close();
+                        }).catch(function (Exception) {
+                            QUI.getMessageHandler().then(function (MH) {
+                                MH.addException(Exception);
+                            });
+
+                            Win.Loader.hide();
+                        });
+                    }
+                }
+            }).open();
         }
     });
 });

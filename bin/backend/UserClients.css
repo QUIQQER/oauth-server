@@ -1,0 +1,14 @@
+.quiqqer-oauth-client {
+    border: none;
+}
+
+.quiqqer-oauth-client td {
+    padding: 0 0 8px 0;
+}
+
+.quiqqer-oauth-client-secret div {
+    max-width: 300px;
+    overflow: scroll;
+    width: 100%;
+    word-break: break-all;
+}

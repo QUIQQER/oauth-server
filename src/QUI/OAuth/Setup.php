@@ -55,6 +55,7 @@ class Setup
                 grant_types VARCHAR(80), 
                 scope VARCHAR(100), 
                 user_id INT(11) NOT NULL, 
+                c_date INT(11) NOT NULL, 
                 CONSTRAINT clients_client_id_pk PRIMARY KEY (client_id)
             );
             
@@ -105,7 +106,8 @@ class Setup
             'redirect_uri'  => 'VARCHAR(2000) NOT NULL',
             'grant_types'   => 'VARCHAR(80)',
             'scope'         => 'VARCHAR(100)',
-            'user_id'       => 'INT(11) NOT NULL'
+            'user_id'       => 'INT(11) NOT NULL',
+            'c_date'        => 'INT(11) NOT NULL'
         ));
     }
 }
