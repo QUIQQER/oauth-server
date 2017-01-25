@@ -59,7 +59,7 @@ class Handler
             'c_date'        => time()
         ));
 
-        return QUI::getDataBase()->getPDO()->lastInsertId('client_id');
+        return $clientId;
     }
 
     /**
@@ -230,7 +230,7 @@ class Handler
     {
         self::isAllowed($User);
 
-        QUI\Permissions\Permission::checkPermission($permission);
+        QUI\Permissions\Permission::checkPermission($permission, $User);
     }
 
     /**
