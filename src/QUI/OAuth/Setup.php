@@ -48,6 +48,7 @@ class Setup
     {
         $query = "
             CREATE TABLE IF NOT EXISTS " . self::getTable('oauth_clients') . " (
+                name VARCHAR(250) NOT NULL, 
                 client_id VARCHAR(80) NOT NULL, 
                 client_secret VARCHAR(80), 
                 redirect_uri VARCHAR(2000) NOT NULL, 
@@ -96,5 +97,15 @@ class Setup
         ";
 
         QUI::getDataBase()->getPDO()->query($query);
+
+        QUI::getDataBase()->table()->addColumn(self::getTable('oauth_clients'), array(
+            'name'          => 'VARCHAR(250) NOT NULL',
+            'client_id'     => 'VARCHAR(80) NOT NULL',
+            'client_secret' => 'VARCHAR(80)',
+            'redirect_uri'  => 'VARCHAR(2000) NOT NULL',
+            'grant_types'   => 'VARCHAR(80)',
+            'scope'         => 'VARCHAR(100)',
+            'user_id'       => 'INT(11) NOT NULL'
+        ));
     }
 }

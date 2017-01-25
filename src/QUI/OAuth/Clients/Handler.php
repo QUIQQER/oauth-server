@@ -82,7 +82,7 @@ class Handler
 
     public static function updateOAuthClient($clientId, $data, $User = null)
     {
-        self::checkPermissions('permission.delete.update', $User);
+        self::checkPermissions('permission.oauth.client.update', $User);
     }
 
     /**
@@ -91,13 +91,13 @@ class Handler
      * @param $clientId
      * @param null $User
      */
-    public static function deleteOAuthClient($clientId, $User = null)
+    public static function removeOAuthClient($clientId, $User = null)
     {
         if (is_null($User)) {
             $User = QUI::getUserBySession();
         }
 
-        self::checkPermissions('permission.delete.oauth', $User);
+        self::checkPermissions('permission.oauth.client.delete', $User);
 
 
         QUI::getDataBase()->delete(QUI\OAuth\Setup::getTable('oauth_clients'), array(

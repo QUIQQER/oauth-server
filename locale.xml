@@ -9,6 +9,41 @@
             <de><![CDATA[OAuth Server]]></de>
             <en><![CDATA[OAuth Server]]></en>
         </locale>
+    </groups>
 
+    <groups name="quiqqer/oauth-server" datatype="js">
+        <locale name="control.user.clients.button.add">
+            <de><![CDATA[Client hinzufügen]]></de>
+            <en><![CDATA[Add Client]]></en>
+        </locale>
+        <locale name="control.user.clients.button.edit">
+            <de><![CDATA[Client editieren]]></de>
+            <en><![CDATA[Edit Client]]></en>
+        </locale>
+        <locale name="control.user.clients.button.delete">
+            <de><![CDATA[Client löschen]]></de>
+            <en><![CDATA[Delete Client]]></en>
+        </locale>
+
+        <locale name="control.user.clients.window.delete.title">
+            <de><![CDATA[OAuth Client löschen]]></de>
+            <en><![CDATA[Delete OAuth Client]]></en>
+        </locale>
+        <locale name="control.user.clients.window.delete.text" html="1">
+            <de><![CDATA[
+                Möchten Sie folgenden OAuth Client wirklich löschen?
+                <br />
+                <br />
+                <b>[name]</b><br />
+                <pre style="white-space: pre-wrap; word-wrap: break-word;">[clientId]</pre>
+            ]]></de>
+            <en><![CDATA[
+                Are you sure you want to delete the following OAuth Client?
+                <br />
+                <br />
+                <b>[name]</b><br />
+                <pre style="white-space: pre-wrap; word-wrap: break-word;">[clientId]</pre>
+            ]]></en>
+        </locale>
     </groups>
 </locales>
