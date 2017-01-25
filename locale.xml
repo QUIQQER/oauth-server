@@ -20,6 +20,28 @@
         </locale>
     </groups>
 
+    <groups name="quiqqer/oauth-server" datatype="js,php">
+        <locale name="exception.could.not.create.client">
+            <de><![CDATA[
+            Konnte OAUth Client nicht anlegen. Bitte versuchen Sie es noch einmal oder
+            nehmen Kontakt mit einem Administrator auf.
+            ]]></de>
+            <en><![CDATA[
+            Could not create OAUth Client. Please try again or
+            Contact an administrator.
+            ]]></en>
+        </locale>
+        <locale name="exception.client.not.found">
+            <de><![CDATA[OAuth Client konnte nicht gefunden werden.]]></de>
+            <en><![CDATA[OAuth Client could not be found.]]></en>
+        </locale>
+        <locale name="exception.client.could.not.save">
+            <de><![CDATA[OAuth Client konnte nicht gespeichert werden.]]></de>
+            <en><![CDATA[OAuth Client could not be saved.]]></en>
+        </locale>
+    </groups>
+
+
     <groups name="quiqqer/oauth-server" datatype="js">
         <locale name="control.user.clients.button.add">
             <de><![CDATA[Client hinzufügen]]></de>
