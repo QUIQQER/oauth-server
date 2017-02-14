@@ -8,8 +8,8 @@ namespace QUI\OAuth\Clients;
 use QUI;
 use QUI\Utils\Security\Orthos;
 
-use Rhumsaa\Uuid\Uuid;
-use Rhumsaa\Uuid\Exception\UnsatisfiedDependencyException;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 
 /**
  * Class Handler
