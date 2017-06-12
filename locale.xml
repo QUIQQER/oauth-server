@@ -20,6 +20,17 @@
         </locale>
     </groups>
 
+    <groups name="quiqqer/oauth-server" datatype="php">
+        <locale name="settings.title">
+            <de><![CDATA[OAuth2 Einstellungen]]></de>
+            <en><![CDATA[OAuth2 Settings]]></en>
+        </locale>
+        <locale name="settings.access_lifetime.text">
+            <de><![CDATA[Token Lebenszeit (in Sekunden)]]></de>
+            <en><![CDATA[Token Lifetime (in seconds)]]></en>
+        </locale>
+    </groups>
+
     <groups name="quiqqer/oauth-server" datatype="js,php">
         <locale name="exception.could.not.create.client">
             <de><![CDATA[

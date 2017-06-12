@@ -24,11 +24,11 @@
 
                     <settings title="settings" name="settings">
                         <title>
-                            <locale group="quiqqer/oauth-server" var="settings.cron.title"/>
+                            <locale group="quiqqer/oauth-server" var="settings.title"/>
                         </title>
                         <input conf="general.access_lifetime" type="number">
                             <text>
-                                <locale group="quiqqer/oauth-server" var="settings.baseHost"/>
+                                <locale group="quiqqer/oauth-server" var="settings.access_lifetime.text"/>
                             </text>
                         </input>
                     </settings>
