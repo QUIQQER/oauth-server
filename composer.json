@@ -1,7 +1,7 @@
 {
   "name": "quiqqer/oauth-server",
   "type": "quiqqer-library",
-  "description": "",
+  "description": "OAuth Server",
   "version": "dev-dev",
   "license": "MIT",
   "authors": [

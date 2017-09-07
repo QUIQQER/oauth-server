@@ -5,7 +5,7 @@
             <de><![CDATA[QUIQQER - OAuth Server]]></de>
             <en><![CDATA[QUIQQER - OAuth Server]]></en>
         </locale>
-        <locale name="package.title">
+        <locale name="package.description">
             <de><![CDATA[OAuth Server]]></de>
             <en><![CDATA[OAuth Server]]></en>
         </locale>
