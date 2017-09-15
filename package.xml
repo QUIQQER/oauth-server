@@ -8,6 +8,8 @@
             <locale group="quiqqer/oauth-server" var="package.description"/>
         </description>
 
+        <image src="URL_OPT_DIR/quiqqer/oauth-server/bin/images/Logo.jpg"/>
+
         <support>
             <email>support@pcsg.de</email>
             <forum>https://community.quiqqer.com</forum>
