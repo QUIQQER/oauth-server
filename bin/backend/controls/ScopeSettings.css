@@ -1,0 +1,20 @@
+.quiqqer-oauth-server-scopesettings-table {
+    border-spacing: 0;
+    width: 100%;
+}
+
+.quiqqer-oauth-server-scopesettings-table thead {
+    background-color: #dedede;
+}
+
+.quiqqer-oauth-server-scopesettings-table tbody tr:nth-child(2n) {
+    background-color: #ededed;
+}
+
+.quiqqer-oauth-server-scopesettings-table input[name="maxCalls"] {
+    width: 100px;
+}
+
+.quiqqer-oauth-server-scopesettings-table input[name="unlimitedCalls"] {
+    float: left;
+}

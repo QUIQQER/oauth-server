@@ -54,6 +54,82 @@
 
 
     <groups name="quiqqer/oauth-server" datatype="js">
+
+        <!-- Controls: backend/controls/ScopeSettings -->
+        <locale name="controls.backend.ScopeSettings.template.headerActive">
+            <de><![CDATA[Aktiv]]></de>
+            <en><![CDATA[Active]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.headerCalls">
+            <de><![CDATA[Aufrufe]]></de>
+            <en><![CDATA[Calls]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.headerScope">
+            <de><![CDATA[Scope (Einstiegspunkt)]]></de>
+            <en><![CDATA[Scope (entry point)]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelUnlimitedCalls">
+            <de><![CDATA[Unbegrenzt]]></de>
+            <en><![CDATA[Unlimited]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelMaxCalls">
+            <de><![CDATA[Max. Anzahl Aufrufe]]></de>
+            <en><![CDATA[Max. number of calls]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelMaxCallsType">
+            <de><![CDATA[Zeitrahmen]]></de>
+            <en><![CDATA[Time frame]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionAbsolute">
+            <de><![CDATA[absolut]]></de>
+            <en><![CDATA[absolute]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionMinute">
+            <de><![CDATA[pro Minute]]></de>
+            <en><![CDATA[per minute]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionHour">
+            <de><![CDATA[pro Stunde]]></de>
+            <en><![CDATA[per hour]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionDay">
+            <de><![CDATA[pro Tag]]></de>
+            <en><![CDATA[per day]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionMonth">
+            <de><![CDATA[pro Monat]]></de>
+            <en><![CDATA[per month]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionYear">
+            <de><![CDATA[pro Jahr]]></de>
+            <en><![CDATA[per year]]></en>
+        </locale>
+
+        <!-- Controls: backend/controls/UserClient -->
+        <locale name="controls.backend.UserClient.createClient.popup.close.text">
+            <de><![CDATA[Abbrechen]]></de>
+            <en><![CDATA[Cancel]]></en>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.confirm.text">
+            <de><![CDATA[Client erstellen]]></de>
+            <en><![CDATA[Create client]]></en>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.confirm">
+            <de><![CDATA[Hier klicken, um den OAuth2-Client mit den obigen Einstellungen zu erstellen]]></de>
+            <en><![CDATA[Click here to create a OAuth2 client with the above settings]]></en>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelName">
+            <de><![CDATA[Titel]]></de>
+            <en><![CDATA[Title]]></en>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelScopeSettings">
+            <de><![CDATA[Zugriffs-Einstellungen]]></de>
+            <en><![CDATA[Access settings]]></en>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.title">
+            <de><![CDATA[Neuen OAuth2-Client erstellen]]></de>
+            <en><![CDATA[Create new OAuth2 client]]></en>
+        </locale>
         <locale name="control.user.clients.button.add">
             <de><![CDATA[Client hinzufügen]]></de>
             <en><![CDATA[Add Client]]></en>

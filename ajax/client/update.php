@@ -1,9 +1,13 @@
 <?php
 
+use QUI\Utils\Security\Orthos;
+
 /**
- * Create a oauth client entry
+ * Edit an Oauth2 client
  *
- * @return string
+ * @param int $clientId
+ * @param array $data
+ * @return void
  * @throws \QUI\Exception
  */
 QUI::$Ajax->registerFunction(
@@ -11,8 +15,9 @@ QUI::$Ajax->registerFunction(
     function ($clientId, $data) {
         QUI\OAuth\Clients\Handler::updateOAuthClient(
             $clientId,
-            json_decode($data, true)
+            Orthos::clearArray(json_decode($data, true))
         );
     },
-    array('clientId', 'data')
+    ['clientId', 'data'],
+    'Permission::checkAdminUser'
 );

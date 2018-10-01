@@ -3,6 +3,7 @@
 /**
  * This file contains QUI\OAuth\RestProvider
  */
+
 namespace QUI\OAuth;
 
 use QUI;
@@ -42,14 +43,12 @@ class RestProvider implements QUI\REST\ProviderInterface
 
                 return $Response->withStatus(200)
                     ->withHeader('Content-Type', 'application/json')
-                    ->write(json_encode(array('success' => true)));
+                    ->write(json_encode(['success' => true]));
             });
-
 
             $this->post('/token', function () use ($Server) {
                 $Server->handleTokenRequest(OAuth2\Request::createFromGlobals())->send();
             });
-
 
             $this->post('/resource', function () use ($Server) {
             });

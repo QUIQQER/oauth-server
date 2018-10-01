@@ -3,6 +3,7 @@
 /**
  * This file contains QUI\OAuth\Server
  */
+
 namespace QUI\OAuth;
 
 use QUI;
@@ -47,19 +48,20 @@ class Setup
     public static function execute()
     {
         $query = "
-            CREATE TABLE IF NOT EXISTS " . self::getTable('oauth_clients') . " (
+            CREATE TABLE IF NOT EXISTS ".self::getTable('oauth_clients')." (
                 name VARCHAR(250) NOT NULL, 
                 client_id VARCHAR(80) NOT NULL, 
                 client_secret VARCHAR(80), 
                 redirect_uri VARCHAR(2000) NOT NULL, 
                 grant_types VARCHAR(80), 
-                scope VARCHAR(100), 
+                scope VARCHAR(4000), 
+                scope_restrictions TEXT NULL DEFAULT NULL,
                 user_id INT(11) NOT NULL, 
                 c_date INT(11) NOT NULL, 
                 CONSTRAINT clients_client_id_pk PRIMARY KEY (client_id)
             );
             
-            CREATE TABLE IF NOT EXISTS " . self::getTable('oauth_access_tokens') . " (
+            CREATE TABLE IF NOT EXISTS ".self::getTable('oauth_access_tokens')." (
                 access_token VARCHAR(40) NOT NULL, 
                 client_id VARCHAR(80) NOT NULL, 
                 user_id INT(11), 
@@ -68,7 +70,7 @@ class Setup
                 CONSTRAINT access_token_pk PRIMARY KEY (access_token)
             );
             
-            CREATE TABLE IF NOT EXISTS " . self::getTable('oauth_authorization_codes') . " (
+            CREATE TABLE IF NOT EXISTS ".self::getTable('oauth_authorization_codes')." (
                 authorization_code VARCHAR(40) NOT NULL, 
                 client_id VARCHAR(80) NOT NULL, 
                 user_id INT(11), 
@@ -78,7 +80,7 @@ class Setup
                 CONSTRAINT auth_code_pk PRIMARY KEY (authorization_code)
             );
             
-            CREATE TABLE IF NOT EXISTS " . self::getTable('oauth_refresh_tokens') . " (
+            CREATE TABLE IF NOT EXISTS ".self::getTable('oauth_refresh_tokens')." (
                 refresh_token VARCHAR(40) NOT NULL, 
                 client_id VARCHAR(80) NOT NULL, 
                 user_id INT(11), 
@@ -87,9 +89,9 @@ class Setup
                 CONSTRAINT refresh_token_pk PRIMARY KEY (refresh_token)
             );
             
-            CREATE TABLE IF NOT EXISTS " . self::getTable('oauth_scopes') . " (scope TEXT, is_default BOOLEAN);
+            CREATE TABLE IF NOT EXISTS ".self::getTable('oauth_scopes')." (scope TEXT, is_default BOOLEAN);
             
-            CREATE TABLE IF NOT EXISTS " . self::getTable('oauth_jwt') . " (
+            CREATE TABLE IF NOT EXISTS ".self::getTable('oauth_jwt')." (
                 client_id VARCHAR(80) NOT NULL, 
                 subject VARCHAR(80), 
                 public_key VARCHAR(2000), 
@@ -99,15 +101,16 @@ class Setup
 
         QUI::getDataBase()->getPDO()->query($query);
 
-        QUI::getDataBase()->table()->addColumn(self::getTable('oauth_clients'), array(
-            'name'          => 'VARCHAR(250) NOT NULL',
-            'client_id'     => 'VARCHAR(80) NOT NULL',
-            'client_secret' => 'VARCHAR(80)',
-            'redirect_uri'  => 'VARCHAR(2000) NOT NULL',
-            'grant_types'   => 'VARCHAR(80)',
-            'scope'         => 'VARCHAR(100)',
-            'user_id'       => 'INT(11) NOT NULL',
-            'c_date'        => 'INT(11) NOT NULL'
-        ));
+        QUI::getDataBase()->table()->addColumn(self::getTable('oauth_clients'), [
+            'name'               => 'VARCHAR(250) NOT NULL',
+            'client_id'          => 'VARCHAR(80) NOT NULL',
+            'client_secret'      => 'VARCHAR(80)',
+            'redirect_uri'       => 'VARCHAR(2000) NOT NULL DEFAULT \'\'',
+            'grant_types'        => 'VARCHAR(80)',
+            'scope'              => 'VARCHAR(4000)',
+            'scope_restrictions' => 'TEXT NULL DEFAULT NULL',
+            'user_id'            => 'INT(11) NOT NULL',
+            'c_date'             => 'INT(11) NOT NULL'
+        ]);
     }
 }

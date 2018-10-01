@@ -10,9 +10,8 @@ use OAuth2;
 
 /**
  * Class Server
- * oauth server for QUIQQER
  *
- * @package QUI\OAuth
+ * QUIQQER OAuth2 Server (based on bshaffer/oauth2-server-php)
  */
 class Server
 {
@@ -28,57 +27,40 @@ class Server
     {
         $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
-        // defaults
-        $accessLifeTime                = 3600;
-        $useJwtAccessTokens            = false;
-        $storeEncryptedTokenString     = true;
-        $useOpenidConnect              = false;
-        $idLifetime                    = 3600;
-        $wwwRealm                      = 'Service';
-        $tokenParamName                = 'access_token';
-        $tokenBearerHeaderName         = 'Bearer';
-        $enforceState                  = true;
-        $requireExactRedirectUri       = true;
-        $allowImplicit                 = false;
-        $allowCredentialsInRequestBody = true;
-        $allowPublicClients            = true;
-        $alwaysIssueNewRefreshToken    = false;
-        $unsetRefreshTokenAfterUse     = true;
+        // config
+        $accessLifeTime = 3600;
 
-        // settings
         if ($Config->getValue('general', 'access_lifetime')) {
             $accessLifeTime = $Config->getValue('general', 'access_lifetime');
         }
 
-        $Storage = new Storage();
+        $config = [
+            'access_lifetime'                   => $accessLifeTime,
+            'use_jwt_access_tokens'             => false,
+            'store_encrypted_token_string'      => true,
+            'use_openid_connect'                => false,
+            'id_lifetime'                       => 3600,
+            'www_realm'                         => 'Service',
+            'token_param_name'                  => 'access_token',
+            'token_bearer_header_name'          => 'Bearer',
+            'enforce_state'                     => true,
+            'require_exact_redirect_uri'        => true,
+            'allow_implicit'                    => false,
+            'allow_credentials_in_request_body' => true,
+            'allow_public_clients'              => true,
+            'always_issue_new_refresh_token'    => false,
+            'unset_refresh_token_after_use'     => true
+        ];
 
-        // GrantType / Permissions / Auth
-        $this->Server = new OAuth2\Server(
-            $Storage,
-            [
-                'access_lifetime'                   => $accessLifeTime,
-                'use_jwt_access_tokens'             => $useJwtAccessTokens,
-                'store_encrypted_token_string'      => $storeEncryptedTokenString,
-                'use_openid_connect'                => $useOpenidConnect,
-                'id_lifetime'                       => $idLifetime,
-                'www_realm'                         => $wwwRealm,
-                'token_param_name'                  => $tokenParamName,
-                'token_bearer_header_name'          => $tokenBearerHeaderName,
-                'enforce_state'                     => $enforceState,
-                'require_exact_redirect_uri'        => $requireExactRedirectUri,
-                'allow_implicit'                    => $allowImplicit,
-                'allow_credentials_in_request_body' => $allowCredentialsInRequestBody,
-                'allow_public_clients'              => $allowPublicClients,
-                'always_issue_new_refresh_token'    => $alwaysIssueNewRefreshToken,
-                'unset_refresh_token_after_use'     => $unsetRefreshTokenAfterUse
-            ]
-        );
+        $Storage = new Storage(QUI::getDataBase()->getPDO());
 
+        // Build server
+        $this->Server = new OAuth2\Server($Storage, $config);
         $this->Server->addGrantType(new OAuth2\GrantType\ClientCredentials($Storage));
     }
 
     /**
-     * Return the oauth server
+     * Return the OAuth2 server
      *
      * @return OAuth2\Server
      */

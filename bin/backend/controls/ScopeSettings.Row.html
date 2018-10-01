@@ -1,0 +1,27 @@
+<td><b>{{scope}}</b></td>
+<td>
+    <input type="checkbox" name="active"/>
+</td>
+<td>
+    <label>
+        <span>{{labelMaxCalls}}</span>
+        <input type="number" name="maxCalls" disabled/>
+    </label>
+
+    <label>
+        <span>{{labelMaxCallsType}}</span>
+        <select name="maxCallsType" disabled>
+            <option value="absolute">{{maxCallsTypeOptionAbsolute}}</option>
+            <option value="minute">{{maxCallsTypeOptionMinute}}</option>
+            <option value="hour">{{maxCallsTypeOptionHour}}</option>
+            <option value="day">{{maxCallsTypeOptionDay}}</option>
+            <option value="month">{{maxCallsTypeOptionMonth}}</option>
+            <option value="year">{{maxCallsTypeOptionYear}}</option>
+        </select>
+    </label>
+
+    <label>
+        <span>{{labelUnlimitedCalls}}</span>
+        <input type="checkbox" name="unlimitedCalls"/>
+    </label>
+</td>

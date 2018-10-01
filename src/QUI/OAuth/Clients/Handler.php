@@ -3,6 +3,7 @@
 /**
  * This file contains QUI\OAuth\Clients\Handler
  */
+
 namespace QUI\OAuth\Clients;
 
 use QUI;
@@ -22,11 +23,13 @@ class Handler
      *
      * @param QUI\Interfaces\Users\User $User
      * @param string $name
+     * @param array $scopeSettings
      * @return string
      *
      * @throws QUI\Exception
+     * @throws \Exception
      */
-    public static function createOAuthClient(QUI\Interfaces\Users\User $User, $name = '')
+    public static function createOAuthClient(QUI\Interfaces\Users\User $User, $scopeSettings, $name = '')
     {
         if (QUI::getUsers()->isNobodyUser($User)) {
             throw new QUI\Exception('Could not create Client');
@@ -35,31 +38,60 @@ class Handler
         $table = QUI\OAuth\Setup::getTable('oauth_clients');
 
         if (empty($name)) {
-            $name = 'OAuth Client ' . date('Y-m-d');
+            $name = 'OAuth2 Client '.date('Y-m-d');
         }
-
 
         try {
-            $UUID     = Uuid::uuid1();
-            $clientId = $UUID->toString();
-        } catch (UnsatisfiedDependencyException $Exception) {
+            $UUID     = Uuid::uuid4();
+            $clientId = $UUID->serialize();
+        } catch (\Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
-            throw new QUI\OAuth\Exception(array(
+            throw new QUI\OAuth\Exception([
                 'quiqqer/oauth-server',
                 'exception.could.not.create.client'
-            ));
+            ]);
         }
 
-        QUI::getDataBase()->insert($table, array(
-            'client_id'     => $clientId,
-            'client_secret' => Orthos::getPassword(rand(20, 80)),
-            'user_id'       => $User->getId(),
-            'name'          => $name,
-            'c_date'        => time()
-        ));
+        $activeScopes = [];
+
+        foreach ($scopeSettings as $scope => $settings) {
+            if ($settings['active']) {
+                $activeScopes[] = $scope;
+            }
+        }
+
+        QUI::getDataBase()->insert($table, [
+            'client_id'          => $clientId,
+            'client_secret'      => self::generatePassword(),
+            'user_id'            => $User->getId(),
+            'name'               => $name,
+            'c_date'             => time(),
+            'scope'              => empty($activeScopes) ? null : implode(' ', $activeScopes),
+            'scope_restrictions' => json_encode($scopeSettings)
+        ]);
 
         return $clientId;
+    }
+
+    /**
+     * Generate a random password
+     *
+     * @param int $len (optional) - Password length [default: 40]
+     * @return string
+     * @throws \Exception
+     */
+    protected static function generatePassword($len = 40)
+    {
+        $characters         = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()[]{}?!$%&/=*+~,.;:<>-_";
+        $max                = mb_strlen($characters) - 1;
+        $passwordCharacters = [];
+
+        for ($i = 0; $i < $len; $i++) {
+            $passwordCharacters[] = $characters[random_int(0, $max)];
+        }
+
+        return implode('', $passwordCharacters);
     }
 
     /**
@@ -72,12 +104,12 @@ class Handler
     {
         self::isAllowed(false, $User);
 
-        return QUI::getDataBase()->fetch(array(
+        return QUI::getDataBase()->fetch([
             'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => array(
+            'where' => [
                 'user_id' => $User->getId()
-            )
-        ));
+            ]
+        ]);
     }
 
     /**
@@ -99,21 +131,21 @@ class Handler
 
         if (!isset($result[0])) {
             throw new QUI\OAuth\Exception(
-                array(
+                [
                     'quiqqer/oauth-server',
                     'exception.client.not.found'
-                ),
+                ],
                 404
             );
         }
 
-        return QUI::getDataBase()->fetch(array(
+        return QUI::getDataBase()->fetch([
             'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => array(
+            'where' => [
                 'user_id'   => $User->getId(),
                 'client_id' => $clientId
-            )
-        ));
+            ]
+        ]);
     }
 
     /**
@@ -121,45 +153,60 @@ class Handler
      * You can update the following data:
      *
      * - name
+     * - scope_restrictions
      *
      * @param $clientId
      * @param array $data
-     * @param null $User
      *
      * @throws QUI\OAuth\Exception
      */
-    public static function updateOAuthClient($clientId, $data = array(), $User = null)
+    public static function updateOAuthClient($clientId, $data = [])
     {
-        if (is_null($User)) {
-            $User = QUI::getUserBySession();
-        }
-
-        self::checkPermissions('permission.oauth.client.update', $User);
-        self::isAllowed($clientId, $User);
+//        if (is_null($User)) {
+//            $User = QUI::getUserBySession();
+//        }
+//
+//        self::checkPermissions('permission.oauth.client.update', $User);
+//        self::isAllowed($clientId, $User);
 
         if (!is_array($data)) {
             throw new QUI\OAuth\Exception(
-                array(
+                [
                     'quiqqer/oauth-server',
                     'exception.client.could.not.save'
-                ),
+                ],
                 404
             );
         }
 
-        if (!isset($data['name'])) {
-            return;
+        $update = [];
+
+        if (!empty($data['title']) && is_string($data['title'])) {
+            $update['name'] = $data['title'];
         }
+
+        if (!empty($data['scope_restrictions']) && is_array($data['scope_restrictions'])) {
+            $availableScopes = QUI\REST\Server::getInstance()->getEntryPoints();
+
+            foreach ($data['scope_restrictions'] as $scope => $settings) {
+                if (!in_array($scope, $availableScopes)) {
+                    unset($data['scope_restrictions'][$scope]);
+                }
+            }
+
+            $update['scope_restrictions'] = json_encode($data['scope_restrictions']);
+        }
+
+        \QUI\System\Log::writeRecursive($data);
+        \QUI\System\Log::writeRecursive($update);
+        \QUI\System\Log::writeRecursive($clientId);
 
         QUI::getDataBase()->update(
             QUI\OAuth\Setup::getTable('oauth_clients'),
-            array(
-                'name' => $data['name']
-            ),
-            array(
-                'user_id'   => $User->getId(),
+            $update,
+            [
                 'client_id' => $clientId
-            )
+            ]
         );
     }
 
@@ -180,19 +227,19 @@ class Handler
 
         self::isAllowed($clientId, $User);
 
-        $result = QUI::getDataBase()->fetch(array(
+        $result = QUI::getDataBase()->fetch([
             'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => array(
+            'where' => [
                 'client_id' => $clientId
-            )
-        ));
+            ]
+        ]);
 
         if (!isset($result[0])) {
             throw new QUI\OAuth\Exception(
-                array(
+                [
                     'quiqqer/oauth-server',
                     'exception.client.not.found'
-                ),
+                ],
                 404
             );
         }
@@ -215,9 +262,9 @@ class Handler
         self::checkPermissions('permission.oauth.client.delete', $User);
         self::isAllowed($clientId, $User);
 
-        QUI::getDataBase()->delete(QUI\OAuth\Setup::getTable('oauth_clients'), array(
+        QUI::getDataBase()->delete(QUI\OAuth\Setup::getTable('oauth_clients'), [
             'client_id' => $clientId
-        ));
+        ]);
     }
 
     /**
@@ -268,12 +315,12 @@ class Handler
             );
         }
 
-        $result = QUI::getDataBase()->fetch(array(
+        $result = QUI::getDataBase()->fetch([
             'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => array(
+            'where' => [
                 'client_id' => $clientId
-            )
-        ));
+            ]
+        ]);
 
         if (!isset($result[0])) {
             throw new QUI\Permissions\Exception(
