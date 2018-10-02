@@ -6,8 +6,8 @@
             <en><![CDATA[QUIQQER - OAuth Server]]></en>
         </locale>
         <locale name="package.description">
-            <de><![CDATA[OAuth Server]]></de>
-            <en><![CDATA[OAuth Server]]></en>
+            <de><![CDATA[OAuth2-Server]]></de>
+            <en><![CDATA[OAuth2 Server]]></en>
         </locale>
 
         <locale name="client_id">
@@ -18,9 +18,29 @@
             <de><![CDATA[Client-Secret]]></de>
             <en><![CDATA[Client-Secret]]></en>
         </locale>
+
+        <!-- Permissions -->
+        <locale name="permission.quiqqer.oauth-server._header">
+            <de><![CDATA[OAuth2 Server]]></de>
+            <en><![CDATA[OAuth2 Server]]></en>
+        </locale>
+        <locale name="permission.quiqqer.oauth-server.manage_clients">
+            <de><![CDATA[Darf OAuth Clients verwalten (CRUD)]]></de>
+            <en><![CDATA[Has permission to manage OAuth clients (CRUD)]]></en>
+        </locale>
     </groups>
 
     <groups name="quiqqer/oauth-server" datatype="php">
+
+        <!-- Settings -->
+        <locale name="settings.active.text">
+            <de><![CDATA[OAuth2 Status]]></de>
+            <en><![CDATA[OAuth2 status]]></en>
+        </locale>
+        <locale name="settings.active.description">
+            <de><![CDATA[OAuth2-Modul ist aktiv und prüft alle REST API Anfragen hinsichtlich der Berechtigungen, die für einzelne OAuth2-Klienten konfiguriert sind.]]></de>
+            <en><![CDATA[OAuth2 module is active and checks all REST API requests for permissions configured for individual OAuth2 clients.]]></en>
+        </locale>
         <locale name="settings.title">
             <de><![CDATA[OAuth2 Einstellungen]]></de>
             <en><![CDATA[OAuth2 Settings]]></en>
@@ -29,6 +49,7 @@
             <de><![CDATA[Token Lebenszeit (in Sekunden)]]></de>
             <en><![CDATA[Token Lifetime (in seconds)]]></en>
         </locale>
+        
     </groups>
 
     <groups name="quiqqer/oauth-server" datatype="js,php">
@@ -154,14 +175,14 @@
         </locale>
         <locale name="control.user.clients.window.delete.text" html="1">
             <de><![CDATA[
-                Möchten Sie folgenden OAuth Client wirklich löschen?
+                Sind Sie sicher, dass Sie folgenden OAuth Client unwiderruflich löschen möchten?
                 <br />
                 <br />
                 <b>[name]</b><br />
                 <pre style="white-space: pre-wrap; word-wrap: break-word;">[clientId]</pre>
             ]]></de>
             <en><![CDATA[
-                Are you sure you want to delete the following OAuth Client?
+                Are you sure you want to irrevocably delete the following OAuth Client?
                 <br />
                 <br />
                 <b>[name]</b><br />

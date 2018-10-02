@@ -4,6 +4,10 @@
 
         <config>
             <section name="general">
+                <conf name="active">
+                    <type><![CDATA[boolean]]></type>
+                    <defaultvalue>1</defaultvalue>
+                </conf>
                 <conf name="access_lifetime">
                     <type><![CDATA[int]]></type>
                     <defaultvalue>3600</defaultvalue>
@@ -26,6 +30,16 @@
                         <title>
                             <locale group="quiqqer/oauth-server" var="settings.title"/>
                         </title>
+
+                        <input conf="general.active" type="checkbox">
+                            <text>
+                                <locale group="quiqqer/oauth-server" var="settings.active.text"/>
+                            </text>
+                            <description>
+                                <locale group="quiqqer/oauth-server" var="settings.active.description"/>
+                            </description>
+                        </input>
+
                         <input conf="general.access_lifetime" type="number">
                             <text>
                                 <locale group="quiqqer/oauth-server" var="settings.access_lifetime.text"/>

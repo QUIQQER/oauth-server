@@ -13,4 +13,12 @@ $packageDir        = dirname(dirname($quiqqerPackageDir));
 // include quiqqer bootstrap for tests
 require $packageDir . '/quiqqer/quiqqer/tests/bootstrap.php';
 
+if (!defined('ADMIN')) {
+    define('ADMIN', 1);
+}
+
+if (!defined('SYSTEM_INTERN')) {
+    define('SYSTEM_INTERN', 1);
+}
+
 QUI\Autoloader::$ComposerLoader->add('QUITest', dirname(__FILE__) . '/');

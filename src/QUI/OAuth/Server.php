@@ -3,25 +3,27 @@
 /**
  * This file contains QUI\OAuth\Server
  */
+
 namespace QUI\OAuth;
 
 use QUI;
 use OAuth2;
+use QUI\OAuth\Middleware\ResourceController;
 
 /**
  * Class Server
  *
  * QUIQQER OAuth2 Server (based on bshaffer/oauth2-server-php)
  */
-class Server
+class Server extends QUI\Utils\Singleton
 {
     /**
      * @var OAuth2\Server
      */
-    protected $Server;
+    protected $OAuth2Server;
 
     /**
-     * Serrver constructor.
+     * Server constructor.
      */
     public function __construct()
     {
@@ -55,8 +57,20 @@ class Server
         $Storage = new Storage(QUI::getDataBase()->getPDO());
 
         // Build server
-        $this->Server = new OAuth2\Server($Storage, $config);
-        $this->Server->addGrantType(new OAuth2\GrantType\ClientCredentials($Storage));
+        $this->OAuth2Server = new OAuth2\Server($Storage, $config);
+        $this->OAuth2Server->addGrantType(new OAuth2\GrantType\ClientCredentials($Storage));
+
+        $this->OAuth2Server->setResourceController(
+            new ResourceController(
+                new OAuth2\TokenType\Bearer([
+                    'token_param_name'         => $config['token_param_name'],
+                    'token_bearer_header_name' => $config['token_bearer_header_name']
+                ]),
+                $this->OAuth2Server->getStorage('access_token'),
+                ['www_realm' => $config['www_realm']],
+                $this->OAuth2Server->getScopeUtil()
+            )
+        );
     }
 
     /**
@@ -64,8 +78,8 @@ class Server
      *
      * @return OAuth2\Server
      */
-    public function getServer()
+    public function getOAuth2Server()
     {
-        return $this->Server;
+        return $this->OAuth2Server;
     }
 }

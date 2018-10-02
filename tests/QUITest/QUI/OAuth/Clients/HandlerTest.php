@@ -7,12 +7,19 @@ use QUI;
 /**
  * Class ConfigTest
  */
-class HandlerTest extends \PHPUnit_Framework_TestCase
+class HandlerTest extends \PHPUnit\Framework\TestCase
 {
     public function testOAuthConnection()
     {
         $SystemUser    = QUI::getUsers()->getSystemUser();
-        $oauthClientId = QUI\OAuth\Clients\Handler::createOAuthClient($SystemUser);
+        $oauthClientId = QUI\OAuth\Clients\Handler::createOAuthClient($SystemUser, [
+            '/projects/{project}/{lang}/{id}' => [
+                'active'         => true,
+                'maxCalls'       => 0,
+                'maxCallsType'   => 'absolute',
+                'unlimitedCalls' => true
+            ]
+        ]);
 
         $this->assertNotEmpty($oauthClientId);
 
@@ -20,13 +27,13 @@ class HandlerTest extends \PHPUnit_Framework_TestCase
         $REST       = QUI\REST\Server::getInstance();
         $apiAddress = $REST->getAddress();
 
-        $oauthClient = QUI\OAuth\Clients\Handler::getOAuthClient($oauthClientId, $SystemUser);
+        $oauthClient = QUI\OAuth\Clients\Handler::getOAuthClient($oauthClientId);
 
         $clientID     = $oauthClient['client_id'];
         $clientSecret = $oauthClient['client_secret'];
 
-        $curl = "curl -u {$clientID}:{$clientSecret} ";
-        $curl .= "{$apiAddress}oauth/token -d 'grant_type=client_credentials'";
+        $curl = "curl -u {$clientID}:".escapeshellarg($clientSecret);
+        $curl .= " {$apiAddress}oauth/token -d 'grant_type=client_credentials'";
 
         $result = shell_exec($curl);
         $result = json_decode($result, true);
@@ -37,20 +44,23 @@ class HandlerTest extends \PHPUnit_Framework_TestCase
             $accessKey = $result['access_token'];
 
             $result = shell_exec(
-                "curl {$apiAddress}oauth/authorize -d 'access_token={$accessKey}'"
+                "curl {$apiAddress}projects/Basic/de/1 -d 'access_token={$accessKey}'"
             );
 
             $result = json_decode($result, true);
+
+            \QUI\System\Log::writeRecursive("curl {$apiAddress}projects/Basic/de/1 -d 'access_token={$accessKey}'");
+            \QUI\System\Log::writeRecursive($result);
 
             $this->assertArrayHasKey('success', $result);
         }
 
         // delete the oauth clients
-        QUI\OAuth\Clients\Handler::removeOAuthClient($clientID, $SystemUser);
+        QUI\OAuth\Clients\Handler::removeOAuthClient($clientID);
 
         // check if the client doesn't exist
         try {
-            QUI\OAuth\Clients\Handler::getOAuthClient($oauthClientId, $SystemUser);
+            QUI\OAuth\Clients\Handler::getOAuthClient($oauthClientId);
             $this->assertTrue(false, 'OAuth Client still exists. Should not exists');
         } catch (QUI\OAuth\Exception $Exception) {
             $this->assertTrue(true);

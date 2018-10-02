@@ -9,6 +9,7 @@ namespace QUI\OAuth;
 use QUI;
 use QUI\REST\Server;
 use OAuth2;
+use QUI\OAuth\Server as OAuth2Server;
 
 use Psr\Http\Message\ServerRequestInterface as RequestInterface;
 use Psr\Http\Message\ResponseInterface as ResponseInterface;
@@ -26,7 +27,7 @@ class RestProvider implements QUI\REST\ProviderInterface
     public function register(Server $Server)
     {
         $Slim   = $Server->getSlim();
-        $Server = (new \QUI\OAuth\Server())->getServer();
+        $Server = OAuth2Server::getInstance()->getOAuth2Server();
 
         $Slim->group('/oauth', function () use ($Server) {
             /* @var $this \Slim\App */

@@ -7,35 +7,36 @@
 namespace QUI\OAuth\Clients;
 
 use QUI;
-use QUI\Utils\Security\Orthos;
-
 use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
 
 /**
  * Class Handler
- * @package QUI\OAuth\Clients
+ *
+ * OAuth2 client handler
  */
 class Handler
 {
+    const PERMISSION_MANAGE_CLIENTS = 'quiqqer.oauth-server.manage_clients';
+
     /**
      * Creates oauth client credentials for the user
      *
      * @param QUI\Interfaces\Users\User $User
      * @param string $name
      * @param array $scopeSettings
-     * @return string
+     * @return string - New Client ID
      *
-     * @throws QUI\Exception
+     * @throws \QUI\Permissions\Exception
+     * @throws \QUI\Exception
      * @throws \Exception
      */
     public static function createOAuthClient(QUI\Interfaces\Users\User $User, $scopeSettings, $name = '')
     {
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+
         if (QUI::getUsers()->isNobodyUser($User)) {
             throw new QUI\Exception('Could not create Client');
         }
-
-        $table = QUI\OAuth\Setup::getTable('oauth_clients');
 
         if (empty($name)) {
             $name = 'OAuth2 Client '.date('Y-m-d');
@@ -61,15 +62,18 @@ class Handler
             }
         }
 
-        QUI::getDataBase()->insert($table, [
-            'client_id'          => $clientId,
-            'client_secret'      => self::generatePassword(),
-            'user_id'            => $User->getId(),
-            'name'               => $name,
-            'c_date'             => time(),
-            'scope'              => empty($activeScopes) ? null : implode(' ', $activeScopes),
-            'scope_restrictions' => json_encode($scopeSettings)
-        ]);
+        QUI::getDataBase()->insert(
+            QUI\OAuth\Setup::getTable('oauth_clients'),
+            [
+                'client_id'          => $clientId,
+                'client_secret'      => self::generatePassword(),
+                'user_id'            => $User->getId(),
+                'name'               => $name,
+                'c_date'             => time(),
+                'scope'              => empty($activeScopes) ? null : implode(' ', $activeScopes),
+                'scope_restrictions' => json_encode($scopeSettings)
+            ]
+        );
 
         return $clientId;
     }
@@ -99,10 +103,13 @@ class Handler
      *
      * @param QUI\Interfaces\Users\User $User
      * @return array
+     *
+     * @throws \QUI\Permissions\Exception
+     * @throws \QUI\Exception
      */
     public static function getOAuthClientsByUser(QUI\Interfaces\Users\User $User)
     {
-        self::isAllowed(false, $User);
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
 
         return QUI::getDataBase()->fetch([
             'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
@@ -116,18 +123,19 @@ class Handler
      * Return a client from the user
      *
      * @param QUI\Interfaces\Users\User $User
-     * @param $clientId
+     * @param int $clientId
      * @return array
      *
-     * @throws QUI\OAuth\Exception|QUI\Permissions\Exception
+     * @throws \QUI\Permissions\Exception
+     * @throws \QUI\Exception
      */
     public static function getOAuthClientByUser(QUI\Interfaces\Users\User $User, $clientId)
     {
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+
         if (is_null($User)) {
             $User = QUI::getUserBySession();
         }
-
-        self::isAllowed($clientId, $User);
 
         if (!isset($result[0])) {
             throw new QUI\OAuth\Exception(
@@ -149,25 +157,47 @@ class Handler
     }
 
     /**
+     * Return a client by access token
+     *
+     * @param string $accessToken
+     * @return array|false
+     *
+     * @throws \QUI\Exception
+     */
+    public static function getOAuthClientByAccessToken($accessToken)
+    {
+        $result = QUI::getDataBase()->fetch([
+            'select' => ['clientId'],
+            'from'   => QUI\OAuth\Setup::getTable('oauth_access_tokens'),
+            'where'  => [
+                'access_token' => $accessToken
+            ]
+        ]);
+
+        if (empty($result)) {
+            return false;
+        }
+
+        return self::getOAuthClient($result[0]['client_id']);
+    }
+
+    /**
      * Update the data from a client
      * You can update the following data:
      *
      * - name
      * - scope_restrictions
      *
-     * @param $clientId
+     * @param int $clientId
      * @param array $data
      *
-     * @throws QUI\OAuth\Exception
+     * @throws \QUI\OAuth\Exception
+     * @throws \QUI\Permissions\Exception
+     * @throws \QUI\Exception
      */
     public static function updateOAuthClient($clientId, $data = [])
     {
-//        if (is_null($User)) {
-//            $User = QUI::getUserBySession();
-//        }
-//
-//        self::checkPermissions('permission.oauth.client.update', $User);
-//        self::isAllowed($clientId, $User);
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
 
         if (!is_array($data)) {
             throw new QUI\OAuth\Exception(
@@ -197,10 +227,6 @@ class Handler
             $update['scope_restrictions'] = json_encode($data['scope_restrictions']);
         }
 
-        \QUI\System\Log::writeRecursive($data);
-        \QUI\System\Log::writeRecursive($update);
-        \QUI\System\Log::writeRecursive($clientId);
-
         QUI::getDataBase()->update(
             QUI\OAuth\Setup::getTable('oauth_clients'),
             $update,
@@ -213,19 +239,15 @@ class Handler
     /**
      * Return oauth client data
      *
-     * @param $clientId
-     * @param null $User
+     * @param int $clientId
      * @return array
      *
-     * @throws QUI\OAuth\Exception|QUI\Permissions\Exception
+     * @throws \QUI\Permissions\Exception
+     * @throws \QUI\Exception
      */
-    public static function getOAuthClient($clientId, $User = null)
+    public static function getOAuthClient($clientId)
     {
-        if (is_null($User)) {
-            $User = QUI::getUserBySession();
-        }
-
-        self::isAllowed($clientId, $User);
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
 
         $result = QUI::getDataBase()->fetch([
             'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
@@ -250,90 +272,19 @@ class Handler
     /**
      * Delete a oauth client
      *
-     * @param $clientId
-     * @param null $User
+     * @param int $clientId
+     *
+     * @throws \QUI\Permissions\Exception
+     * @throws \QUI\Exception
      */
-    public static function removeOAuthClient($clientId, $User = null)
+    public static function removeOAuthClient($clientId)
     {
-        if (is_null($User)) {
-            $User = QUI::getUserBySession();
-        }
-
-        self::checkPermissions('permission.oauth.client.delete', $User);
-        self::isAllowed($clientId, $User);
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
 
         QUI::getDataBase()->delete(QUI\OAuth\Setup::getTable('oauth_clients'), [
             'client_id' => $clientId
         ]);
-    }
 
-    /**
-     * @param string $permission
-     * @param null|QUI\Interfaces\Users\User $User
-     *
-     * @throw QUI\Permissions\Exception
-     */
-    protected static function checkPermissions($permission, $User = null)
-    {
-        self::isAllowed($User);
-
-        QUI\Permissions\Permission::checkPermission($permission, $User);
-    }
-
-    /**
-     * Checks if the user is allowed to do some action
-     *
-     * @param bool|string $clientId
-     * @param null|QUI\Interfaces\Users\User $User
-     *
-     * @throws QUI\Permissions\Exception
-     */
-    protected static function isAllowed($clientId = false, $User = null)
-    {
-        if (is_null($User)) {
-            $User = QUI::getUserBySession();
-        }
-
-        // Wenn der übergebene Benutzer = der Session Benutzer ist
-        // Wird ihm der Zugriff erlaubt
-        if (QUI::getUserBySession()->getId() == $User->getId()) {
-            return;
-        }
-
-        if ($User->isSU()) {
-            return;
-        }
-
-        if (QUI::getUsers()->isSystemUser($User)) {
-            return;
-        }
-
-        if ($clientId === false) {
-            throw new QUI\Permissions\Exception(
-                QUI::getLocale()->get('quiqqer/system', 'exception.no.permission'),
-                403
-            );
-        }
-
-        $result = QUI::getDataBase()->fetch([
-            'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => [
-                'client_id' => $clientId
-            ]
-        ]);
-
-        if (!isset($result[0])) {
-            throw new QUI\Permissions\Exception(
-                QUI::getLocale()->get('quiqqer/system', 'exception.no.permission'),
-                403
-            );
-        }
-
-        if ($User->getId() != $result[0]['user_id']) {
-            throw new QUI\Permissions\Exception(
-                QUI::getLocale()->get('quiqqer/system', 'exception.no.permission'),
-                403
-            );
-        };
+        // @todo Token löschen und alles andere, was mit der client_ID zusammenhängt
     }
 }

@@ -26,4 +26,26 @@ class EventHandler
 
         Setup::execute();
     }
+
+    /**
+     * quiqqer/quiqqer: onRequest
+     *
+     * Add REST API OAuth2 middleware to validate requests
+     *
+     * @param QUI\Rewrite $Rewrite
+     * @param string $url
+     *
+     * @throws \QUI\Exception
+     */
+    public static function onRequest(QUI\Rewrite $Rewrite, $url)
+    {
+        $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+
+        if (!$Conf->getValue('general', 'active')) {
+            return;
+        }
+
+        $Server = QUI\REST\Server::getCurrentInstance();
+        $Server->getSlim()->add(new QUI\OAuth\Middleware\RestMiddleware());
+    }
 }

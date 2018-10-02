@@ -109,7 +109,7 @@ define('package/quiqqer/oauth-server/bin/backend/controls/ScopeSettings', [
                         'class'     : 'quiqqer-oauth-server-scopesettings-scope',
                         'data-scope': scope,
                         html        : Mustache.render(templateRow, {
-                            scope                     : '/' + scope,
+                            scope                     : scope,
                             labelUnlimitedCalls       : labelUnlimitedCalls,
                             labelMaxCalls             : labelMaxCalls,
                             labelMaxCallsType         : labelMaxCallsType,
@@ -137,10 +137,19 @@ define('package/quiqqer/oauth-server/bin/backend/controls/ScopeSettings', [
 
                     var settings = self.$Settings[scope];
 
-                    Row.getElement('input[name="active"]').checked      = settings.active;
-                    UnlimitedCheckbox.checked                           = settings.unlimitedCalls;
-                    Row.getElement('input[name="maxCalls"]').value      = settings.maxCalls;
-                    Row.getElement('select[name="maxCallsType"]').value = settings.maxCallsType;
+                    Row.getElement('input[name="active"]').checked = settings.active;
+                    UnlimitedCheckbox.checked                      = settings.unlimitedCalls;
+
+                    var MaxCallsInput     = Row.getElement('input[name="maxCalls"]'),
+                        MaxCallsTypeInput = Row.getElement('select[name="maxCallsType"]');
+
+                    MaxCallsInput.value     = settings.maxCalls;
+                    MaxCallsTypeInput.value = settings.maxCallsType;
+
+                    if (!UnlimitedCheckbox.checked) {
+                        MaxCallsInput.disabled     = false;
+                        MaxCallsTypeInput.disabled = false;
+                    }
                 }
 
                 self.Loader.hide();

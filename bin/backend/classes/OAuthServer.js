@@ -41,16 +41,16 @@ define('package/quiqqer/oauth-server/bin/backend/classes/OAuthServer', [
         /**
          * Update an OAuth2 client
          *
-         * @param {Number} userId
+         * @param {Number} clientId
          * @param {Object} Data
          *
          * @return {Promise}
          */
-        updateClient: function (userId, Data) {
+        updateClient: function (clientId, Data) {
             return new Promise(function (resolve, reject) {
                 QUIAjax.post('package_quiqqer_oauth-server_ajax_client_update', resolve, {
                     'package': pkg,
-                    userId   : userId,
+                    clientId : clientId,
                     data     : JSON.encode(Data),
                     onError  : reject
                 });
