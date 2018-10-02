@@ -73,7 +73,5 @@ class RestMiddleware
         /** @var ResourceController $ResourceContoller */
         $ResourceContoller = $OAuth2Server->getResourceController();
         $ResourceContoller->verify($endpoint, OAuth2\Request::createFromGlobals());
-
-
     }
 }

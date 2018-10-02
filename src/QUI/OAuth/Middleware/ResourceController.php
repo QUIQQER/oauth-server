@@ -53,7 +53,6 @@ class ResourceController extends \OAuth2\Controller\ResourceController
      */
     protected function verifyEndpointPermission($clientData, $endpoint, RequestInterface $Request)
     {
-        
     }
 
     /**
@@ -66,7 +65,6 @@ class ResourceController extends \OAuth2\Controller\ResourceController
      */
     protected function verifyAccessLimit($clientData, $endpoint, RequestInterface $Request)
     {
-
     }
 
     /**

@@ -27,7 +27,8 @@ class InvalidRequestException extends Exception
      *
      * @return string
      */
-    public function getErrorDescription() {
+    public function getErrorDescription()
+    {
         return $this->errorDescription;
     }
 }
