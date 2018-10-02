@@ -167,7 +167,7 @@ class Handler
     public static function getOAuthClientByAccessToken($accessToken)
     {
         $result = QUI::getDataBase()->fetch([
-            'select' => ['clientId'],
+            'select' => ['client_id'],
             'from'   => QUI\OAuth\Setup::getTable('oauth_access_tokens'),
             'where'  => [
                 'access_token' => $accessToken

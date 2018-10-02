@@ -35,6 +35,7 @@ class Setup
             case 'oauth_jti':
             case 'oauth_scopes':
             case 'oauth_public_keys':
+            case 'oauth_access_limits':
                 return QUI::getDBTableName($table);
                 break;
         }

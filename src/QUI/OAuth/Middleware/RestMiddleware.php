@@ -64,9 +64,9 @@ class RestMiddleware
         }
 
 //        // @todo gefährlich? Wird zB für getOAuthClient permission benötigt
-//        if (!defined('SYSTEM_INTERN')) {
-//            define('SYSTEM_INTERN', 1);
-//        }
+        if (!defined('SYSTEM_INTERN')) {
+            define('SYSTEM_INTERN', 1);
+        }
 
         // Verfiy resource request
         $OAuth2Server = QUI\OAuth\Server::getInstance()->getOAuth2Server();

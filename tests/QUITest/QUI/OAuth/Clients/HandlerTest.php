@@ -15,9 +15,9 @@ class HandlerTest extends \PHPUnit\Framework\TestCase
         $oauthClientId = QUI\OAuth\Clients\Handler::createOAuthClient($SystemUser, [
             '/projects/{project}/{lang}/{id}' => [
                 'active'         => true,
-                'maxCalls'       => 0,
-                'maxCallsType'   => 'absolute',
-                'unlimitedCalls' => true
+                'maxCalls'       => 2,
+                'maxCallsType'   => 'minute',
+                'unlimitedCalls' => false
             ]
         ]);
 

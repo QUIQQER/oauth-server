@@ -118,12 +118,12 @@
             <en><![CDATA[per day]]></en>
         </locale>
         <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionMonth">
-            <de><![CDATA[pro Monat]]></de>
-            <en><![CDATA[per month]]></en>
+            <de><![CDATA[pro Monat (30 Tage)]]></de>
+            <en><![CDATA[per month (30 days)]]></en>
         </locale>
         <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionYear">
-            <de><![CDATA[pro Jahr]]></de>
-            <en><![CDATA[per year]]></en>
+            <de><![CDATA[pro Jahr (365 Tage)]]></de>
+            <en><![CDATA[per year (365 days)]]></en>
         </locale>
 
         <!-- Controls: backend/controls/UserClient -->
