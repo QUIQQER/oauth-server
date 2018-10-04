@@ -7,9 +7,9 @@
  */
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_list',
-    function () {
+    function ($userId) {
         $list = QUI\OAuth\Clients\Handler::getOAuthClientsByUser(
-            QUI::getUserBySession()
+            QUI::getUsers()->get((int)$userId)
         );
 
         foreach ($list as $key => $entry) {
@@ -19,5 +19,7 @@ QUI::$Ajax->registerFunction(
         }
 
         return $list;
-    }
+    },
+    ['userId'],
+    'Permission::checkAdminUser'
 );

@@ -75,6 +75,17 @@ class Handler
             ]
         );
 
+        // Insert default access limit data for all active scopes
+        foreach ($activeScopes as $scope) {
+            QUI::getDataBase()->insert(
+                QUI\OAuth\Setup::getTable('oauth_access_limits'),
+                [
+                    'client_id' => $clientId,
+                    'scope'     => $scope
+                ]
+            );
+        }
+
         return $clientId;
     }
 
@@ -215,12 +226,19 @@ class Handler
             $update['name'] = $data['title'];
         }
 
+        $activeScopes = [];
+
         if (!empty($data['scope_restrictions']) && is_array($data['scope_restrictions'])) {
             $availableScopes = QUI\REST\Server::getInstance()->getEntryPoints();
 
             foreach ($data['scope_restrictions'] as $scope => $settings) {
                 if (!in_array($scope, $availableScopes)) {
                     unset($data['scope_restrictions'][$scope]);
+                    continue;
+                }
+
+                if ($settings['active']) {
+                    $activeScopes[] = $scope;
                 }
             }
 
@@ -234,6 +252,30 @@ class Handler
                 'client_id' => $clientId
             ]
         );
+
+        // Write limit data for all active scopes to database
+        $PDO   = QUI::getDataBase()->getPDO();
+        $table = QUI\OAuth\Setup::getTable('oauth_access_limits');
+
+        foreach ($activeScopes as $scope) {
+            try {
+                $Statement = $PDO->prepare(
+                    'INSERT INTO `'.$table.'` (`client_id`, `scope`)'
+                    .' SELECT '.$PDO->quote($clientId).', '.$PDO->quote($scope)
+                    .' FROM DUAL'
+                    .' WHERE NOT EXISTS ('
+                    .'   SELECT 1 FROM `'.$table.'`'
+                    .'   WHERE `client_id` ='.$PDO->quote($clientId)
+                    .'   AND `scope` ='.$PDO->quote($scope)
+                    .')'
+                    .' LIMIT 1'
+                );
+
+                $Statement->execute();
+            } catch (\PDOException $Exception) {
+                QUI\System\Log::writeException($Exception);
+            }
+        }
     }
 
     /**
@@ -281,10 +323,111 @@ class Handler
     {
         QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
 
-        QUI::getDataBase()->delete(QUI\OAuth\Setup::getTable('oauth_clients'), [
+        $DB = QUI::getDataBase();
+
+        foreach (QUI\OAuth\Setup::getClientTables() as $table) {
+            $DB->delete($table, ['client_id' => $clientId]);
+        }
+    }
+
+    /**
+     * Get current access limit information for an OAuth client
+     *
+     * @param string $clientId
+     * @param string $scope (optional) - Restrict results to a specific scope
+     * @return array
+     * @throws \QUI\Permissions\Exception
+     * @throws \QUI\Exception
+     */
+    public static function getClientLimits(string $clientId, string $scope = null)
+    {
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+
+        $clientData       = self::getOAuthClient($clientId);
+        $scopRestrictions = json_decode($clientData['scope_restrictions'], true);
+
+        $limits = [];
+        $where  = [
             'client_id' => $clientId
+        ];
+
+        if (!is_null($scope)) {
+            $where['scope'] = $scope;
+        }
+
+        $result = QUI::getDataBase()->fetch([
+            'select' => ['scope', 'total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage'],
+            'from'   => QUI::getDBTableName('oauth_access_limits'),
+            'where'  => $where
         ]);
 
-        // @todo Token löschen und alles andere, was mit der client_ID zusammenhängt
+        foreach ($result as $row) {
+            $scope = $row['scope'];
+            unset($row['scope']);
+
+            $row['queryLimitReached'] = false;
+
+            if (isset($scopRestrictions[$scope])) {
+                if ($scopRestrictions[$scope]['maxCallsType'] !== 'absolute') {
+                    $row['queryLimitReached'] = (int)$row['interval_usage_count'] >= (int)$scopRestrictions[$scope]['maxCalls'];
+                }
+            }
+
+            $limits[$scope] = $row;
+        }
+
+        return $limits;
+    }
+
+    /**
+     * Reset access limits for an OAuth client
+     *
+     * @param string $clientId
+     * @param string $scope (optional) - Restrict reset to a specific scope
+     * @return void
+     * @throws \QUI\OAuth\Exception
+     * @throws \QUI\Permissions\Exception
+     * @throws \QUI\Exception
+     */
+    public static function resetClientLimits(string $clientId, string $scope = null)
+    {
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+
+        $table = QUI\OAuth\Setup::getTable('oauth_access_limits');
+
+        // Check if DB entry for scope exists
+        if (!is_null($scope)) {
+            $result = QUI::getDataBase()->fetch([
+                'select' => 1,
+                'from'   => $table,
+                'where'  => [
+                    'client_id' => $clientId,
+                    'scope'     => $scope
+                ]
+            ]);
+
+            if (empty($result)) {
+                throw new QUI\OAuth\Exception(
+                    QUI::getLocale()->get(
+                        'quiqqer/oauth-server',
+                        'exception.Handler.resetClientLimits.scope_not_found'
+                    )
+                );
+            }
+        }
+
+        $where = [
+            'client_id' => $clientId
+        ];
+
+        if (!is_null($scope)) {
+            $where['scope'] = $scope;
+        }
+
+        QUI::getDataBase()->update($table, [
+            'interval_usage_count' => 0,
+            'first_usage'          => 0,
+            'last_usage'           => 0
+        ], $where);
     }
 }

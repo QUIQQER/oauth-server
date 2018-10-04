@@ -30,17 +30,31 @@ class Setup
             case 'oauth_access_tokens':
             case 'oauth_refresh_tokens':
             case 'oauth_authorization_codes':
-            case 'oauth_users':
             case 'oauth_jwt':
-            case 'oauth_jti':
             case 'oauth_scopes':
-            case 'oauth_public_keys':
             case 'oauth_access_limits':
                 return QUI::getDBTableName($table);
                 break;
         }
 
         throw new QUI\Exception('unknown table');
+    }
+
+    /**
+     * Get all tables with a reference to a specific OAuth client
+     *
+     * @return array
+     */
+    public static function getClientTables()
+    {
+        return [
+            QUI::getDBTableName('oauth_clients'),
+            QUI::getDBTableName('oauth_access_tokens'),
+            QUI::getDBTableName('oauth_refresh_tokens'),
+            QUI::getDBTableName('oauth_authorization_codes'),
+            QUI::getDBTableName('oauth_jwt'),
+            QUI::getDBTableName('oauth_access_limits')
+        ];
     }
 
     /**

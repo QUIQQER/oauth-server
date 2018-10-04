@@ -32,6 +32,12 @@
 
     <groups name="quiqqer/oauth-server" datatype="php">
 
+        <!-- Labels -->
+        <locale name="label.never">
+            <de><![CDATA[niemals]]></de>
+            <en><![CDATA[never]]></en>
+        </locale>
+
         <!-- Settings -->
         <locale name="settings.active.text">
             <de><![CDATA[OAuth2 Status]]></de>
@@ -49,7 +55,50 @@
             <de><![CDATA[Token Lebenszeit (in Sekunden)]]></de>
             <en><![CDATA[Token Lifetime (in seconds)]]></en>
         </locale>
-        
+
+        <locale name="exception.Handler.resetClientLimits.scope_not_found">
+            <de><![CDATA[Für diesen Einstiegspunkt wurde keine Limit-Daten gefunden.]]></de>
+            <en><![CDATA[No limit data was found for this entry point.]]></en>
+        </locale>
+
+        <!-- Messages -->
+        <locale name="message.ajax.general_error">
+            <de><![CDATA[Bei der Durchführung des Vorgangs ist ein unerwarteter Fehler aufgetreten. Bitte wenden Sie sich an einen Administrator oder überprüfen sie die Fehler-Logs.]]></de>
+            <en><![CDATA[An unexpected error occurred while performing the operation. Please contact an administrator or check the error logs.]]></en>
+        </locale>
+        <locale name="message.ajax.client.resetLimits.error" html="true">
+            <de><![CDATA[Die Abfragen konnten nicht zurückgesetzt werden:<br/><br/>[error]]]></de>
+            <en><![CDATA[The usages could not be reset:<br/><br/>[error]]]></en>
+        </locale>
+        <locale name="message.ajax.client.resetLimits.success" html="true">
+            <de><![CDATA[Die Abfragen für OAuth-Client <b>[clientId]</b> für den Einstiegspunkt <b>[scope]</b> wurden erfolgreich zurückgesetzt.]]></de>
+            <en><![CDATA[The usages for OAuth client <b>[clientId]</b> for scope <b>[scope]</b> have been successfully reset.]]></en>
+        </locale>
+        <locale name="message.ajax.client.remove.error" html="true">
+            <de><![CDATA[Der OAuth-Client konnte nicht gelöscht werden:<br/><br/>[error]]]></de>
+            <en><![CDATA[The OAuth client could not be deleted:<br/><br/>[error]]]></en>
+        </locale>
+        <locale name="message.ajax.client.remove.success" html="true">
+            <de><![CDATA[Der OAuth-Client <b>[clientId]</b> wurde erfolgreich gelöscht.]]></de>
+            <en><![CDATA[The OAuth client <b>[clientId]</b> has been deleted successfully.]]></en>
+        </locale>
+        <locale name="message.ajax.client.create.error" html="true">
+            <de><![CDATA[Der OAuth-Client konnte nicht erstellt werden:<br/><br/>[error]]]></de>
+            <en><![CDATA[The OAuth client could not be created:<br/><br/>[error]]]></en>
+        </locale>
+        <locale name="message.ajax.client.create.success" html="true">
+            <de><![CDATA[Der OAuth-Client <b>[clientId]</b> wurde erfolgreich erstellt.]]></de>
+            <en><![CDATA[The OAuth client <b>[clientId]</b> has been created successfully.]]></en>
+        </locale>
+        <locale name="message.ajax.client.update.error" html="true">
+            <de><![CDATA[Der OAuth-Client konnte nicht aktualisiert werden:<br/><br/>[error]]]></de>
+            <en><![CDATA[The OAuth client could not be updated:<br/><br/>[error]]]></en>
+        </locale>
+        <locale name="message.ajax.client.update.success" html="true">
+            <de><![CDATA[Der OAuth-Client <b>[clientId]</b> wurde erfolgreich aktualisiert.]]></de>
+            <en><![CDATA[The OAuth client <b>[clientId]</b> has been updated successfully.]]></en>
+        </locale>
+
     </groups>
 
     <groups name="quiqqer/oauth-server" datatype="js,php">
@@ -77,10 +126,6 @@
     <groups name="quiqqer/oauth-server" datatype="js">
 
         <!-- Controls: backend/controls/ScopeSettings -->
-        <locale name="controls.backend.ScopeSettings.template.headerActive">
-            <de><![CDATA[Aktiv]]></de>
-            <en><![CDATA[Active]]></en>
-        </locale>
         <locale name="controls.backend.ScopeSettings.template.headerCalls">
             <de><![CDATA[Aufrufe]]></de>
             <en><![CDATA[Calls]]></en>
@@ -93,17 +138,21 @@
             <de><![CDATA[Unbegrenzt]]></de>
             <en><![CDATA[Unlimited]]></en>
         </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelActive">
+            <de><![CDATA[aktiv]]></de>
+            <en><![CDATA[active]]></en>
+        </locale>
         <locale name="controls.backend.ScopeSettings.template.labelMaxCalls">
             <de><![CDATA[Max. Anzahl Aufrufe]]></de>
             <en><![CDATA[Max. number of calls]]></en>
         </locale>
         <locale name="controls.backend.ScopeSettings.template.labelMaxCallsType">
-            <de><![CDATA[Zeitrahmen]]></de>
-            <en><![CDATA[Time frame]]></en>
+            <de><![CDATA[Intervall]]></de>
+            <en><![CDATA[Interval]]></en>
         </locale>
         <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionAbsolute">
-            <de><![CDATA[absolut]]></de>
-            <en><![CDATA[absolute]]></en>
+            <de><![CDATA[insgesamt]]></de>
+            <en><![CDATA[total]]></en>
         </locale>
         <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionMinute">
             <de><![CDATA[pro Minute]]></de>
@@ -124,6 +173,38 @@
         <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionYear">
             <de><![CDATA[pro Jahr (365 Tage)]]></de>
             <en><![CDATA[per year (365 days)]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelTotalUsageCount">
+            <de><![CDATA[Abfragen (insgesamt)]]></de>
+            <en><![CDATA[Usage count (total)]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelIntervalUsageCount">
+            <de><![CDATA[Abfragen (Intervall)]]></de>
+            <en><![CDATA[Usage count (interval)]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelReset">
+            <de><![CDATA[Abfragen zurücksetzen]]></de>
+            <en><![CDATA[Reset usage count]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelFirstUsage">
+            <de><![CDATA[Erste Abfrage (Intervall)]]></de>
+            <en><![CDATA[First usage (interval)]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelLastUsage">
+            <de><![CDATA[Letzte Abfrage (Intervall)]]></de>
+            <en><![CDATA[Last usage (interval)]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.limitReached">
+            <de><![CDATA[(Abfrage-Limit erreicht!)]]></de>
+            <en><![CDATA[(Query limit reached!)]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.reset.title">
+            <de><![CDATA[Abfragen zurücksetzen]]></de>
+            <en><![CDATA[Reset usage count]]></en>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.reset.text" html="true">
+            <de><![CDATA[Sind Sie sicher, dass Sie die Abfragen des OAuth-Clients <b>[clientId]</b> für den Einstiegspunkt <b>[scope]</b> zurücksetzen wollen?<br/><br/>Dadurch wird der Client so zurückgesetzt, als hätte er noch keine API-Abfragen für diesen Einstiegspunkt <b>im konfigurierten Intervall</b> durchgeführt.]]></de>
+            <en><![CDATA[Are you sure you want to reset the usage of the OAuth client <b>[clientId]</b> for the entry point <b>[scope]</b>?<br/><br/>This will reset the client as if it hadn't done any API queries <b>in the configured interval</b> for that entry point yet.]]></en>
         </locale>
 
         <!-- Controls: backend/controls/UserClient -->

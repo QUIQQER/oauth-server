@@ -1,8 +1,8 @@
 <td><b>{{scope}}</b></td>
-<td>
-    <input type="checkbox" name="active"/>
+<td class="quiqqer-oauth-server-scopesettings-table-active">
+    <span>{{labelActive}}</span>
 </td>
-<td>
+<td class="quiqqer-oauth-server-scopesettings-table-limits">
     <label>
         <span>{{labelMaxCalls}}</span>
         <input type="number" name="maxCalls" disabled/>
@@ -20,8 +20,7 @@
         </select>
     </label>
 
-    <label>
+    <label class="quiqqer-oauth-server-scopesettings-table-unlimited">
         <span>{{labelUnlimitedCalls}}</span>
-        <input type="checkbox" name="unlimitedCalls"/>
     </label>
 </td>

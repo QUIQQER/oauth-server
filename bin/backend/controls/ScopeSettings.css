@@ -3,6 +3,10 @@
     width: 100%;
 }
 
+.quiqqer-oauth-server-scopesettings-table-active {
+    min-width: 65px;
+}
+
 .quiqqer-oauth-server-scopesettings-table thead {
     background-color: #dedede;
 }
@@ -17,4 +21,70 @@
 
 .quiqqer-oauth-server-scopesettings-table input[name="unlimitedCalls"] {
     float: left;
+}
+
+.quiqqer-oauth-server-scopesettings-scope label {
+    width: auto !important;
+}
+
+.quiqqer-oauth-server-scopesettings-scope label:not(:first-of-type) {
+    margin-left: 30px;
+}
+
+.quiqqer-oauth-server-scopesettings-scope label input,
+.quiqqer-oauth-server-scopesettings-scope label select {
+    clear: both;
+    display: block;
+}
+
+.quiqqer-oauth-server-scopesettings-scope label input[type="checkbox"] {
+    float: left;
+}
+
+.quiqqer-oauth-server-scopesettings-table-unlimited > span,
+.quiqqer-oauth-server-scopesettings-table-active > span {
+    clear: both;
+    display: block;
+    margin-bottom: 5px;
+}
+
+/***
+ * Limits
+ */
+.quiqqer-oauth-server-scopesettings-limits {
+    border-top: 1px solid #dedede;
+    float: left;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.quiqqer-oauth-server-scopesettings-limits-box {
+    float: left;
+    width: 100%;
+}
+
+.quiqqer-oauth-server-scopesettings-limits-box ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.quiqqer-oauth-server-scopesettings-limits-box-label {
+    display: inline-block;
+    font-weight: bold;
+    width: 175px;
+}
+
+.quiqqer-oauth-server-scopesettings-limits-reset {
+    cursor: pointer;
+    float: right;
+}
+
+.quiqqer-oauth-server-scopesettings-limits-reset:hover {
+    font-weight: bold;
+}
+
+.quiqqer-oauth-server-scopesettings-limits-box-limitReached {
+    color: red;
+    font-weight: bold;
+    margin-left: 5px;
 }

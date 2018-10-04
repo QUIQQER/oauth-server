@@ -38,6 +38,8 @@ class HandlerTest extends \PHPUnit\Framework\TestCase
         $result = shell_exec($curl);
         $result = json_decode($result, true);
 
+        \QUI\System\Log::writeRecursive($result);
+
         $this->assertArrayHasKey('access_token', $result);
 
         if ($result['access_token']) {

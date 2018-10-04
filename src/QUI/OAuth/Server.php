@@ -24,6 +24,8 @@ class Server extends QUI\Utils\Singleton
 
     /**
      * Server constructor.
+     *
+     * @throws \QUI\Exception
      */
     public function __construct()
     {

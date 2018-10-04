@@ -16,10 +16,45 @@ QUI::$Ajax->registerFunction(
             $title = Orthos::clear($title);
         }
 
-        OAuthClientsHandler::createOAuthClient(
-            QUI::getUsers()->get((int)$userId),
-            Orthos::clearArray(json_decode($scopeSettings, true)),
-            $title
+        try {
+            $newClientId = OAuthClientsHandler::createOAuthClient(
+                QUI::getUsers()->get((int)$userId),
+                Orthos::clearArray(json_decode($scopeSettings, true)),
+                $title
+            );
+        } catch (QUI\OAuth\Exception $Exception) {
+            QUI::getMessagesHandler()->addError(
+                QUI::getLocale()->get(
+                    'quiqqer/oauth-server',
+                    'message.ajax.client.create.error',
+                    [
+                        'error' => $Exception->getMessage()
+                    ]
+                )
+            );
+
+            return;
+        } catch (\Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+
+            QUI::getMessagesHandler()->addError(
+                QUI::getLocale()->get(
+                    'quiqqer/oauth-server',
+                    'message.ajax.general_error'
+                )
+            );
+
+            return;
+        }
+
+        QUI::getMessagesHandler()->addSuccess(
+            QUI::getLocale()->get(
+                'quiqqer/oauth-server',
+                'message.ajax.client.create.success',
+                [
+                    'clientId' => $newClientId
+                ]
+            )
         );
     },
     ['userId', 'scopeSettings', 'title'],

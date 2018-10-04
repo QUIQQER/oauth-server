@@ -49,7 +49,7 @@ class RestMiddleware
 
             throw new InvalidRequestException(
                 'system_error',
-                'System error. Please contect an administrator.',
+                'System error. Please contact an administrator.',
                 500
             );
         }

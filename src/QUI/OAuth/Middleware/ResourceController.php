@@ -37,7 +37,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
 
             throw new InvalidRequestException(
                 'system_error',
-                'System error. Please contect an administrator.',
+                'System error. Please contact an administrator.',
                 500
             );
         }
@@ -52,7 +52,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
     }
 
     /**
-     * Check if the current request is allowed to access the requested endpoint
+     * Check if the current request is allowed to access the requested endpoint (scope)
      *
      * @param array $clientData - OAuth Client data
      * @param string $scope
@@ -97,28 +97,24 @@ class ResourceController extends \OAuth2\Controller\ResourceController
             'where'  => [
                 'client_id' => $clientData['client_id'],
                 'scope'     => $scope
-            ]
+            ],
+            'limit'  => 1
         ]);
 
+        if (empty($result)) {
+            $this->throwInvalidScopeException();
+        }
+
         $now                = time();
-        $insert             = true;
+        $data               = current($result);
         $writeToDatabase    = false;
-        $totalUsageCount    = 0;
-        $intervalUsageCount = 0;
-        $firstUsage         = $now;
-        $lastUsage          = $now;
+        $firstUsage         = $data['first_usage'];
+        $lastUsage          = $data['last_usage'];
+        $totalUsageCount    = $data['total_usage_count'];
+        $intervalUsageCount = $data['interval_usage_count'];
         $maxCalls           = $scopeSettings['maxCalls'];
         $maxCallsType       = $scopeSettings['maxCallsType'];
         $maxCallsExceeded   = false;
-
-        if (!empty($result)) {
-            $data = current($result);
-
-            $totalUsageCount    = $data['total_usage_count'];
-            $intervalUsageCount = $data['interval_usage_count'];
-            $lastUsage          = $data['last_usage'];
-            $insert             = false;
-        }
 
         // absolute call count restriction
         $totalUsageCount++;
@@ -166,32 +162,21 @@ class ResourceController extends \OAuth2\Controller\ResourceController
         }
 
         if ($writeToDatabase) {
-            if ($insert) {
-                QUI::getDataBase()->insert($table, [
-                    'client_id'            => $clientData['client_id'],
-                    'scope'                => $scope,
-                    'total_usage_count'    => $totalUsageCount,
-                    'interval_usage_count' => $intervalUsageCount,
-                    'first_usage'          => $firstUsage,
-                    'last_usage'           => $lastUsage
-                ]);
-            } else {
-                QUI::getDataBase()->update($table, [
-                    'total_usage_count'    => $totalUsageCount,
-                    'interval_usage_count' => $intervalUsageCount,
-                    'first_usage'          => $firstUsage,
-                    'last_usage'           => $lastUsage
-                ], [
-                    'client_id' => $clientData['client_id'],
-                    'scope'     => $scope
-                ]);
-            }
+            QUI::getDataBase()->update($table, [
+                'total_usage_count'    => $totalUsageCount,
+                'interval_usage_count' => $intervalUsageCount,
+                'first_usage'          => $firstUsage,
+                'last_usage'           => $lastUsage
+            ], [
+                'client_id' => $clientData['client_id'],
+                'scope'     => $scope
+            ]);
         }
 
         if ($maxCallsExceeded) {
             throw new InvalidRequestException(
                 'query_limit_reached',
-                'You have exceeded the maximum number of calls per time interval.',
+                'You have exceeded the maximum number of calls ('.$maxCalls.') per time interval ('.$maxCallsType.').',
                 403
             );
         }

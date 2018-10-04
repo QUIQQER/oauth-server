@@ -1,28 +1,25 @@
 <?php
 
-use QUI\Utils\Security\Orthos;
+use QUI\OAuth\Clients\Handler as ClientsHandler;
 
 /**
- * Edit an Oauth2 client
+ * Reset usage limits for an OAuth client for a specific scope
  *
  * @param int $clientId
- * @param array $data
- * @return void
+ * @param string $scope
+ * @return array
  * @throws \QUI\Exception
  */
 QUI::$Ajax->registerFunction(
-    'package_quiqqer_oauth-server_ajax_client_update',
-    function ($clientId, $data) {
+    'package_quiqqer_oauth-server_ajax_client_resetLimits',
+    function ($clientId, $scope) {
         try {
-            QUI\OAuth\Clients\Handler::updateOAuthClient(
-                $clientId,
-                Orthos::clearArray(json_decode($data, true))
-            );
+            ClientsHandler::resetClientLimits($clientId, $scope);
         } catch (QUI\OAuth\Exception $Exception) {
             QUI::getMessagesHandler()->addError(
                 QUI::getLocale()->get(
                     'quiqqer/oauth-server',
-                    'message.ajax.client.update.error',
+                    'message.ajax.client.resetLimits.error',
                     [
                         'error' => $Exception->getMessage()
                     ]
@@ -46,13 +43,14 @@ QUI::$Ajax->registerFunction(
         QUI::getMessagesHandler()->addSuccess(
             QUI::getLocale()->get(
                 'quiqqer/oauth-server',
-                'message.ajax.client.update.success',
+                'message.ajax.client.resetLimits.success',
                 [
-                    'clientId' => $clientId
+                    'clientId' => $clientId,
+                    'scope'    => $scope
                 ]
             )
         );
     },
-    ['clientId', 'data'],
+    ['clientId', 'scope'],
     'Permission::checkAdminUser'
 );

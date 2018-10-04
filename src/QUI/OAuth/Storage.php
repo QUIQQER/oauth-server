@@ -33,9 +33,9 @@ class Storage extends OAuth2\Storage\Pdo
                 'code_table'          => Setup::getTable('oauth_authorization_codes'),
                 'user_table'          => QUI::getUsers()->table(),
                 'jwt_table'           => Setup::getTable('oauth_jwt'),
-                'jti_table'           => Setup::getTable('oauth_jti'),
+//                'jti_table'           => Setup::getTable('oauth_jti'),
                 'scope_table'         => Setup::getTable('oauth_scopes'),
-                'public_key_table'    => Setup::getTable('oauth_public_keys')
+//                'public_key_table'    => Setup::getTable('oauth_public_keys')
             ];
         } catch (\Exception $Exception) {
             QUI\System\Log::writeException($Exception);

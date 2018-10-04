@@ -11,22 +11,21 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
     'qui/controls/windows/Confirm',
     'qui/controls/windows/Popup',
     'qui/controls/buttons/Button',
+    'qui/controls/loader/Loader',
 
     'package/quiqqer/oauth-server/bin/backend/controls/ScopeSettings',
     'package/quiqqer/oauth-server/bin/backend/OAuthServer',
 
     'controls/grid/Grid',
-    'Ajax',
     'Locale',
     'Mustache',
 
-    'text!package/quiqqer/oauth-server/bin/backend/controls/UserClients.Client.html',
     'text!package/quiqqer/oauth-server/bin/backend/controls/UserClients.Create.html',
     'text!package/quiqqer/oauth-server/bin/backend/controls/UserClients.Edit.html',
     'css!package/quiqqer/oauth-server/bin/backend/controls/UserClients.css'
 
-], function (QUI, QUIControl, QUIConfirm, QUIPoup, QUIButton, ScopeSettings, OAuthServer, Grid, QUIAjax,
-             QUILocale, Mustache, templateClient, templateCreate, templateEdit) {
+], function (QUI, QUIControl, QUIConfirm, QUIPoup, QUIButton, QUILoader, ScopeSettings, OAuthServer, Grid,
+             QUILocale, Mustache, templateCreate, templateEdit) {
     "use strict";
 
     var lg = 'quiqqer/oauth-server';
@@ -40,7 +39,8 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
             'refresh',
             'createClient',
             'openDeleteDialog',
-            'editClient'
+            'editClient',
+            '$getUser'
         ],
 
         options: {
@@ -50,7 +50,9 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
         initialize: function (options) {
             this.parent(options);
 
-            this.$Grid = null;
+            this.$Grid  = null;
+            this.Loader = new QUILoader();
+            this.$User  = null;
 
             this.addEvents({
                 onInject: this.$onInject
@@ -127,20 +129,20 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                 onRefresh : this.refresh,
                 onClick   : function () {
                     var selected = self.$Grid.getSelectedIndices(),
+                        TableButtons = self.$Grid.getAttribute('buttons');
 
-                        Edit     = self.$Grid.getButtons().filter(function (Btn) {
-                            return Btn.getAttribute('name') == 'edit';
-                        })[0],
-
-                        Delete   = self.$Grid.getButtons().filter(function (Btn) {
-                            return Btn.getAttribute('name') == 'delete';
-                        })[0];
-
-                    Edit.enable();
-                    Delete.enable();
+                    if (selected.length === 1) {
+                        TableButtons.edit.enable();
+                        TableButtons.delete.enable();
+                    } else {
+                        TableButtons.edit.disable();
+                        TableButtons.delete.disable();
+                    }
                 },
                 onDblClick: this.editClient
             });
+
+            this.Loader.inject(Elm);
 
             this.refresh();
         },
@@ -152,16 +154,43 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
          */
         refresh: function () {
             var self = this;
-            return new Promise(function (resolve) {
-                QUIAjax.get('package_quiqqer_oauth-server_ajax_client_list', function (result) {
-                    self.$Grid.setData({
-                        data: result
-                    });
 
-                    resolve();
-                }, {
-                    'package': 'quiqqer/oauth-server'
+            this.Loader.show();
+
+            return this.$getUser().then(function (User) {
+                return OAuthServer.getClientList(User.getId());
+            }).then(function (result) {
+                self.$Grid.setData({
+                    data: result
                 });
+
+                self.Loader.hide();
+            });
+        },
+
+        /**
+         * Get User
+         *
+         * @return {Promise}
+         */
+        $getUser: function () {
+            var self = this;
+
+            if (this.$User) {
+                return Promise.resolve(this.$User);
+            }
+
+            return new Promise(function (resolve) {
+                var waitForUser = setInterval(function () {
+                    if (!self.getAttribute('User')) {
+                        return;
+                    }
+
+                    clearInterval(waitForUser);
+
+                    self.$User = self.getAttribute('User');
+                    resolve(self.$User);
+                }, 200);
             });
         },
 
@@ -174,7 +203,7 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
             var self = this;
             var ScopeSettingsControl;
 
-            return new Promise(function (resolve, reject) {
+            return new Promise(function (resolve) {
                 var Popup = new QUIPoup({
                     icon           : 'fa fa-plus',
                     title          : QUILocale.get(
@@ -200,11 +229,14 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                                     onLoaded: function (Control) {
                                         Control.getElm().addClass('field-container-field');
                                         Popup.Loader.hide();
+                                        self.refresh();
                                     }
                                 }
                             }).inject(
                                 Content.getElement('.scope-settings')
                             );
+
+                            Content.getElement('input[name="name"]').focus();
                         },
                         onClose: function () {
                             resolve();
@@ -222,54 +254,21 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                         onClick: function () {
                             var Content = Popup.getContent();
 
+                            Popup.Loader.show();
+
                             OAuthServer.createClient(
                                 self.getAttribute('User').getId(),
                                 ScopeSettingsControl.getSettings(),
                                 Content.getElement('input[name="name"]').value
                             ).then(function () {
                                 Popup.close();
+                                self.refresh();
+                            }, function () {
+                                Popup.Loader.hide();
                             });
                         }
                     }
                 }));
-            });
-        },
-
-        /**
-         * Delete a client
-         *
-         * @param {String} clientId - ID of the client
-         * @returns {Promise}
-         */
-        deleteClient: function (clientId) {
-            var self = this;
-
-            return new Promise(function (resolve) {
-                QUIAjax.post('package_quiqqer_oauth-server_ajax_client_remove', function (result) {
-                    self.refresh();
-                    resolve(result);
-                }, {
-                    'package': 'quiqqer/oauth-server',
-                    clientId : clientId
-                });
-            });
-        },
-
-        /**
-         * Delete a Client
-         *
-         * @param {String} clientId - ID of the client
-         * @param {Object} data - New data for the client
-         * @returns {Promise}
-         */
-        updateClient: function (clientId, data) {
-            return new Promise(function (resolve, reject) {
-                QUIAjax.post('package_quiqqer_oauth-server_ajax_client_update', resolve, {
-                    'package': 'quiqqer/oauth-server',
-                    clientId : clientId,
-                    data     : JSON.encode(data),
-                    onError  : reject
-                });
             });
         },
 
@@ -285,28 +284,28 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                 data = this.$Grid.getSelectedData()[0];
 
             new QUIConfirm({
-                title    : QUILocale.get(lg, 'control.user.clients.window.delete.title'),
-                icon     : 'fa fa-trash',
-                maxWidth : 600,
-                maxHeight: 400,
-                autoclose: false,
-                events   : {
-                    onOpen: function (Win) {
-                        var Content = Win.getContent();
-
-                        Content.set('html', QUILocale.get(lg, 'control.user.clients.window.delete.text', {
-                            name    : data.name,
-                            clientId: data.client_id
-                        }));
-                    },
-
+                title      : QUILocale.get(lg, 'control.user.clients.window.delete.title'),
+                text       : QUILocale.get(lg, 'control.user.clients.window.delete.title'),
+                information: QUILocale.get(lg, 'control.user.clients.window.delete.text', {
+                    name    : data.name,
+                    clientId: data.client_id
+                }),
+                icon       : 'fa fa-trash',
+                texticon   : 'fa fa-trash',
+                maxWidth   : 600,
+                maxHeight  : 400,
+                autoclose  : false,
+                events     : {
                     onSubmit: function (Win) {
                         Win.Loader.show();
 
-                        self.deleteClient(data.client_id).then(function () {
+                        OAuthServer.deleteClient(data.client_id).then(function () {
                             return self.refresh();
                         }).then(function () {
                             Win.close();
+                            self.refresh();
+                        }, function () {
+                            Win.Loader.hide();
                         });
                     }
                 }
@@ -320,8 +319,6 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
             var ScopeSettingsControl;
             var self = this,
                 data = this.$Grid.getSelectedData()[0];
-
-            console.log(data);
 
             new QUIConfirm({
                 title    : QUILocale.get(lg, 'control.user.clients.window.edit.title', {
@@ -353,6 +350,7 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                             }));
 
                             ScopeSettingsControl = new ScopeSettings({
+                                clientId: data.client_id,
                                 settings: clientData.scope_restrictions,
                                 events  : {
                                     onLoaded: function (Control) {
