@@ -1,30 +1,31 @@
 {
-    "name": "quiqqer\/oauth-server",
-    "type": "quiqqer-library",
-    "description": "OAuth Server",
-    "version": "rest_middleware",
-    "license": "GPL-3.0+",
-    "authors": [
-        {
-            "name": "Henning Leutz",
-            "email": "leutz@pcsg.de",
-            "homepage": "http:\/\/www.pcsg.de",
-            "role": "Developer"
-        }
-    ],
-    "support": {
-        "email": "support@pcsg.de",
-        "url": "http:\/\/www.pcsg.de"
-    },
-    "require": {
-        "php": ">=7.0",
-        "quiqqer\/quiqqer": "*@dev",
-        "bshaffer\/oauth2-server-php": "1.*",
-        "ramsey\/uuid": "3.*"
-    },
-    "autoload": {
-        "psr-4": {
-            "QUI\\OAuth\\": "src\/QUI\/OAuth"
-        }
+  "name": "quiqqer\/oauth-server",
+  "type": "quiqqer-library",
+  "description": "OAuth Server",
+  "version": "rest_middleware",
+  "license": "GPL-3.0+",
+  "authors": [
+    {
+      "name": "Henning Leutz",
+      "email": "leutz@pcsg.de",
+      "homepage": "http:\/\/www.pcsg.de",
+      "role": "Developer"
     }
+  ],
+  "support": {
+    "email": "support@pcsg.de",
+    "url": "http:\/\/www.pcsg.de"
+  },
+  "require": {
+    "php": ">=7.0",
+    "quiqqer\/quiqqer": ">=1.1|*@dev",
+    "quiqqer\/rest": ">0.0.1|*@dev",
+    "bshaffer\/oauth2-server-php": "1.*",
+    "ramsey\/uuid": "3.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "QUI\\OAuth\\": "src\/QUI\/OAuth"
+    }
+  }
 }
