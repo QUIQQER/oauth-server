@@ -38,8 +38,6 @@ class HandlerTest extends \PHPUnit\Framework\TestCase
         $result = shell_exec($curl);
         $result = json_decode($result, true);
 
-        \QUI\System\Log::writeRecursive($result);
-
         $this->assertArrayHasKey('access_token', $result);
 
         if ($result['access_token']) {
@@ -50,9 +48,6 @@ class HandlerTest extends \PHPUnit\Framework\TestCase
             );
 
             $result = json_decode($result, true);
-
-            \QUI\System\Log::writeRecursive("curl {$apiAddress}projects/Basic/de/1 -d 'access_token={$accessKey}'");
-            \QUI\System\Log::writeRecursive($result);
 
             $this->assertArrayHasKey('success', $result);
         }
