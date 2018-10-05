@@ -108,8 +108,8 @@ class ResourceController extends \OAuth2\Controller\ResourceController
         $now                = time();
         $data               = current($result);
         $writeToDatabase    = false;
-        $firstUsage         = $data['first_usage'];
-        $lastUsage          = $data['last_usage'];
+        $firstUsage         = empty($data['first_usage']) ? $now : $data['first_usage'];
+        $lastUsage          = empty($data['last_usage']) ? $now : $data['last_usage'];
         $totalUsageCount    = $data['total_usage_count'];
         $intervalUsageCount = $data['interval_usage_count'];
         $maxCalls           = $scopeSettings['maxCalls'];
@@ -140,18 +140,17 @@ class ResourceController extends \OAuth2\Controller\ResourceController
                     break;
 
                 case 'month':
-                    $intervalSeconds *= 60 * 24 * 30;
+                    $intervalSeconds *= 60 * 24 * 30;   // 30 days
                     break;
 
                 case 'year':
-                    $intervalSeconds *= 60 * 24 * 365;
+                    $intervalSeconds *= 60 * 24 * 365;  // 365 days
                     break;
             }
 
             if (!empty($lastUsage) && ($now - $lastUsage) > $intervalSeconds) {
                 $intervalUsageCount = 1;
                 $firstUsage         = $now;
-                $lastUsage          = $now;
             }
 
             if ($intervalUsageCount > $maxCalls) {
@@ -166,7 +165,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
                 'total_usage_count'    => $totalUsageCount,
                 'interval_usage_count' => $intervalUsageCount,
                 'first_usage'          => $firstUsage,
-                'last_usage'           => $lastUsage
+                'last_usage'           => $now
             ], [
                 'client_id' => $clientData['client_id'],
                 'scope'     => $scope
