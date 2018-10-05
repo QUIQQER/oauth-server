@@ -32,7 +32,7 @@ class Handler
      */
     public static function createOAuthClient(QUI\Interfaces\Users\User $User, $scopeSettings, $name = '')
     {
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+        self::checkManagePermission();
 
         if (QUI::getUsers()->isNobodyUser($User)) {
             throw new QUI\Exception('Could not create Client');
@@ -120,7 +120,7 @@ class Handler
      */
     public static function getOAuthClientsByUser(QUI\Interfaces\Users\User $User)
     {
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+        self::checkManagePermission();
 
         return QUI::getDataBase()->fetch([
             'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
@@ -142,7 +142,7 @@ class Handler
      */
     public static function getOAuthClientByUser(QUI\Interfaces\Users\User $User, $clientId)
     {
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+        self::checkManagePermission();
 
         if (is_null($User)) {
             $User = QUI::getUserBySession();
@@ -208,7 +208,7 @@ class Handler
      */
     public static function updateOAuthClient($clientId, $data = [])
     {
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+        self::checkManagePermission();
 
         if (!is_array($data)) {
             throw new QUI\OAuth\Exception(
@@ -289,7 +289,7 @@ class Handler
      */
     public static function getOAuthClient($clientId)
     {
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+        self::checkManagePermission();
 
         $result = QUI::getDataBase()->fetch([
             'from'  => QUI\OAuth\Setup::getTable('oauth_clients'),
@@ -321,7 +321,7 @@ class Handler
      */
     public static function removeOAuthClient($clientId)
     {
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+        self::checkManagePermission();
 
         $DB = QUI::getDataBase();
 
@@ -341,7 +341,7 @@ class Handler
      */
     public static function getClientLimits(string $clientId, string $scope = null)
     {
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+        self::checkManagePermission();
 
         $clientData       = self::getOAuthClient($clientId);
         $scopRestrictions = json_decode($clientData['scope_restrictions'], true);
@@ -391,7 +391,7 @@ class Handler
      */
     public static function resetClientLimits(string $clientId, string $scope = null)
     {
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
+        self::checkManagePermission();
 
         $table = QUI\OAuth\Setup::getTable('oauth_access_limits');
 
@@ -429,5 +429,21 @@ class Handler
             'first_usage'          => 0,
             'last_usage'           => 0
         ], $where);
+    }
+
+    /**
+     * Checks if the current user is allowed to manage OAuth clients
+     *
+     * @return void
+     * @throws \QUI\Permissions\Exception
+     */
+    protected static function checkManagePermission()
+    {
+        // Client data must be at least readable if a REST request has to be authenticated
+        if (defined('OAUTH_REST_REQUEST') && OAUTH_REST_REQUEST) {
+            return;
+        }
+
+        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
     }
 }
