@@ -1,43 +1,44 @@
-QUIQQER oauth-server
+![QUIQQER OAuth Server](bin/images/Readme.jpg)
+
+QUIQQER OAuth Server
 ========
 
+Control all your QUIQQER REST API requests via OAuth authentication and set individual query limits for each OAuth client. 
 
-
-Paketname:
+Package Name:
 
     quiqqer/oauth-server
 
 
-Features (Funktionen)
+Features
 --------
-
-- oauth-server with QUIQQER user credentials
-
+* Create and manage OAuth clients with individual access configuration
+* All REST API endpoints that are registered by the REST providers in your QUIQQER system are treated
+as OAuth scopes
+  * Each scope can be individually configured for each OAuth client
+  * Limit queries per time interval (i.e. "1000 queries / hour") or allow unlimited access
+  * Optionally turn off OAuth authentication for REST API endpoints in the settings
+* Currently supported grant types
+  * `client_credentials`
+* Implemented as a Slim middleware (https://www.slimframework.com/)
 
 Installation
 ------------
+The Package Name is: quiqqer/oauth-server
 
-Der Paketname ist: quiqqer/oauth-server
-
-
-Mitwirken
+Contribute
 ----------
-
+- Project: https://dev.quiqqer.com/quiqqer/oauth-server
 - Issue Tracker: https://dev.quiqqer.com/quiqqer/oauth-server/issues
-- Source Code: https://dev.quiqqer.com/quiqqer/oauth-server/
-
+- Source Code: https://dev.quiqqer.com/quiqqer/oauth-server/tree/master
 
 Support
 -------
+If you found any errors or have wishes or suggestions for improvement,
+please contact us by email at support@pcsg.de.
 
-Falls Sie ein Fehler gefunden haben, oder Verbesserungen wünschen,
-dann können Sie gerne an support@pcsg.de eine E-Mail schreiben.
+We will transfer your message to the responsible developers.
 
-
-Lizenz
+License
 -------
-
-MIT
-
-Entwickler
---------
+PCSG QL-1.0, CC BY-NC-SA 4.0
