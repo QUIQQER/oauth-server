@@ -6,8 +6,8 @@
             <en><![CDATA[QUIQQER - OAuth Server]]></en>
         </locale>
         <locale name="package.description">
-            <de><![CDATA[OAuth2-Server]]></de>
-            <en><![CDATA[OAuth2 Server]]></en>
+            <de><![CDATA[Verwalte und beschränke Zugriffe auf REST API Einstiegspunkte mittels OAuth-Authentifizierung.]]></de>
+            <en><![CDATA[Manage and restrict access to REST API endpoints via OAuth authentication.]]></en>
         </locale>
 
         <locale name="client_id">

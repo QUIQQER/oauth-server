@@ -26,5 +26,10 @@
         <provider>
             <rest src="\QUI\OAuth\RestProvider"/>
         </provider>
+
+        <languages>
+            <language>de</language>
+            <language>en</language>
+        </languages>
     </package>
 </quiqqer>
