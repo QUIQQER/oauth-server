@@ -1,14 +1,20 @@
 {
   "name": "quiqqer\/oauth-server",
-  "type": "quiqqer-library",
-  "description": "OAuth Server",
+  "type": "quiqqer-module",
+  "description": "Manage and restrict access to REST API endpoints via OAuth authentication",
   "version": "rest_middleware",
   "license": "GPL-3.0+",
   "authors": [
     {
       "name": "Henning Leutz",
       "email": "leutz@pcsg.de",
-      "homepage": "http:\/\/www.pcsg.de",
+      "homepage": "https:\/\/www.pcsg.de",
+      "role": "Developer"
+    },
+    {
+      "name": "Patrick Müller",
+      "email": "p.mueller@pcsg.de",
+      "homepage": "https:\/\/www.pcsg.de",
       "role": "Developer"
     }
   ],
