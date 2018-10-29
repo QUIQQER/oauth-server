@@ -41,4 +41,4 @@ We will transfer your message to the responsible developers.
 
 License
 -------
-PCSG QL-1.0, CC BY-NC-SA 4.0
+GPL-3.0+
