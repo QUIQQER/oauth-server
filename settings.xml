@@ -15,7 +15,7 @@
             </section>
         </config>
 
-        <window name="quiqqer-server">
+        <window name="quiqqer-oauth-server">
             <title>OAuth</title>
             <params>
                 <icon>fa fa-key</icon>
