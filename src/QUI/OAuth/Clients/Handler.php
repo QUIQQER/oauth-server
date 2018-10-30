@@ -446,4 +446,24 @@ class Handler
 
         QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
     }
+
+    /**
+     * Deletes all access tokens that are expired for at least 24 hours
+     *
+     * @return void
+     */
+    public static function cleanupAccessTokens()
+    {
+        $MinAge = new \DateTime('-24 hours');
+
+        QUI::getDataBase()->delete(
+            QUI\OAuth\Setup::getTable('oauth_access_tokens'),
+            [
+                'expires' => [
+                    'type'  => '<=',
+                    'value' => $MinAge->format('Y-m-d H:i:s')
+                ]
+            ]
+        );
+    }
 }

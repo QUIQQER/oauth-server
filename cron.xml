@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<crons>
+    <cron exec="\QUI\OAuth\Clients\Handler::cleanupAccessTokens">
+        <title>
+            <locale group="quiqqer/oauth-server" var="cron.cleanupAccessTokens.title" />
+        </title>
+        <description>
+            <locale group="quiqqer/oauth-server" var="cron.cleanupAccessTokens.description" />
+        </description>
+    </cron>
+</crons>
