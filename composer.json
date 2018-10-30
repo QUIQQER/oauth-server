@@ -24,8 +24,8 @@
   },
   "require": {
     "php": ">=7.0",
-    "quiqqer\/quiqqer": ">=1.1|*@dev",
-    "quiqqer\/rest": ">=1.0|*@dev",
+    "quiqqer\/quiqqer": "^1.1|*@dev",
+    "quiqqer\/rest": "^1.0|*@dev",
     "bshaffer\/oauth2-server-php": "1.*",
     "ramsey\/uuid": "3.*"
   },
