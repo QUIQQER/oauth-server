@@ -13,11 +13,9 @@ class HandlerTest extends \PHPUnit\Framework\TestCase
     {
         $SystemUser    = QUI::getUsers()->getSystemUser();
         $oauthClientId = QUI\OAuth\Clients\Handler::createOAuthClient($SystemUser, [
-            '/projects/{project}/{lang}/{id}' => [
+            '/quiqqer_oauth_test' => [
                 'active'         => true,
-                'maxCalls'       => 2,
-                'maxCallsType'   => 'minute',
-                'unlimitedCalls' => false
+                'unlimitedCalls' => true
             ]
         ]);
 
@@ -44,11 +42,10 @@ class HandlerTest extends \PHPUnit\Framework\TestCase
             $accessKey = $result['access_token'];
 
             $result = shell_exec(
-                "curl {$apiAddress}projects/Basic/de/1 -d 'access_token={$accessKey}'"
+                "curl {$apiAddress}quiqqer_oauth_test -d 'access_token={$accessKey}'"
             );
 
             $result = json_decode($result, true);
-
             $this->assertArrayHasKey('success', $result);
         }
 

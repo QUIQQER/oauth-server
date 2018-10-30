@@ -53,5 +53,13 @@ class RestProvider implements QUI\REST\ProviderInterface
                 $Server->handleTokenRequest(OAuth2\Request::createFromGlobals())->send();
             });
         });
+
+        // Test path
+        $Slim->post('/quiqqer_oauth_test', function () use ($Server) {
+            $Response = new OAuth2\Response([
+                'success' => true
+            ]);
+            $Response->send();
+        });
     }
 }
