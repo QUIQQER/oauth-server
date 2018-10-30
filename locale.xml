@@ -28,6 +28,16 @@
             <de><![CDATA[Darf OAuth Clients verwalten (CRUD)]]></de>
             <en><![CDATA[Has permission to manage OAuth clients (CRUD)]]></en>
         </locale>
+
+        <!-- Crons -->
+        <locale name="cron.cleanupAccessTokens.title">
+            <de><![CDATA[OAuth Access Tokens aufräumen]]></de>
+            <en><![CDATA[Cleanup OAuth Access Tokens]]></en>
+        </locale>
+        <locale name="cron.cleanupAccessTokens.description">
+            <de><![CDATA[Löscht alle OAuth Access Tokens aus der Datenbank, die seit min. 24h abgelaufen sind.]]></de>
+            <en><![CDATA[Deletes all OAuth Access Tokens from the database that are expired for at least 24h.]]></en>
+        </locale>
     </groups>
 
     <groups name="quiqqer/oauth-server" datatype="php">
