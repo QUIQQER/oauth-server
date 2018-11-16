@@ -95,7 +95,10 @@ define('package/quiqqer/oauth-server/bin/backend/controls/ScopeSettings', [
                 Row.getElement('select[name="maxCallsType"]').disabled = Switch.getStatus();
             };
 
-            var resolve = [OAuthServer.getScopes()];
+            var resolve = [
+                OAuthServer.getScopes(),
+                OAuthServer.getProtectedScopes()
+            ];
 
             if (this.getAttribute('clientId')) {
                 resolve.push(OAuthServer.getLimits(this.getAttribute('clientId')));
@@ -104,11 +107,12 @@ define('package/quiqqer/oauth-server/bin/backend/controls/ScopeSettings', [
             Promise.all(
                 resolve
             ).then(function (result) {
-                var scopes = result[0],
-                    Limits = false;
+                var scopes    = result[0],
+                    Protected = result[1],
+                    Limits    = false;
 
-                if (typeof result[1] !== 'undefined') {
-                    Limits = result[1];
+                if (typeof result[2] !== 'undefined') {
+                    Limits = result[2];
                 }
 
                 var TableBody = self.$Content.getElement('tbody');
@@ -122,7 +126,8 @@ define('package/quiqqer/oauth-server/bin/backend/controls/ScopeSettings', [
                     maxCallsTypeOptionHour     = QUILocale.get(lg, lgPrefix + 'maxCallsTypeOptionHour'),
                     maxCallsTypeOptionDay      = QUILocale.get(lg, lgPrefix + 'maxCallsTypeOptionDay'),
                     maxCallsTypeOptionMonth    = QUILocale.get(lg, lgPrefix + 'maxCallsTypeOptionMonth'),
-                    maxCallsTypeOptionYear     = QUILocale.get(lg, lgPrefix + 'maxCallsTypeOptionYear');
+                    maxCallsTypeOptionYear     = QUILocale.get(lg, lgPrefix + 'maxCallsTypeOptionYear'),
+                    labelNotProtected          = QUILocale.get(lg, lgPrefix + 'labelNotProtected');
 
                 for (var i = 0, len = scopes.length; i < len; i++) {
                     var scope = scopes[i];
@@ -144,6 +149,15 @@ define('package/quiqqer/oauth-server/bin/backend/controls/ScopeSettings', [
                             maxCallsTypeOptionYear    : maxCallsTypeOptionYear
                         })
                     }).inject(TableBody);
+
+                    if (scope in Protected && !Protected[scope]) {
+                        new Element('span', {
+                            'class': 'quiqqer-oauth-server-scopesettings-table-scope-unprotected',
+                            html   : labelNotProtected
+                        }).inject(
+                            Row.getElement('.quiqqer-oauth-server-scopesettings-table-scope')
+                        );
+                    }
 
                     if (!(scope in self.$Settings)) {
                         self.$Settings[scope] = {

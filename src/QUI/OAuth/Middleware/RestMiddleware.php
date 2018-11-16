@@ -2,8 +2,8 @@
 
 namespace QUI\OAuth\Middleware;
 
+use GuzzleHttp\Psr7\ServerRequest;
 use QUI;
-use OAuth2;
 
 class RestMiddleware
 {
@@ -43,7 +43,8 @@ class RestMiddleware
     protected function validateRequest($Request)
     {
         try {
-            $Config = QUI::getPackage('quiqqer/rest')->getConfig();
+            $RESTConfig  = QUI::getPackage('quiqqer/rest')->getConfig();
+            $OAuthConfig = QUI::getPackage('quiqqer/oauth-server')->getConfig();
         } catch (\Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
@@ -54,13 +55,27 @@ class RestMiddleware
             );
         }
 
-        $basePath = ltrim($Config->getValue('general', 'basePath'), '/');
+        $basePath = ltrim($RESTConfig->getValue('general', 'basePath'), '/');
         $query    = $Request->getQueryParams();
         $endpoint = '/'.str_replace($basePath, '', ltrim($query['_url'], '/'));
 
         // Requests to /oauth endpoints do not require special authentication / permissions
         if (mb_strpos($endpoint, '/oauth') === 0) {
             return;
+        }
+
+        // Check if OAuth2 authentication is required for the endpoint (scope)
+        $scope           = ResourceController::parseScopeFromEndpoint($endpoint);
+        $protectedScopes = $OAuthConfig->get('general', 'protected_scopes');
+
+        if (!empty($protectedScopes)) {
+            $protectedScopes = json_decode($protectedScopes, true);
+
+            if (isset($protectedScopes[$scope]) && !$protectedScopes[$scope]) {
+                QUI\System\Log::writeRecursive("no verification");
+                // do not verify request
+                return;
+            }
         }
 
         // This constant tells the OAuth client handler to ignore permission checks
@@ -70,6 +85,6 @@ class RestMiddleware
         $OAuth2Server = QUI\OAuth\Server::getInstance()->getOAuth2Server();
         /** @var ResourceController $ResourceContoller */
         $ResourceContoller = $OAuth2Server->getResourceController();
-        $ResourceContoller->verify($endpoint, OAuth2\Request::createFromGlobals());
+        $ResourceContoller->verify($endpoint, ServerRequest::fromGlobals());
     }
 }

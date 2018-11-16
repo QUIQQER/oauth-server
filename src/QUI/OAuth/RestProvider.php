@@ -10,9 +10,7 @@ use QUI;
 use QUI\REST\Server;
 use OAuth2;
 use QUI\OAuth\Server as OAuth2Server;
-
-use Psr\Http\Message\ServerRequestInterface as RequestInterface;
-use Psr\Http\Message\ResponseInterface as ResponseInterface;
+use GuzzleHttp\Psr7\Response;
 
 /**
  * Class RestProvider
