@@ -1,0 +1,38 @@
+.quiqqer-oauth-server-protectedscopes-table {
+    border-spacing: 0;
+    width: 100%;
+}
+
+.quiqqer-oauth-server-protectedscopes-table-active {
+    min-width: 65px;
+}
+
+.quiqqer-oauth-server-protectedscopes-table thead {
+    background-color: #dedede;
+}
+
+.quiqqer-oauth-server-protectedscopes-table tbody tr:nth-child(2n) {
+    background-color: #ededed;
+}
+
+.quiqqer-oauth-server-protectedscopes-scope label {
+    width: auto !important;
+}
+
+.quiqqer-oauth-server-protectedscopes-scope label:not(:first-of-type) {
+    margin-left: 30px;
+}
+
+.quiqqer-oauth-server-protectedscopes-scope label input,
+.quiqqer-oauth-server-protectedscopes-scope label select {
+    clear: both;
+    display: block;
+}
+
+.quiqqer-oauth-server-protectedscopes-scope label input[type="checkbox"] {
+    float: left;
+}
+
+.quiqqer-oauth-server-protectedscopes-table-header-scope {
+    max-width: 500px;
+}

@@ -121,6 +121,20 @@ define('package/quiqqer/oauth-server/bin/backend/classes/OAuthServer', [
         },
 
         /**
+         * Return scope protection settings
+         *
+         * @return {Promise}
+         */
+        getProtectedScopes: function () {
+            return new Promise(function (resolve, reject) {
+                QUIAjax.get('package_quiqqer_oauth-server_ajax_client_getProtectedScopes', resolve, {
+                    'package': pkg,
+                    onError  : reject
+                });
+            });
+        },
+
+        /**
          * Return all scope usage limits for an OAuth client
          *
          * @param {String} clientId - ID of the OAuth client

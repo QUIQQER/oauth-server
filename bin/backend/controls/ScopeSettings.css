@@ -48,6 +48,11 @@
     margin-bottom: 5px;
 }
 
+.quiqqer-oauth-server-scopesettings-table-scope-unprotected {
+    color: #ff1100;
+    display: block;
+}
+
 /***
  * Limits
  */

@@ -54,8 +54,8 @@
             <en><![CDATA[OAuth2 status]]></en>
         </locale>
         <locale name="settings.active.description">
-            <de><![CDATA[OAuth2-Modul ist aktiv und prüft alle REST API Anfragen hinsichtlich der Berechtigungen, die für einzelne OAuth2-Klienten konfiguriert sind.]]></de>
-            <en><![CDATA[OAuth2 module is active and checks all REST API requests for permissions configured for individual OAuth2 clients.]]></en>
+            <de><![CDATA[OAuth2-Modul ist aktiv und prüft alle REST API Anfragen hinsichtlich der Berechtigungen, die für einzelne OAuth2-Klienten konfiguriert sind. Ausgenommen sind Einstiegspunkte, die unter "Überwachte Einstiegspunkte" deaktiviert sind.]]></de>
+            <en><![CDATA[OAuth2 module is active and checks all REST API requests for permissions configured for individual OAuth2 clients. Exceptions are entry points which are deactivated under "Monitored entry points".]]></en>
         </locale>
         <locale name="settings.title">
             <de><![CDATA[OAuth2 Einstellungen]]></de>
@@ -65,7 +65,14 @@
             <de><![CDATA[Token Lebenszeit (in Sekunden)]]></de>
             <en><![CDATA[Token Lifetime (in seconds)]]></en>
         </locale>
-
+        <locale name="settings.protected_scopes.text">
+            <de><![CDATA[Überwachte Einstiegspunkte]]></de>
+            <en><![CDATA[Monitored entry points]]></en>
+        </locale>
+        <locale name="settings.protected_scopes.description" html="true">
+            <de><![CDATA[Hier kann für einzelne Eintiegspunkte festgelegt werden, ob für ihren Aufruf eine OAuth2-Authentifizierung notwendig ist. <b>Achtung:</b> Ist die Option für einen Einstiegspunkt ausgestellt, kann er u.U. von jeder Stelle frei aufgerufen werden!]]></de>
+            <en><![CDATA[Here you can specify for individual entry points whether OAuth2 authentication is required to call them. <b>Caution:</b> If the option is set for an entry point, it may be called freely from any location!]]></en>
+        </locale>
         <locale name="exception.Handler.resetClientLimits.scope_not_found">
             <de><![CDATA[Für diesen Einstiegspunkt wurde keine Limit-Daten gefunden.]]></de>
             <en><![CDATA[No limit data was found for this entry point.]]></en>
@@ -208,6 +215,10 @@
             <de><![CDATA[(Abfrage-Limit erreicht!)]]></de>
             <en><![CDATA[(Query limit reached!)]]></en>
         </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelNotProtected">
+            <de><![CDATA[(z.Z. nicht überwacht!)]]></de>
+            <en><![CDATA[(currently not monitored!)]]></en>
+        </locale>
         <locale name="controls.backend.ScopeSettings.limits.reset.title">
             <de><![CDATA[Abfragen zurücksetzen]]></de>
             <en><![CDATA[Reset usage count]]></en>
@@ -215,6 +226,16 @@
         <locale name="controls.backend.ScopeSettings.limits.reset.text" html="true">
             <de><![CDATA[Sind Sie sicher, dass Sie die Abfragen des OAuth-Clients <b>[clientId]</b> für den Einstiegspunkt <b>[scope]</b> zurücksetzen wollen?<br/><br/>Dadurch wird der Client so zurückgesetzt, als hätte er noch keine API-Abfragen für diesen Einstiegspunkt <b>im konfigurierten Intervall</b> durchgeführt.]]></de>
             <en><![CDATA[Are you sure you want to reset the usage of the OAuth client <b>[clientId]</b> for the entry point <b>[scope]</b>?<br/><br/>This will reset the client as if it hadn't done any API queries <b>in the configured interval</b> for that entry point yet.]]></en>
+        </locale>
+
+        <!-- Controls: backend/controls/settings/ProtectedScopes -->
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerScope">
+            <de><![CDATA[Scope (Einstiegspunkt)]]></de>
+            <en><![CDATA[Scope (entry point)]]></en>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerProtected">
+            <de><![CDATA[OAuth2-Authentifizierung]]></de>
+            <en><![CDATA[OAuth2 authentication]]></en>
         </locale>
 
         <!-- Controls: backend/controls/UserClient -->

@@ -12,6 +12,9 @@
                     <type><![CDATA[int]]></type>
                     <defaultvalue>3600</defaultvalue>
                 </conf>
+                <conf name="protected_scopes">
+                    <type><![CDATA[string]]></type>
+                </conf>
             </section>
         </config>
 
@@ -44,6 +47,15 @@
                             <text>
                                 <locale group="quiqqer/oauth-server" var="settings.access_lifetime.text"/>
                             </text>
+                        </input>
+
+                        <input conf="general.protected_scopes" type="string" data-qui="package/quiqqer/oauth-server/bin/backend/controls/settings/ProtectedScopes">
+                            <text>
+                                <locale group="quiqqer/oauth-server" var="settings.protected_scopes.text"/>
+                            </text>
+                            <description>
+                                <locale group="quiqqer/oauth-server" var="settings.protected_scopes.description"/>
+                            </description>
                         </input>
                     </settings>
 

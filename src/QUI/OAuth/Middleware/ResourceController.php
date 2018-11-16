@@ -4,8 +4,10 @@ namespace QUI\OAuth\Middleware;
 
 use QUI;
 use OAuth2;
-use OAuth2\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use QUI\OAuth\Clients\Handler as OAuthClients;
+use QUI\REST\Utils\RequestUtils;
+use QUI\REST\Server as RestServer;
 
 class ResourceController extends \OAuth2\Controller\ResourceController
 {
@@ -13,21 +15,33 @@ class ResourceController extends \OAuth2\Controller\ResourceController
      * Verify a REST API request
      *
      * @param string $endpoint - The endpoint
-     * @param RequestInterface $Request
+     * @param ServerRequestInterface $Request
      * @throws InvalidRequestException
      */
-    public function verify($endpoint, RequestInterface $Request)
+    public function verify($endpoint, ServerRequestInterface $Request)
     {
         $VerificationResponse = new OAuth2\Response();
 
-        // General verification (token and scope)
-        parent::verifyResourceRequest($Request, $VerificationResponse);
+        /**
+         * General verification (token and scope)
+         *
+         * The request object used here implements \OAuth2\RequestInterface
+         */
+        parent::verifyResourceRequest(
+            OAuth2\Request::createFromGlobals(),
+            $VerificationResponse
+        );
+
         $this->parseErrorFromResponseAndThrowException($VerificationResponse);
 
-        $accessToken = $Request->query('access_token');
+        $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
 
         if (empty($accessToken)) {
-            $accessToken = $Request->request('access_token');
+            throw new InvalidRequestException(
+                'token_missing',
+                'No access token provided. Please provide a valid access token with your request (access_token).',
+                401
+            );
         }
 
         try {
@@ -42,13 +56,21 @@ class ResourceController extends \OAuth2\Controller\ResourceController
             );
         }
 
-        $scope = $this->parseScopeFromEndpoint(json_decode($clientData['scope_restrictions'], true), $endpoint);
+        if (empty($clientData)) {
+            throw new InvalidRequestException(
+                'invalid_token',
+                'The access token provided is invalid.',
+                401
+            );
+        }
+
+        $scope = self::parseScopeFromEndpoint($endpoint);
 
         if (empty($scope)) {
             $this->throwInvalidScopeException();
         }
 
-        $this->verifyScopePermission($clientData, $scope, $Request);
+        $this->verifyScopePermission($clientData, $scope);
     }
 
     /**
@@ -56,11 +78,10 @@ class ResourceController extends \OAuth2\Controller\ResourceController
      *
      * @param array $clientData - OAuth Client data
      * @param string $scope
-     * @param RequestInterface $Request
      * @return void
      * @throws InvalidRequestException
      */
-    protected function verifyScopePermission($clientData, $scope, RequestInterface $Request)
+    protected function verifyScopePermission($clientData, $scope)
     {
         $scopeRestrictions = json_decode($clientData['scope_restrictions'], true);
 
@@ -205,15 +226,21 @@ class ResourceController extends \OAuth2\Controller\ResourceController
     /**
      * Parses the OAuth2 scope from the requested REST API endpoint
      *
-     * @param array $scopeRestrictions - OAuth client scope restrictions
      * @param string $endpoint
      * @return string|false - Scope name or false if scope could not be parsed
      */
-    protected function parseScopeFromEndpoint($scopeRestrictions, $endpoint)
+    public static function parseScopeFromEndpoint($endpoint)
     {
         $requestsScope = false;
 
-        foreach ($scopeRestrictions as $scope => $restrictions) {
+        try {
+            $availableScopes = RestServer::getInstance()->getEntryPoints();
+        } catch (\Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+            return false;
+        }
+
+        foreach ($availableScopes as $scope) {
             $parts        = explode('/', trim($scope, '/'));
             $literalParts = [];
 
