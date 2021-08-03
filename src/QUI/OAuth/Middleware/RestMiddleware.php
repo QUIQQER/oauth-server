@@ -4,23 +4,28 @@ namespace QUI\OAuth\Middleware;
 
 use GuzzleHttp\Psr7\ServerRequest;
 use QUI;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Psr\Http\Message\ResponseInterface as Response;
 
 class RestMiddleware
 {
     /**
      * Example middleware invokable class
      *
-     * @param  \Psr\Http\Message\ServerRequestInterface $Request PSR7 request
-     * @param  \Psr\Http\Message\ResponseInterface $Response PSR7 response
-     * @param  callable $next Next middleware
+     * @param Request $Request PSR7 request
+     * @param RequestHandler $RequestHandler PSR7 response
      *
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return Response
      */
-    public function __invoke($Request, $Response, $next)
+    public function __invoke(Request $Request, RequestHandler $RequestHandler): Response
     {
         try {
             $this->validateRequest($Request);
+            return $RequestHandler->handle($Request);
         } catch (InvalidRequestException $Exception) {
+            $Response = new QUI\REST\Response($Exception->getCode());
+
             $Response->getBody()->write(json_encode([
                 'error'             => $Exception->getMessage(),
                 'error_description' => $Exception->getErrorDescription(),
@@ -29,18 +34,18 @@ class RestMiddleware
 
             return $Response;
         }
-
-        return $next($Request, $Response);
     }
 
     /**
      * Validate a REST API request
      *
-     * @param  \Psr\Http\Message\ServerRequestInterface $Request PSR7 request
+     * Throws an exception if the request is invalid
+     *
+     * @param Request $Request PSR7 request
      * @return void
      * @throws InvalidRequestException
      */
-    protected function validateRequest($Request)
+    protected function validateRequest(Request $Request): void
     {
         try {
             $RESTConfig  = QUI::getPackage('quiqqer/rest')->getConfig();

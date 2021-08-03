@@ -24,7 +24,7 @@
     "require": {
         "php": ">=7.0",
         "quiqqer\/quiqqer": "^1.2|*@dev",
-        "quiqqer\/rest": "^1.1|*@dev",
+        "quiqqer\/rest": "^2|*@dev",
         "bshaffer\/oauth2-server-php": "1.*",
         "psr\/http-message": "^1",
         "ramsey\/uuid": "3.*"

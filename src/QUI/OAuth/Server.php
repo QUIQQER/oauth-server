@@ -1,9 +1,5 @@
 <?php
 
-/**
- * This file contains QUI\OAuth\Server
- */
-
 namespace QUI\OAuth;
 
 use QUI;

@@ -1,16 +1,15 @@
 <?php
 
-/**
- * This file contains QUI\OAuth\RestProvider
- */
-
 namespace QUI\OAuth;
 
+use Psr\Http\Message\ResponseInterface as ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface as RequestInterface;
 use QUI;
+use QUI\REST\Response;
 use QUI\REST\Server;
 use OAuth2;
 use QUI\OAuth\Server as OAuth2Server;
-use GuzzleHttp\Psr7\Response;
+use Slim\Routing\RouteCollectorProxy;
 
 /**
  * Class RestProvider
@@ -24,12 +23,10 @@ class RestProvider implements QUI\REST\ProviderInterface
      */
     public function register(Server $Server)
     {
-        $Slim   = $Server->getSlim();
-        $Server = OAuth2Server::getInstance()->getOAuth2Server();
+        $Slim         = $Server->getSlim();
+        $OAuth2Server = OAuth2Server::getInstance()->getOAuth2Server();
 
-        $Slim->group('/oauth', function () use ($Server) {
-            /* @var $this \Slim\App */
-
+        $Slim->group('/oauth', function (RouteCollectorProxy $RouteCollector) use ($OAuth2Server) {
             // @todo the /authorize endpoint functionality has to be rewritten
             // as soon as quiqqer/oauth-server allows `Authorization Code` grant type
 //            $this->post('/authorize', function (
@@ -47,17 +44,19 @@ class RestProvider implements QUI\REST\ProviderInterface
 //                    ->write(json_encode(['success' => true]));
 //            });
 
-            $this->post('/token', function () use ($Server) {
-                $Server->handleTokenRequest(OAuth2\Request::createFromGlobals())->send();
+            $RouteCollector->post('/token', function () use ($OAuth2Server) {
+                $OAuth2Server->handleTokenRequest(OAuth2\Request::createFromGlobals())->send();
             });
         });
 
         // Test path
-        $Slim->post('/quiqqer_oauth_test', function () use ($Server) {
-            $Response = new OAuth2\Response([
+        $Slim->post('/quiqqer_oauth_test', function (RequestInterface $Request, ResponseInterface $Response, $args) {
+            /** @var Response $Response */
+            $Response->withHeader('Content-Type', 'application/json');
+
+            return $Response->write(\json_encode([
                 'success' => true
-            ]);
-            $Response->send();
+            ]));
         });
     }
 }

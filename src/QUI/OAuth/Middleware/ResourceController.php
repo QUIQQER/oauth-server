@@ -16,9 +16,11 @@ class ResourceController extends \OAuth2\Controller\ResourceController
      *
      * @param string $endpoint - The endpoint
      * @param ServerRequestInterface $Request
+     * @return void
+     *
      * @throws InvalidRequestException
      */
-    public function verify($endpoint, ServerRequestInterface $Request)
+    public function verify(string $endpoint, ServerRequestInterface $Request): void
     {
         $VerificationResponse = new OAuth2\Response();
 
