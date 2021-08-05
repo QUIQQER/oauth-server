@@ -1,37 +1,36 @@
 {
-    "name": "quiqqer\/oauth-server",
-    "type": "quiqqer-module",
-    "description": "Manage and restrict access to REST API endpoints via OAuth authentication",
-    "license": "GPL-3.0+",
-    "authors": [
-        {
-            "name": "Henning Leutz",
-            "email": "leutz@pcsg.de",
-            "homepage": "https:\/\/www.pcsg.de",
-            "role": "Developer"
-        },
-        {
-            "name": "Patrick M\u00fcller",
-            "email": "p.mueller@pcsg.de",
-            "homepage": "https:\/\/www.pcsg.de",
-            "role": "Developer"
-        }
-    ],
-    "support": {
-        "email": "support@pcsg.de",
-        "url": "http:\/\/www.pcsg.de"
+  "name": "quiqqer\/oauth-server",
+  "type": "quiqqer-module",
+  "description": "Manage and restrict access to REST API endpoints via OAuth authentication",
+  "license": "GPL-3.0+",
+  "authors": [
+    {
+      "name": "Henning Leutz",
+      "email": "leutz@pcsg.de",
+      "homepage": "https:\/\/www.pcsg.de",
+      "role": "Developer"
     },
-    "require": {
-        "php": ">=7.0",
-        "quiqqer\/quiqqer": "^1.2|*@dev",
-        "quiqqer\/rest": "^2|*@dev",
-        "bshaffer\/oauth2-server-php": "1.*",
-        "psr\/http-message": "^1",
-        "ramsey\/uuid": "3.*"
-    },
-    "autoload": {
-        "psr-4": {
-            "QUI\\OAuth\\": "src\/QUI\/OAuth"
-        }
+    {
+      "name": "Patrick M\u00fcller",
+      "email": "p.mueller@pcsg.de",
+      "homepage": "https:\/\/www.pcsg.de",
+      "role": "Developer"
     }
+  ],
+  "support": {
+    "email": "support@pcsg.de",
+    "url": "https:\/\/www.pcsg.de"
+  },
+  "require": {
+    "php": "^7.4|^8",
+    "quiqqer\/quiqqer": "^1.2|*@dev",
+    "quiqqer\/rest": "^2.1|*@dev",
+    "bshaffer\/oauth2-server-php": "1.*",
+    "psr\/http-message": "^1"
+  },
+  "autoload": {
+    "psr-4": {
+      "QUI\\OAuth\\": "src\/QUI\/OAuth"
+    }
+  }
 }

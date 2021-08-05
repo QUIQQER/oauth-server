@@ -2,4 +2,6 @@
 <events>
     <event on="onPackageSetup" fire="\QUI\OAuth\EventHandler::onPackageSetup"/>
     <event on="onRequest" fire="\QUI\OAuth\EventHandler::onRequest" priority="-1"/>
+
+    <event on="onQuiqqerRestLoadOpenApiSpecification" fire="\QUI\OAuth\EventHandler::onQuiqqerRestLoadOpenApiSpecification"/>
 </events>
