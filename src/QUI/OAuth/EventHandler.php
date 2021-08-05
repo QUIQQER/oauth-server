@@ -88,4 +88,40 @@ class EventHandler
         $Server = QUI\REST\Server::getCurrentInstance();
         $Server->getSlim()->add(new QUI\OAuth\Middleware\RestMiddleware());
     }
+
+    /**
+     * quiqqer/rest: onQuiqqerRestLoadOpenApiSpecification
+     *
+     * @param string $apiName
+     * @param array $specification
+     * @return void
+     */
+    public static function onQuiqqerRestLoadOpenApiSpecification(string $apiName, array &$specification): void
+    {
+        try {
+            $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+
+            if (!$Conf->getValue('general', 'active')) {
+                return;
+            }
+
+            // Extend OpenApi specification by OAuth2 information
+            if (empty($specification['components']['securitySchemes'])) {
+                $specification['components']['securitySchemes'] = [];
+            }
+
+            $specification['components']['securitySchemes']['oAuth2'] = [
+                'type'        => 'oauth2',
+                'description' => 'This API uses OAuth 2 with the clientCredentials grant flow.',
+                'flows'       => [
+                    'clientCredentials' => [
+                        'tokenUrl' => QUI\REST\Server::getInstance()->getBasePathWithHost().'oauth/token'
+                    ],
+                    'scopes'            => [] // @todo add scopes
+                ]
+            ];
+        } catch (\Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+        }
+    }
 }

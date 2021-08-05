@@ -243,6 +243,7 @@ class Handler
             }
 
             $update['scope_restrictions'] = json_encode($data['scope_restrictions']);
+            $update['scope']              = empty($activeScopes) ? null : implode(' ', $activeScopes);
         }
 
         QUI::getDataBase()->update(
