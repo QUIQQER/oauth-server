@@ -44,9 +44,21 @@ class RestProvider implements QUI\REST\ProviderInterface
 //                    ->write(json_encode(['success' => true]));
 //            });
 
-            $RouteCollector->post('/token', function () use ($OAuth2Server) {
-                $OAuth2Server->handleTokenRequest(OAuth2\Request::createFromGlobals())->send();
-            });
+            $RouteCollector->post(
+                '/token',
+                function (RequestInterface $Request, ResponseInterface $Response, $args) use ($OAuth2Server) {
+                    $OAuthServerResponse = $OAuth2Server->handleTokenRequest(OAuth2\Request::createFromGlobals());
+
+                    $RestResponse = new Response(
+                        $OAuthServerResponse->getStatusCode(),
+                        $OAuthServerResponse->getHttpHeaders(),
+                        $OAuthServerResponse->getResponseBody(),
+                        $OAuthServerResponse->version
+                    );
+
+                    return $RestResponse->withHeader('Content-Type', 'application/json');
+                }
+            );
         });
 
         // Test path
@@ -58,5 +70,42 @@ class RestProvider implements QUI\REST\ProviderInterface
                 'success' => true
             ]));
         });
+    }
+
+    /**
+     * Get file containting OpenApi definition for this API.
+     *
+     * @return string|false - Absolute file path or false if no definition exists
+     */
+    public function getOpenApiDefinitionFile()
+    {
+        return false;
+    }
+
+    /**
+     * Get unique internal API name.
+     *
+     * This is required for requesting specific data about an API (i.e. OpenApi definition).
+     *
+     * @return string - Only letters; no other characters!
+     */
+    public function getName(): string
+    {
+        return 'OAuthServer';
+    }
+
+    /**
+     * Get title of this API.
+     *
+     * @param QUI\Locale|null $Locale (optional)
+     * @return string
+     */
+    public function getTitle(QUI\Locale $Locale = null): string
+    {
+        if (empty($Locale)) {
+            $Locale = QUI::getLocale();
+        }
+
+        return $Locale->get('quiqqer/oauth-server', 'RestProvider.title');
     }
 }

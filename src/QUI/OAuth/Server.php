@@ -56,7 +56,9 @@ class Server extends QUI\Utils\Singleton
 
         // Build server
         $this->OAuth2Server = new OAuth2\Server($Storage, $config);
-        $this->OAuth2Server->addGrantType(new OAuth2\GrantType\ClientCredentials($Storage));
+
+        // Add client credentials grant type
+        $this->OAuth2Server->addGrantType(new OAuth2\GrantType\ClientCredentials($Storage, $config));
 
         $this->OAuth2Server->setResourceController(
             new ResourceController(

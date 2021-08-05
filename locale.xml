@@ -118,7 +118,13 @@
 
     </groups>
 
-    <groups name="quiqqer/oauth-server" datatype="js,php">
+    <groups name="quiqqer/oauth-server" datatype="php">
+        
+        <locale name="RestProvider.title">
+            <de><![CDATA[QUIQQER OAuth 2.0 Authentication API]]></de>
+            <en><![CDATA[QUIQQER OAuth 2.0 Authentication API]]></en>
+        </locale>
+        
         <locale name="exception.could.not.create.client">
             <de><![CDATA[
             Konnte OAUth Client nicht anlegen. Bitte versuchen Sie es noch einmal oder
