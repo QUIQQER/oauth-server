@@ -44,7 +44,8 @@ class RestProvider implements QUI\REST\ProviderInterface
 //                    ->write(json_encode(['success' => true]));
 //            });
 
-            $RouteCollector->post('/token',
+            $RouteCollector->post(
+                '/token',
                 function (RequestInterface $Request, ResponseInterface $Response, $args) use ($OAuth2Server) {
                     $OAuthServerResponse = $OAuth2Server->handleTokenRequest(OAuth2\Request::createFromGlobals());
 
