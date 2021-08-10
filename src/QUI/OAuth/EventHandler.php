@@ -120,6 +120,49 @@ class EventHandler
                     'scopes'            => [] // @todo add scopes
                 ]
             ];
+
+            if (empty($specification['components']['responses'])) {
+                $specification['components']['responses'] = [];
+            }
+
+            $specification['components']['responses']['OAuth2Error'] = [
+                'description' => 'OAuth 2 Middleware error',
+                'content'     => [
+                    'application/json' => [
+                        'schema' => [
+                            'type'       => 'object',
+                            'properties' => [
+                                'error'             => [
+                                    'type'        => 'string',
+                                    'description' => 'Error short handle.'
+                                ],
+                                'error_description' => [
+                                    'type'        => 'string',
+                                    'description' => 'Error description.'
+                                ],
+                                'error_code'        => [
+                                    'type'        => 'integer',
+                                    'description' => 'Error code.'
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+
+            foreach ($specification['paths'] as $path => $methods) {
+                foreach ($methods as $method => $methodData) {
+                    if (!empty($methodData['responses']['4XX'])) {
+                        continue;
+                    }
+
+                    $methodData['responses']['4XX'] = [
+                        '$ref' => '#/components/responses/OAuth2Error'
+                    ];
+
+                    $specification['paths'][$path][$method] = $methodData;
+                }
+            }
         } catch (\Exception $Exception) {
             QUI\System\Log::writeException($Exception);
         }
