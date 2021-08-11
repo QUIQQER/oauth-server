@@ -152,12 +152,18 @@ class EventHandler
 
             foreach ($specification['paths'] as $path => $methods) {
                 foreach ($methods as $method => $methodData) {
-                    if (!empty($methodData['responses']['4XX'])) {
-                        continue;
+                    if (empty($methodData['responses']['4XX'])) {
+                        $methodData['responses']['4XX'] = [
+                            '$ref' => '#/components/responses/OAuth2Error'
+                        ];
                     }
 
-                    $methodData['responses']['4XX'] = [
-                        '$ref' => '#/components/responses/OAuth2Error'
+                    if (empty($methodData['security'])) {
+                        $methodData['security'] = [];
+                    }
+
+                    $methodData['security'][] = [
+                        'oAuth2' => []
                     ];
 
                     $specification['paths'][$path][$method] = $methodData;
