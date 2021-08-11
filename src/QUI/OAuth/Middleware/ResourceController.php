@@ -36,7 +36,13 @@ class ResourceController extends \OAuth2\Controller\ResourceController
 
         $this->parseErrorFromResponseAndThrowException($VerificationResponse);
 
-        $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
+        $tokenData = $this->getToken();
+
+        if (!empty($tokenData['access_token'])) {
+            $accessToken = $tokenData['access_token'];
+        } else {
+            $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
+        }
 
         if (empty($accessToken)) {
             throw new InvalidRequestException(
