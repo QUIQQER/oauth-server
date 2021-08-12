@@ -97,9 +97,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
             $this->throwInvalidScopeException();
         }
 
-        if ($scopeSettings['unlimitedCalls']) {
-            return;
-        }
+        $unlimitedCalls = !empty($scopeSettings['unlimitedCalls']);
 
         // check access limits
         try {
@@ -143,7 +141,9 @@ class ResourceController extends \OAuth2\Controller\ResourceController
         $totalUsageCount++;
         $intervalUsageCount++;
 
-        if ($maxCallsType === 'absolute') {
+        if ($unlimitedCalls) {
+            $writeToDatabase = true;
+        } elseif ($maxCallsType === 'absolute') {
             if ($intervalUsageCount > $maxCalls) {
                 $maxCallsExceeded = true;
             } else {
