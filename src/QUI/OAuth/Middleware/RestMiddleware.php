@@ -72,8 +72,7 @@ class RestMiddleware
             $protectedScopes = json_decode($protectedScopes, true);
 
             if (isset($protectedScopes[$scope]) && !$protectedScopes[$scope]) {
-                QUI\System\Log::writeRecursive("no verification");
-                // do not verify request
+                // no request verification required since the scope / endpoint is not protected
                 return;
             }
         }
