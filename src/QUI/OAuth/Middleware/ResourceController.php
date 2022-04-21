@@ -177,7 +177,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
                     break;
             }
 
-            if (!empty($lastUsage) && ($now - $lastUsage) > $intervalSeconds) {
+            if (!empty($firstUsage) && ($now - $firstUsage) > $intervalSeconds) {
                 $intervalUsageCount = 1;
                 $firstUsage         = $now;
             }
