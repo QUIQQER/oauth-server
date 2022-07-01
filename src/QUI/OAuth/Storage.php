@@ -1,12 +1,7 @@
 <?php
 
-/**
- * This file contains QUI\OAuth\Storage
- */
-
 namespace QUI\OAuth;
 
-use BaconQrCode\Exception\InvalidArgumentException;
 use QUI;
 use OAuth2;
 
@@ -20,10 +15,8 @@ class Storage extends OAuth2\Storage\Pdo
     /**
      * @param mixed $connection
      * @param array $config
-     *
-     * @throws InvalidArgumentException
      */
-    public function __construct($connection, $config = array())
+    public function __construct($connection, $config = [])
     {
         try {
             $config = [

@@ -79,6 +79,12 @@ class ResourceController extends \OAuth2\Controller\ResourceController
         }
 
         $this->verifyScopePermission($clientData, $scope);
+
+        try {
+            QUI\OAuth\Clients\Handler::setSesstionUser(QUI::getUsers()->get($clientData['user_id']));
+        } catch (\Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+        }
     }
 
     /**

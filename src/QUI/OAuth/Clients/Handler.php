@@ -1,13 +1,10 @@
 <?php
 
-/**
- * This file contains QUI\OAuth\Clients\Handler
- */
-
 namespace QUI\OAuth\Clients;
 
 use QUI;
 use Ramsey\Uuid\Uuid;
+use QUI\Interfaces\Users\User as QUIUserInterface;
 
 /**
  * Class Handler
@@ -16,6 +13,13 @@ use Ramsey\Uuid\Uuid;
  */
 class Handler
 {
+    /**
+     * Runtime var for session user (based on oauth authentication).
+     *
+     * @var QUIUserInterface|null
+     */
+    protected static ?QUIUserInterface $SessionUser = null;
+
     const PERMISSION_MANAGE_CLIENTS = 'quiqqer.oauth-server.manage_clients';
 
     /**
@@ -466,5 +470,30 @@ class Handler
                 ]
             ]
         );
+    }
+
+    /**
+     * Get QUIQQER user that is currently authenticated via OAuth.
+     *
+     * @return QUIUserInterface
+     */
+    public static function getSessionUser(): QUIUserInterface
+    {
+        if (empty(self::$SessionUser)) {
+            return QUI::getUserBySession();
+        }
+
+        return self::$SessionUser;
+    }
+
+    /**
+     * Set QUIQQER user that is currently authenticated via OAuth.
+     *
+     * @param QUIUserInterface $SessionUser
+     * @return void
+     */
+    public static function setSesstionUser(QUIUserInterface $SessionUser): void
+    {
+        self::$SessionUser = $SessionUser;
     }
 }
