@@ -2,7 +2,7 @@
   "name": "quiqqer\/oauth-server",
   "type": "quiqqer-module",
   "description": "Manage and restrict access to REST API endpoints via OAuth authentication",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "license": "GPL-3.0+",
   "authors": [
     {
