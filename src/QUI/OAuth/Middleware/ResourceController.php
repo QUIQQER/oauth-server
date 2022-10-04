@@ -36,7 +36,13 @@ class ResourceController extends \OAuth2\Controller\ResourceController
 
         $this->parseErrorFromResponseAndThrowException($VerificationResponse);
 
-        $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
+        $tokenData = $this->getToken();
+
+        if (!empty($tokenData['access_token'])) {
+            $accessToken = $tokenData['access_token'];
+        } else {
+            $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
+        }
 
         if (empty($accessToken)) {
             throw new InvalidRequestException(
@@ -73,6 +79,12 @@ class ResourceController extends \OAuth2\Controller\ResourceController
         }
 
         $this->verifyScopePermission($clientData, $scope);
+
+        try {
+            QUI\OAuth\Clients\Handler::setSesstionUser(QUI::getUsers()->get($clientData['user_id']));
+        } catch (\Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+        }
     }
 
     /**
@@ -97,9 +109,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
             $this->throwInvalidScopeException();
         }
 
-        if ($scopeSettings['unlimitedCalls']) {
-            return;
-        }
+        $unlimitedCalls = !empty($scopeSettings['unlimitedCalls']);
 
         // check access limits
         try {
@@ -143,7 +153,9 @@ class ResourceController extends \OAuth2\Controller\ResourceController
         $totalUsageCount++;
         $intervalUsageCount++;
 
-        if ($maxCallsType === 'absolute') {
+        if ($unlimitedCalls) {
+            $writeToDatabase = true;
+        } elseif ($maxCallsType === 'absolute') {
             if ($intervalUsageCount > $maxCalls) {
                 $maxCallsExceeded = true;
             } else {
@@ -171,7 +183,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
                     break;
             }
 
-            if (!empty($lastUsage) && ($now - $lastUsage) > $intervalSeconds) {
+            if (!empty($firstUsage) && ($now - $firstUsage) > $intervalSeconds) {
                 $intervalUsageCount = 1;
                 $firstUsage         = $now;
             }

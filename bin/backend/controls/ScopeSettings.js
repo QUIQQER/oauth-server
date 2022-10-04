@@ -172,14 +172,14 @@ define('package/quiqqer/oauth-server/bin/backend/controls/ScopeSettings', [
 
                     // Active switch
                     new QUISwitch({
-                        status: settings.active
+                        status: !!parseInt(settings.active)
                     }).inject(
                         Row.getElement('.quiqqer-oauth-server-scopesettings-table-active')
                     );
 
                     // Unlimited switch
                     var UnlimitedSwitch = new QUISwitch({
-                        status: settings.unlimitedCalls,
+                        status: !!parseInt(settings.unlimitedCalls),
                         events: {
                             onChange: switchUnlimited
                         }
