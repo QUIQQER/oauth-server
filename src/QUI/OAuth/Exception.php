@@ -3,6 +3,7 @@
 /**
  * this file contains QUI\OAuth\Exception
  */
+
 namespace QUI\OAuth;
 
 use QUI;
