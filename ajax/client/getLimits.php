@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * this file contains package_quiqqer_oauth-server_ajax_client_getLimits
+ */
+
 use QUI\OAuth\Clients\Handler as ClientsHandler;
 
 /**
