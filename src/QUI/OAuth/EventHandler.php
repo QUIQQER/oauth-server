@@ -20,7 +20,7 @@ class EventHandler
     /**
      * @param QUI\Package\Package $Package
      */
-    public static function onPackageSetup(QUI\Package\Package $Package)
+    public static function onPackageSetup(QUI\Package\Package $Package): void
     {
         if ($Package->getName() !== 'quiqqer/oauth-server') {
             return;
@@ -34,7 +34,7 @@ class EventHandler
      *
      * @param QUI\Package\Package $Package
      */
-    public static function onPackageInstall(QUI\Package\Package $Package)
+    public static function onPackageInstall(QUI\Package\Package $Package): void
     {
         if ($Package->getName() !== 'quiqqer/oauth-server') {
             return;
@@ -53,11 +53,11 @@ class EventHandler
      * @return void
      * @throws \QUI\Exception
      */
-    protected static function createCrons()
+    protected static function createCrons(): void
     {
-        $Crons = new CronManager();
+        $Cron = new CronManager();
 
-        $Crons->add(
+        $Cron->add(
             '\QUI\OAuth\Clients\Handler::cleanupAccessTokens',
             '0',
             '0',
@@ -77,7 +77,7 @@ class EventHandler
      *
      * @throws \QUI\Exception
      */
-    public static function onRequest(QUI\Rewrite $Rewrite, $url)
+    public static function onRequest(QUI\Rewrite $Rewrite, string $url): void
     {
         $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
@@ -111,13 +111,13 @@ class EventHandler
             }
 
             $specification['components']['securitySchemes']['oAuth2'] = [
-                'type'        => 'oauth2',
+                'type' => 'oauth2',
                 'description' => 'This API uses OAuth 2 with the clientCredentials grant flow.',
-                'flows'       => [
+                'flows' => [
                     'clientCredentials' => [
-                        'tokenUrl' => QUI\REST\Server::getInstance()->getBasePathWithHost().'oauth/token'
+                        'tokenUrl' => QUI\REST\Server::getInstance()->getBasePathWithHost() . 'oauth/token'
                     ],
-                    'scopes'            => [] // @todo add scopes
+                    'scopes' => [] // @todo add scopes
                 ]
             ];
 
@@ -127,21 +127,21 @@ class EventHandler
 
             $specification['components']['responses']['OAuth2Error'] = [
                 'description' => 'OAuth 2 Middleware error',
-                'content'     => [
+                'content' => [
                     'application/json' => [
                         'schema' => [
-                            'type'       => 'object',
+                            'type' => 'object',
                             'properties' => [
-                                'error'             => [
-                                    'type'        => 'string',
+                                'error' => [
+                                    'type' => 'string',
                                     'description' => 'Error short handle.'
                                 ],
                                 'error_description' => [
-                                    'type'        => 'string',
+                                    'type' => 'string',
                                     'description' => 'Error description.'
                                 ],
-                                'error_code'        => [
-                                    'type'        => 'integer',
+                                'error_code' => [
+                                    'type' => 'integer',
                                     'description' => 'Error code.'
                                 ]
                             ]

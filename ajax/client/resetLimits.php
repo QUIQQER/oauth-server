@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * this file contains package_quiqqer_oauth-server_ajax_client_resetLimits
+ */
+
 use QUI\OAuth\Clients\Handler as ClientsHandler;
 
 /**
@@ -27,7 +31,7 @@ QUI::$Ajax->registerFunction(
             );
 
             return;
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
             QUI::getMessagesHandler()->addError(
@@ -46,7 +50,7 @@ QUI::$Ajax->registerFunction(
                 'message.ajax.client.resetLimits.success',
                 [
                     'clientId' => $clientId,
-                    'scope'    => $scope
+                    'scope' => $scope
                 ]
             )
         );

@@ -11,6 +11,8 @@ use OAuth2;
 use QUI\OAuth\Server as OAuth2Server;
 use Slim\Routing\RouteCollectorProxy;
 
+use function json_encode;
+
 /**
  * Class RestProvider
  *
@@ -21,9 +23,9 @@ class RestProvider implements QUI\REST\ProviderInterface
     /**
      * @param Server $Server
      */
-    public function register(Server $Server)
+    public function register(Server $Server): void
     {
-        $Slim         = $Server->getSlim();
+        $Slim = $Server->getSlim();
         $OAuth2Server = OAuth2Server::getInstance()->getOAuth2Server();
 
         $Slim->group('/oauth', function (RouteCollectorProxy $RouteCollector) use ($OAuth2Server) {
@@ -66,18 +68,18 @@ class RestProvider implements QUI\REST\ProviderInterface
             /** @var Response $Response */
             $Response->withHeader('Content-Type', 'application/json');
 
-            return $Response->write(\json_encode([
+            return $Response->write(json_encode([
                 'success' => true
             ]));
         });
     }
 
     /**
-     * Get file containting OpenApi definition for this API.
+     * Get file containing OpenApi definition for this API.
      *
      * @return string|false - Absolute file path or false if no definition exists
      */
-    public function getOpenApiDefinitionFile()
+    public function getOpenApiDefinitionFile(): bool|string
     {
         return false;
     }

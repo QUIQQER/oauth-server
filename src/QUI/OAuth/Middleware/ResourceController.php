@@ -2,6 +2,7 @@
 
 namespace QUI\OAuth\Middleware;
 
+use Exception;
 use QUI;
 use OAuth2;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,7 +10,7 @@ use QUI\OAuth\Clients\Handler as OAuthClients;
 use QUI\REST\Utils\RequestUtils;
 use QUI\REST\Server as RestServer;
 
-class ResourceController extends \OAuth2\Controller\ResourceController
+class ResourceController extends OAuth2\Controller\ResourceController
 {
     /**
      * Verify a REST API request
@@ -54,7 +55,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
 
         try {
             $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
             throw new InvalidRequestException(
@@ -81,8 +82,8 @@ class ResourceController extends \OAuth2\Controller\ResourceController
         $this->verifyScopePermission($clientData, $scope);
 
         try {
-            QUI\OAuth\Clients\Handler::setSesstionUser(QUI::getUsers()->get($clientData['user_id']));
-        } catch (\Exception $Exception) {
+            QUI\OAuth\Clients\Handler::setSessionUser(QUI::getUsers()->get($clientData['user_id']));
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
         }
     }
@@ -95,7 +96,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
      * @return void
      * @throws InvalidRequestException
      */
-    protected function verifyScopePermission($clientData, $scope)
+    protected function verifyScopePermission(array $clientData, string $scope): void
     {
         $scopeRestrictions = json_decode($clientData['scope_restrictions'], true);
 
@@ -114,40 +115,40 @@ class ResourceController extends \OAuth2\Controller\ResourceController
         // check access limits
         try {
             $table = QUI\OAuth\Setup::getTable('oauth_access_limits');
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
             throw new InvalidRequestException(
                 'system_error',
-                'System error. Please contect an administrator.',
+                'System error. Please contact an administrator.',
                 500
             );
         }
 
         $result = QUI::getDataBase()->fetch([
             'select' => ['total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage'],
-            'from'   => $table,
-            'where'  => [
+            'from' => $table,
+            'where' => [
                 'client_id' => $clientData['client_id'],
-                'scope'     => $scope
+                'scope' => $scope
             ],
-            'limit'  => 1
+            'limit' => 1
         ]);
 
         if (empty($result)) {
             $this->throwInvalidScopeException();
         }
 
-        $now                = time();
-        $data               = current($result);
-        $writeToDatabase    = false;
-        $firstUsage         = empty($data['first_usage']) ? $now : $data['first_usage'];
-        $lastUsage          = empty($data['last_usage']) ? $now : $data['last_usage'];
-        $totalUsageCount    = $data['total_usage_count'];
+        $now = time();
+        $data = current($result);
+        $writeToDatabase = false;
+        $firstUsage = empty($data['first_usage']) ? $now : $data['first_usage'];
+        $lastUsage = empty($data['last_usage']) ? $now : $data['last_usage'];
+        $totalUsageCount = $data['total_usage_count'];
         $intervalUsageCount = $data['interval_usage_count'];
-        $maxCalls           = $scopeSettings['maxCalls'];
-        $maxCallsType       = $scopeSettings['maxCallsType'];
-        $maxCallsExceeded   = false;
+        $maxCalls = $scopeSettings['maxCalls'];
+        $maxCallsType = $scopeSettings['maxCallsType'];
+        $maxCallsExceeded = false;
 
         // absolute call count restriction
         $totalUsageCount++;
@@ -185,7 +186,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
 
             if (!empty($firstUsage) && ($now - $firstUsage) > $intervalSeconds) {
                 $intervalUsageCount = 1;
-                $firstUsage         = $now;
+                $firstUsage = $now;
             }
 
             if ($intervalUsageCount > $maxCalls) {
@@ -197,20 +198,20 @@ class ResourceController extends \OAuth2\Controller\ResourceController
 
         if ($writeToDatabase) {
             QUI::getDataBase()->update($table, [
-                'total_usage_count'    => $totalUsageCount,
+                'total_usage_count' => $totalUsageCount,
                 'interval_usage_count' => $intervalUsageCount,
-                'first_usage'          => $firstUsage,
-                'last_usage'           => $now
+                'first_usage' => $firstUsage,
+                'last_usage' => $now
             ], [
                 'client_id' => $clientData['client_id'],
-                'scope'     => $scope
+                'scope' => $scope
             ]);
         }
 
         if ($maxCallsExceeded) {
             throw new InvalidRequestException(
                 'query_limit_reached',
-                'You have exceeded the maximum number of calls ('.$maxCalls.') per time interval ('.$maxCallsType.').',
+                'You have exceeded the maximum number of calls (' . $maxCalls . ') per time interval (' . $maxCallsType . ').',
                 403
             );
         }
@@ -224,7 +225,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
      * @return void
      * @throws InvalidRequestException
      */
-    protected function parseErrorFromResponseAndThrowException(OAuth2\Response $Response)
+    protected function parseErrorFromResponseAndThrowException(OAuth2\Response $Response): void
     {
         $responseBody = json_decode($Response->getResponseBody(), true);
 
@@ -243,19 +244,19 @@ class ResourceController extends \OAuth2\Controller\ResourceController
      * @param string $endpoint
      * @return string|false - Scope name or false if scope could not be parsed
      */
-    public static function parseScopeFromEndpoint($endpoint)
+    public static function parseScopeFromEndpoint(string $endpoint): bool|string
     {
         $requestsScope = false;
 
         try {
             $availableScopes = RestServer::getInstance()->getEntryPoints();
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
             return false;
         }
 
         foreach ($availableScopes as $scope) {
-            $parts        = explode('/', trim($scope, '/'));
+            $parts = explode('/', trim($scope, '/'));
             $literalParts = [];
 
             foreach ($parts as $part) {
@@ -266,7 +267,7 @@ class ResourceController extends \OAuth2\Controller\ResourceController
                 $literalParts[] = $part;
             }
 
-            $literalEndpoint = '/'.implode('/', $literalParts);
+            $literalEndpoint = '/' . implode('/', $literalParts);
 
             if (mb_strpos($endpoint, $literalEndpoint) !== 0) {
                 continue;

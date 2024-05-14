@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * this file contains package_quiqqer_oauth-server_ajax_client_create
+ */
+
 use QUI\Utils\Security\Orthos;
 use QUI\OAuth\Clients\Handler as OAuthClientsHandler;
 
@@ -34,7 +38,7 @@ QUI::$Ajax->registerFunction(
             );
 
             return;
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
             QUI::getMessagesHandler()->addError(
