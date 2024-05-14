@@ -6,10 +6,13 @@
  * @return array
  * @throws \QUI\Exception
  */
+
+use QUI\REST\Server;
+
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_getScopes',
     function () {
-        $scopes = \QUI\REST\Server::getInstance()->getEntryPoints();
+        $scopes = Server::getInstance()->getEntryPoints();
 
         foreach ($scopes as $k => $scope) {
             switch ($scope) {

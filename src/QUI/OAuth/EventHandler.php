@@ -20,7 +20,7 @@ class EventHandler
     /**
      * @param QUI\Package\Package $Package
      */
-    public static function onPackageSetup(QUI\Package\Package $Package)
+    public static function onPackageSetup(QUI\Package\Package $Package): void
     {
         if ($Package->getName() !== 'quiqqer/oauth-server') {
             return;
@@ -34,7 +34,7 @@ class EventHandler
      *
      * @param QUI\Package\Package $Package
      */
-    public static function onPackageInstall(QUI\Package\Package $Package)
+    public static function onPackageInstall(QUI\Package\Package $Package): void
     {
         if ($Package->getName() !== 'quiqqer/oauth-server') {
             return;
@@ -53,11 +53,11 @@ class EventHandler
      * @return void
      * @throws \QUI\Exception
      */
-    protected static function createCrons()
+    protected static function createCrons(): void
     {
-        $Crons = new CronManager();
+        $Cron = new CronManager();
 
-        $Crons->add(
+        $Cron->add(
             '\QUI\OAuth\Clients\Handler::cleanupAccessTokens',
             '0',
             '0',
@@ -77,7 +77,7 @@ class EventHandler
      *
      * @throws \QUI\Exception
      */
-    public static function onRequest(QUI\Rewrite $Rewrite, $url)
+    public static function onRequest(QUI\Rewrite $Rewrite, string $url): void
     {
         $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 

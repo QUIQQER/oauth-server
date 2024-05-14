@@ -6,7 +6,7 @@ use QUI\OAuth\Exception;
 
 class InvalidRequestException extends Exception
 {
-    protected $errorDescription;
+    protected string $errorDescription;
 
     /**
      * Constructor
@@ -27,7 +27,7 @@ class InvalidRequestException extends Exception
      *
      * @return string
      */
-    public function getErrorDescription()
+    public function getErrorDescription(): string
     {
         return $this->errorDescription;
     }

@@ -27,7 +27,7 @@ QUI::$Ajax->registerFunction(
             );
 
             return;
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
             QUI::getMessagesHandler()->addError(
@@ -46,7 +46,7 @@ QUI::$Ajax->registerFunction(
                 'message.ajax.client.resetLimits.success',
                 [
                     'clientId' => $clientId,
-                    'scope'    => $scope
+                    'scope' => $scope
                 ]
             )
         );

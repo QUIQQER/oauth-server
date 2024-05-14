@@ -2,6 +2,7 @@
 
 namespace QUI\OAuth\Middleware;
 
+use Exception;
 use GuzzleHttp\Psr7\ServerRequest;
 use QUI;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -50,7 +51,7 @@ class RestMiddleware
         try {
             $RESTConfig  = QUI::getPackage('quiqqer/rest')->getConfig();
             $OAuthConfig = QUI::getPackage('quiqqer/oauth-server')->getConfig();
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
             throw new InvalidRequestException(
@@ -85,10 +86,10 @@ class RestMiddleware
         // This constant tells the OAuth client handler to ignore permission checks
         define('OAUTH_REST_REQUEST', 1);
 
-        // Verfiy resource request
+        // Verify resource request
         $OAuth2Server = QUI\OAuth\Server::getInstance()->getOAuth2Server();
-        /** @var ResourceController $ResourceContoller */
-        $ResourceContoller = $OAuth2Server->getResourceController();
-        $ResourceContoller->verify($endpoint, ServerRequest::fromGlobals());
+        /** @var ResourceController $ResourceController */
+        $ResourceController = $OAuth2Server->getResourceController();
+        $ResourceController->verify($endpoint, ServerRequest::fromGlobals());
     }
 }
