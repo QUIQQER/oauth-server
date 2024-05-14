@@ -1,11 +1,12 @@
 <?php
 
 /**
- * Create a oauth client entry
+ * Create an oauth client entry
  *
  * @return string
  * @throws \QUI\Exception
  */
+
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_remove',
     function ($clientId) {
@@ -23,7 +24,7 @@ QUI::$Ajax->registerFunction(
             );
 
             return;
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
             QUI::getMessagesHandler()->addError(
@@ -46,5 +47,5 @@ QUI::$Ajax->registerFunction(
             )
         );
     },
-    array('clientId')
+    ['clientId']
 );

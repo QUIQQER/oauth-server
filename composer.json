@@ -22,11 +22,11 @@
     "url": "https://www.pcsg.de"
   },
   "require": {
-    "php": "^7.4|^8",
-    "quiqqer/quiqqer": "^1.2|*@dev",
-    "quiqqer/rest": "^2.1|*@dev",
-    "bshaffer/oauth2-server-php": "1.*",
-    "psr/http-message": "^1"
+    "php": "^8",
+    "quiqqer/core": "^2",
+    "quiqqer/rest": "^3",
+    "bshaffer/oauth2-server-php": "^1",
+    "psr/http-message": "^1|^2"
   },
   "autoload": {
     "psr-4": {

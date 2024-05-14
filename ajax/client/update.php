@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * this file contains package_quiqqer_oauth-server_ajax_client_update
+ */
+
 use QUI\Utils\Security\Orthos;
 
 /**

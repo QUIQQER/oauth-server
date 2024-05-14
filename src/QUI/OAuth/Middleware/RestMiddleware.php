@@ -2,6 +2,7 @@
 
 namespace QUI\OAuth\Middleware;
 
+use Exception;
 use GuzzleHttp\Psr7\ServerRequest;
 use QUI;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -27,9 +28,9 @@ class RestMiddleware
             $Response = new QUI\REST\Response($Exception->getCode());
 
             $Response->getBody()->write(json_encode([
-                'error'             => $Exception->getMessage(),
+                'error' => $Exception->getMessage(),
                 'error_description' => $Exception->getErrorDescription(),
-                'error_code'        => $Exception->getCode()
+                'error_code' => $Exception->getCode()
             ]));
 
             return $Response;
@@ -48,9 +49,9 @@ class RestMiddleware
     protected function validateRequest(Request $Request): void
     {
         try {
-            $RESTConfig  = QUI::getPackage('quiqqer/rest')->getConfig();
+            $RESTConfig = QUI::getPackage('quiqqer/rest')->getConfig();
             $OAuthConfig = QUI::getPackage('quiqqer/oauth-server')->getConfig();
-        } catch (\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
             throw new InvalidRequestException(
@@ -61,8 +62,8 @@ class RestMiddleware
         }
 
         $basePath = ltrim($RESTConfig->getValue('general', 'basePath'), '/');
-        $query    = $Request->getQueryParams();
-        $endpoint = '/'.str_replace($basePath, '', ltrim($query['_url'], '/'));
+        $query = $Request->getQueryParams();
+        $endpoint = '/' . str_replace($basePath, '', ltrim($query['_url'], '/'));
 
         // Requests to /oauth endpoints do not require special authentication / permissions
         if (mb_strpos($endpoint, '/oauth') === 0) {
@@ -70,7 +71,7 @@ class RestMiddleware
         }
 
         // Check if OAuth2 authentication is required for the endpoint (scope)
-        $scope           = ResourceController::parseScopeFromEndpoint($endpoint);
+        $scope = ResourceController::parseScopeFromEndpoint($endpoint);
         $protectedScopes = $OAuthConfig->get('general', 'protected_scopes');
 
         if (!empty($protectedScopes)) {
@@ -85,10 +86,10 @@ class RestMiddleware
         // This constant tells the OAuth client handler to ignore permission checks
         define('OAUTH_REST_REQUEST', 1);
 
-        // Verfiy resource request
+        // Verify resource request
         $OAuth2Server = QUI\OAuth\Server::getInstance()->getOAuth2Server();
-        /** @var ResourceController $ResourceContoller */
-        $ResourceContoller = $OAuth2Server->getResourceController();
-        $ResourceContoller->verify($endpoint, ServerRequest::fromGlobals());
+        /** @var ResourceController $ResourceController */
+        $ResourceController = $OAuth2Server->getResourceController();
+        $ResourceController->verify($endpoint, ServerRequest::fromGlobals());
     }
 }

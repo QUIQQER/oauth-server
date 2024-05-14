@@ -11,10 +11,10 @@ class HandlerTest extends \PHPUnit\Framework\TestCase
 {
     public function testOAuthConnection()
     {
-        $SystemUser    = QUI::getUsers()->getSystemUser();
+        $SystemUser = QUI::getUsers()->getSystemUser();
         $oauthClientId = QUI\OAuth\Clients\Handler::createOAuthClient($SystemUser, [
             '/quiqqer_oauth_test' => [
-                'active'         => true,
+                'active' => true,
                 'unlimitedCalls' => true
             ]
         ]);
@@ -22,15 +22,15 @@ class HandlerTest extends \PHPUnit\Framework\TestCase
         $this->assertNotEmpty($oauthClientId);
 
         // make a oauth request
-        $REST       = QUI\REST\Server::getInstance();
+        $REST = QUI\REST\Server::getInstance();
         $apiAddress = $REST->getAddress();
 
         $oauthClient = QUI\OAuth\Clients\Handler::getOAuthClient($oauthClientId);
 
-        $clientID     = $oauthClient['client_id'];
+        $clientID = $oauthClient['client_id'];
         $clientSecret = $oauthClient['client_secret'];
 
-        $curl = "curl -u {$clientID}:".escapeshellarg($clientSecret);
+        $curl = "curl -u {$clientID}:" . escapeshellarg($clientSecret);
         $curl .= " {$apiAddress}oauth/token -d 'grant_type=client_credentials'";
 
         $result = shell_exec($curl);
