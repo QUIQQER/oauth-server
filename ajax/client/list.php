@@ -5,6 +5,7 @@
  *
  * @return string
  */
+
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_list',
     function ($userId) {

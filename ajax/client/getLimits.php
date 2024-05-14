@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * this file contains package_quiqqer_oauth-server_ajax_client_getLimits
+ */
+
 use QUI\OAuth\Clients\Handler as ClientsHandler;
 
 /**
@@ -13,7 +17,7 @@ QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_getLimits',
     function ($clientId) {
         $limits = ClientsHandler::getClientLimits($clientId);
-        $L      = QUI::getLocale();
+        $L = QUI::getLocale();
 
         foreach ($limits as $scope => $limitData) {
             if (empty($limitData['first_usage'])) {

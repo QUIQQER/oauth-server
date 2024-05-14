@@ -20,14 +20,14 @@ class Storage extends OAuth2\Storage\Pdo
     {
         try {
             $config = [
-                'client_table'        => Setup::getTable('oauth_clients'),
-                'access_token_table'  => Setup::getTable('oauth_access_tokens'),
+                'client_table' => Setup::getTable('oauth_clients'),
+                'access_token_table' => Setup::getTable('oauth_access_tokens'),
                 'refresh_token_table' => Setup::getTable('oauth_refresh_tokens'),
-                'code_table'          => Setup::getTable('oauth_authorization_codes'),
-                'user_table'          => QUI::getUsers()->table(),
-                'jwt_table'           => Setup::getTable('oauth_jwt'),
+                'code_table' => Setup::getTable('oauth_authorization_codes'),
+                'user_table' => QUI::getUsers()->table(),
+                'jwt_table' => Setup::getTable('oauth_jwt'),
 //                'jti_table'           => Setup::getTable('oauth_jti'),
-                'scope_table'         => Setup::getTable('oauth_scopes'),
+                'scope_table' => Setup::getTable('oauth_scopes'),
 //                'public_key_table'    => Setup::getTable('oauth_public_keys')
             ];
         } catch (\Exception $Exception) {
@@ -41,16 +41,16 @@ class Storage extends OAuth2\Storage\Pdo
      * @param string $username
      * @return array|bool
      */
-    public function getUserDetails($username)
+    public function getUserDetails(string $username): bool|array
     {
         try {
             $User = QUI::getUsers()->getUserByName($username);
-        } catch (QUI\Exception $Exception) {
+        } catch (QUI\Exception) {
             return false;
         }
 
         return array_merge([
-            'user_id' => $User->getId()
+            'user_id' => $User->getUUID()
         ], $User->getAttributes());
     }
 }
