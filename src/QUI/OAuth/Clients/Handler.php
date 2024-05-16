@@ -154,16 +154,6 @@ class Handler
     {
         self::checkManagePermission();
 
-        if (!isset($result[0])) {
-            throw new QUI\OAuth\Exception(
-                [
-                    'quiqqer/oauth-server',
-                    'exception.client.not.found'
-                ],
-                404
-            );
-        }
-
         return QUI::getDataBase()->fetch([
             'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
             'where' => [
