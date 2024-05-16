@@ -41,7 +41,7 @@ class Storage extends OAuth2\Storage\Pdo
      * @param string $username
      * @return array|bool
      */
-    public function getUserDetails(string $username): bool|array
+    public function getUserDetails($username): bool|array
     {
         try {
             $User = QUI::getUsers()->getUserByName($username);
