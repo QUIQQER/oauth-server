@@ -278,13 +278,13 @@ class Handler
     /**
      * Return oauth client data
      *
-     * @param int $clientId
+     * @param string $clientId
      * @return array
      *
      * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
-    public static function getOAuthClient(int $clientId): array
+    public static function getOAuthClient(string $clientId): array
     {
         self::checkManagePermission();
 
