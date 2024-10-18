@@ -10,7 +10,7 @@ QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_list',
     function ($userId) {
         $list = QUI\OAuth\Clients\Handler::getOAuthClientsByUser(
-            QUI::getUsers()->get((int)$userId)
+            QUI::getUsers()->get($userId)
         );
 
         foreach ($list as $key => $entry) {
