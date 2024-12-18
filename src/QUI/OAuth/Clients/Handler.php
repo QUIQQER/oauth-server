@@ -144,13 +144,13 @@ class Handler
      * Return a client from the user
      *
      * @param QUI\Interfaces\Users\User $User
-     * @param int $clientId
+     * @param string $clientId
      * @return array
      *
      * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
-    public static function getOAuthClientByUser(QUI\Interfaces\Users\User $User, int $clientId): array
+    public static function getOAuthClientByUser(QUI\Interfaces\Users\User $User, string $clientId): array
     {
         self::checkManagePermission();
 
@@ -195,14 +195,14 @@ class Handler
      * - name
      * - scope_restrictions
      *
-     * @param int $clientId
+     * @param string $clientId
      * @param array $data
      *
      * @throws QUI\OAuth\Exception
      * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
-    public static function updateOAuthClient(int $clientId, array $data = []): void
+    public static function updateOAuthClient(string $clientId, array $data = []): void
     {
         self::checkManagePermission();
 
@@ -311,12 +311,12 @@ class Handler
     /**
      * Delete an oauth client
      *
-     * @param int $clientId
+     * @param string $clientId
      *
      * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
-    public static function removeOAuthClient(int $clientId): void
+    public static function removeOAuthClient(string $clientId): void
     {
         self::checkManagePermission();
 
