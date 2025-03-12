@@ -108,7 +108,7 @@ class Handler
      */
     protected static function generatePassword(int $len = 40): string
     {
-        $characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()[]{}?!$%&/=*+~,.;:-_";
+        $characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()[]{}?!%&/=*+~,.;:-_";
         $max = mb_strlen($characters) - 1;
         $passwordCharacters = [];
 
