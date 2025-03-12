@@ -1,11 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Parameter \\#1 \\$string of method PDO\\:\\:quote\\(\\) expects string, int given\\.$#"
-			count: 2
-			path: src/QUI/OAuth/Clients/Handler.php
-
-		-
 			message: "#^Access to an undefined property OAuth2\\\\ResponseInterface\\:\\:\\$version\\.$#"
 			count: 1
 			path: src/QUI/OAuth/RestProvider.php
