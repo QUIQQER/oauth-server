@@ -10,6 +10,8 @@ use QUI\OAuth\Clients\Handler as OAuthClients;
 use QUI\REST\Utils\RequestUtils;
 use QUI\REST\Server as RestServer;
 
+use function mb_strpos;
+
 class ResourceController extends OAuth2\Controller\ResourceController
 {
     /**
@@ -246,8 +248,6 @@ class ResourceController extends OAuth2\Controller\ResourceController
      */
     public static function parseScopeFromEndpoint(string $endpoint): bool|string
     {
-        $requestsScope = false;
-
         try {
             $availableScopes = RestServer::getInstance()->getEntryPoints();
         } catch (Exception $Exception) {
@@ -255,33 +255,32 @@ class ResourceController extends OAuth2\Controller\ResourceController
             return false;
         }
 
-        foreach ($availableScopes as $scope) {
-            $parts = explode('/', trim($scope, '/'));
-            $literalParts = [];
+        $endpointParts = explode('/', trim($endpoint, '/'));
 
-            foreach ($parts as $part) {
-                if (mb_strpos($part, '{') !== false) {
-                    break;
+        foreach ($availableScopes as $scope) {
+            $scopeParts = explode('/', trim($scope, '/'));
+
+            if (count($scopeParts) !== count($endpointParts)) {
+                continue;
+            }
+
+            foreach ($scopeParts as $k => $scopePart) {
+                $endpointPart = $endpointParts[$k];
+
+                // skip placeholders
+                if (mb_strpos($scopePart, '{') !== false) {
+                    continue;
                 }
 
-                $literalParts[] = $part;
+                if ($scopePart !== $endpointPart) {
+                    continue 2;
+                }
             }
 
-            $literalEndpoint = '/' . implode('/', $literalParts);
-
-            if (mb_strpos($endpoint, $literalEndpoint) !== 0) {
-                continue;
-            }
-
-            if (mb_substr_count($endpoint, '/') !== mb_substr_count($scope, '/')) {
-                continue;
-            }
-
-            $requestsScope = $scope;
-            break;
+            return $scope;
         }
 
-        return $requestsScope;
+        return false;
     }
 
     /**
