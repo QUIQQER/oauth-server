@@ -120,6 +120,7 @@ class Setup
             'name'               => 'VARCHAR(250) NOT NULL',
             'client_id'          => 'VARCHAR(80) NOT NULL',
             'client_secret'      => 'VARCHAR(80)',
+            'client_secret_is_token' => 'TINYINT(1) NOT NULL DEFAULT 0',
             'redirect_uri'       => 'VARCHAR(2000) NOT NULL DEFAULT \'\'',
             'grant_types'        => 'VARCHAR(80)',
             'scope'              => 'VARCHAR(4000)',
