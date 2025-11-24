@@ -2,11 +2,12 @@
 
 namespace QUI\OAuth\Clients;
 
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use QUI;
+use QUI\Cache\LongTermCache;
 use QUI\Interfaces\Users\User as QUIUserInterface;
 use Ramsey\Uuid\Uuid;
-use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
 
 /**
  * Class Handler
@@ -253,19 +254,26 @@ class Handler
         }
 
         if (!empty($data['clientSecret'])) {
-            // TODO: hashing!!
             $update['client_secret'] = $data['clientSecret'];
         }
 
-        $update['client_secret_is_token'] = !empty($data['clientSecretIsToken']) ? 1 : 0;
+        $clientSecretIsToken = !empty($data['clientSecretIsToken']);
+        $update['client_secret_is_token'] = $clientSecretIsToken ? 1 : 0;
+
+        $tableClients = QUI\OAuth\Setup::getTable('oauth_clients');
 
         QUI::getDataBase()->update(
-            QUI\OAuth\Setup::getTable('oauth_clients'),
+            $tableClients,
             $update,
             [
                 'client_id' => $clientId
             ]
         );
+
+        // If client secret is not a permanent access token (anymore), we have to delete it from cache
+        if ($clientSecretIsToken === false) {
+            self::clearCacheForClientSecretAsAccessTokenByClientId($clientId);
+        }
 
         // Write limit data for all active scopes to database
         $PDO = QUI::getDataBase()->getPDO();
@@ -340,6 +348,7 @@ class Handler
         $DB = QUI::getDataBase();
 
         foreach (QUI\OAuth\Setup::getClientTables() as $table) {
+            self::clearCacheForClientSecretAsAccessTokenByClientId($clientId);
             $DB->delete($table, ['client_id' => $clientId]);
         }
     }
@@ -515,8 +524,6 @@ class Handler
      */
     public static function getOAuthClientDataByRequestWithClientSecretAsToken(ServerRequestInterface $request): ?array
     {
-        // TODO: may be caching and then cache update if client is updated
-
         $authHeader = $request->getHeaderLine('Authorization');
         $token = null;
 
@@ -534,6 +541,16 @@ class Handler
             return null;
         }
 
+        $cacheName = self::getCacheNameForClientSecretsAsAccessTokens($token);
+
+        try {
+            return LongTermCache::get($cacheName);
+        } catch (QUI\Cache\Exception) {
+            // re-build cache
+        } catch (Throwable $e) {
+            QUI\System\Log::writeException($e);
+        }
+
         try {
             $result = QUI::getDataBase()->fetch([
                 'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
@@ -544,10 +561,44 @@ class Handler
                 'limit' => 1
             ]);
 
-            return !empty($result) ? $result[0] : null;
+            if (empty($result)) {
+                return null;
+            }
+
+            $clientData = $result[0];
+            LongTermCache::set($cacheName, $clientData);
+
+            return $clientData;
         } catch (\Exception $exception) {
             QUI\System\Log::writeException($exception);
             return null;
+        }
+    }
+
+    private static function getCacheNameForClientSecretsAsAccessTokens(string $token): string
+    {
+        return 'quiqqer/oauth-server/client-data-with-secret-as-access-token/' . $token;
+    }
+
+    /**
+     * @param string $clientId
+     * @return void
+     * @throws QUI\Database\Exception
+     * @throws QUI\Exception
+     */
+    private static function clearCacheForClientSecretAsAccessTokenByClientId(string $clientId): void
+    {
+        $result = QUI::getDatabase()->fetch([
+            'select' => ['client_secret'],
+            'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
+            'where' => [
+                'client_id' => $clientId
+            ],
+            'limit' => 1
+        ]);
+
+        if (!empty($result)) {
+            LongTermCache::clear(self::getCacheNameForClientSecretsAsAccessTokens($result[0]['client_secret']));
         }
     }
 }
