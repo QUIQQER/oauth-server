@@ -109,8 +109,7 @@ class Handler
      * @return string
      * @throws Exception
      */
-    protected static function generatePassword(int $len = 40): string
-    public static function generatePassword($len = 40): string
+    public static function generatePassword(int $len = 40): string
     {
         $characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()[]{}?!%&/=*+~,.;:-_";
         $max = mb_strlen($characters) - 1;
