@@ -25,7 +25,7 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
     'css!package/quiqqer/oauth-server/bin/backend/controls/UserClients.css'
 
 ], function (QUI, QUIControl, QUIConfirm, QUIPoup, QUIButton, QUILoader, ScopeSettings, OAuthServer, Grid,
-             QUILocale, Mustache, templateCreate, templateEdit) {
+    QUILocale, Mustache, templateCreate, templateEdit) {
     "use strict";
 
     var lg = 'quiqqer/oauth-server';
@@ -128,7 +128,7 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
             this.$Grid.addEvents({
                 onRefresh : this.refresh,
                 onClick   : function () {
-                    var selected = self.$Grid.getSelectedIndices(),
+                    var selected     = self.$Grid.getSelectedIndices(),
                         TableButtons = self.$Grid.getAttribute('buttons');
 
                     if (selected.length === 1) {
@@ -320,6 +320,9 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
             var self = this,
                 data = this.$Grid.getSelectedData()[0];
 
+            let newClientSecret = null;
+            let clientSecretIsTokenCheckbox = null;
+
             new QUIConfirm({
                 title    : QUILocale.get(lg, 'control.user.clients.window.edit.title', {
                     clientId: data.client_id
@@ -328,26 +331,47 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                 maxHeight: 600,
                 maxWidth : 1000,
                 events   : {
-                    onOpen: function (Win) {
+                    onOpen: (Win) => {
                         var Content = Win.getContent();
 
                         Win.Loader.show();
                         Content.set('html', '');
 
-                        OAuthServer.getClient(data.client_id).then(function (clientData) {
+                        OAuthServer.getClient(data.client_id).then((clientData) => {
                             var lgPrefix = 'controls.backend.UserClients.createClient.template.';
 
                             Content.set('html', Mustache.render(templateEdit, {
-                                labelClientId     : QUILocale.get(lg, 'client_id'),
-                                labelClientSecret : QUILocale.get(lg, 'client_secret'),
-                                labelName         : QUILocale.get('quiqqer/system', 'name'),
-                                labelCDate        : QUILocale.get('quiqqer/system', 'c_date'),
-                                labelScopeSettings: QUILocale.get(lg, lgPrefix + 'labelScopeSettings'),
-                                clientId          : clientData.client_id,
-                                clientSecret      : clientData.client_secret.trim(),
-                                name              : clientData.name,
-                                c_date            : new Date(parseInt(clientData.c_date * 1000)).toISOString()
+                                labelClientId                 : QUILocale.get(lg, 'client_id'),
+                                labelClientSecret             : QUILocale.get(lg, 'client_secret'),
+                                labelName                     : QUILocale.get('quiqqer/system', 'name'),
+                                labelCDate                    : QUILocale.get('quiqqer/system', 'c_date'),
+                                labelScopeSettings            : QUILocale.get(lg, lgPrefix + 'labelScopeSettings'),
+                                labelButtonGenerateSecret     : QUILocale.get(lg, lgPrefix + 'labelButtonGenerateSecret'),
+                                labelClientSecretIsToken      : QUILocale.get(lg, lgPrefix + 'labelClientSecretIsToken'),
+                                descriptionClientSecretIsToken: QUILocale.get(lg, lgPrefix + 'descriptionClientSecretIsToken'),
+                                textClientSecretIsToken       : QUILocale.get(lg, lgPrefix + 'textClientSecretIsToken'),
+                                clientId                      : clientData.client_id,
+                                clientSecret                  : clientData.client_secret.trim(),
+                                name                          : clientData.name,
+                                c_date                        : new Date(parseInt(clientData.c_date * 1000)).toISOString()
                             }));
+
+                            console.log(clientData);
+
+                            clientSecretIsTokenCheckbox = Content.getElement('[name="client_secret_is_token"]');
+                            clientSecretIsTokenCheckbox.checked = !!clientData.client_secret_is_token;
+
+                            Content.getElement('button.quiqqer-oauth-client-secret-button').addEventListener(
+                                'click',
+                                async () => {
+                                    const clientSecretInput = Content.getElement(
+                                        '.quiqqer-oauth-client-secret > span'
+                                    );
+
+                                    newClientSecret             = await OAuthServer.generateClientSecret();
+                                    clientSecretInput.innerHTML = newClientSecret;
+                                }
+                            );
 
                             ScopeSettingsControl = new ScopeSettings({
                                 clientId: data.client_id,
@@ -370,8 +394,10 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                         Win.Loader.show();
 
                         OAuthServer.updateClient(data.client_id, {
-                            title             : Content.getElement('[name="name"]').value,
-                            scope_restrictions: ScopeSettingsControl.getSettings()
+                            title              : Content.getElement('[name="name"]').value,
+                            scope_restrictions : ScopeSettingsControl.getSettings(),
+                            clientSecretIsToken: clientSecretIsTokenCheckbox.checked,
+                            clientSecret       : newClientSecret
                         }).then(function () {
                             return self.refresh();
                         }).then(function () {
