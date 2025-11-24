@@ -166,6 +166,20 @@ define('package/quiqqer/oauth-server/bin/backend/classes/OAuthServer', [
                     onError  : reject
                 });
             });
+        },
+
+        /**
+         * Generates a new client secret.
+         *
+         * @return {Promise<string>}
+         */
+        generateClientSecret: async function () {
+            return new Promise(function (resolve, reject) {
+                QUIAjax.post('package_quiqqer_oauth-server_ajax_client_generateSecret', resolve, {
+                    'package': pkg,
+                    onError  : reject
+                });
+            });
         }
     });
 });

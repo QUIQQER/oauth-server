@@ -12,3 +12,7 @@
     width: 100%;
     word-break: break-all;
 }
+
+.quiqqer-oauth-client-secret-button {
+    float: right;
+}
