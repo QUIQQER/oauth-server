@@ -221,7 +221,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
         if ($maxCallsExceeded) {
             throw new InvalidRequestException(
                 'query_limit_reached',
-                'You have exceeded the maximum number of calls ('.$maxCalls.') per time interval ('.$maxCallsType.').',
+                'You have exceeded the maximum number of calls (' . $maxCalls . ') per time interval (' . $maxCallsType . ').',
                 429
             );
         }

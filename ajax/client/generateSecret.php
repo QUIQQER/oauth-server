@@ -18,8 +18,7 @@ QUI::$Ajax->registerFunction(
             throw new QUI\Exception([
                     'quiqqer/oauth-server',
                     'message.ajax.general_error'
-                ]
-            );
+                ]);
         }
     },
     [],
