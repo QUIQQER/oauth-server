@@ -26,53 +26,61 @@ class ResourceController extends OAuth2\Controller\ResourceController
     public function verify(string $endpoint, ServerRequestInterface $Request): void
     {
         $VerificationResponse = new OAuth2\Response();
+        $clientData = OAuthClients::getOAuthClientDataByRequestWithClientSecretAsToken($Request);
 
-        /**
-         * General verification (token and scope)
-         *
-         * The request object used here implements \OAuth2\RequestInterface
-         */
-        parent::verifyResourceRequest(
-            OAuth2\Request::createFromGlobals(),
-            $VerificationResponse
-        );
-
-        $this->parseErrorFromResponseAndThrowException($VerificationResponse);
-
-        $tokenData = $this->getToken();
-
-        if (!empty($tokenData['access_token'])) {
-            $accessToken = $tokenData['access_token'];
-        } else {
-            $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
-        }
-
-        if (empty($accessToken)) {
-            throw new InvalidRequestException(
-                'token_missing',
-                'No access token provided. Please provide a valid access token with your request (access_token).',
-                401
+        if (is_null($clientData)) {
+            /**
+             * General verification (token and scope)
+             *
+             * The request object used here implements \OAuth2\RequestInterface
+             */
+            parent::verifyResourceRequest(
+                OAuth2\Request::createFromGlobals(),
+                $VerificationResponse
             );
-        }
 
-        try {
-            $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
-        } catch (Exception $Exception) {
-            QUI\System\Log::writeException($Exception);
+            $this->parseErrorFromResponseAndThrowException($VerificationResponse);
 
-            throw new InvalidRequestException(
-                'system_error',
-                'System error. Please contact an administrator.',
-                500
-            );
-        }
+            $tokenData = $this->getToken();
 
-        if (empty($clientData)) {
-            throw new InvalidRequestException(
-                'invalid_token',
-                'The access token provided is invalid.',
-                401
-            );
+            if (!empty($tokenData['access_token'])) {
+                $accessToken = $tokenData['access_token'];
+            } else {
+                $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
+            }
+
+            if (empty($accessToken)) {
+                throw new InvalidRequestException(
+                    'token_missing',
+                    'No access token provided. Please provide a valid access token with your request (access_token).',
+                    401
+                );
+            }
+
+            try {
+                $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
+            } catch (Exception $Exception) {
+                QUI\System\Log::writeException($Exception);
+                try {
+                    $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
+                } catch (\Exception $Exception) {
+                    QUI\System\Log::writeException($Exception);
+
+                    throw new InvalidRequestException(
+                        'system_error',
+                        'System error. Please contact an administrator.',
+                        500
+                    );
+                }
+
+                if (empty($clientData)) {
+                    throw new InvalidRequestException(
+                        'invalid_token',
+                        'The access token provided is invalid.',
+                        401
+                    );
+                }
+            }
         }
 
         $scope = self::parseScopeFromEndpoint($endpoint);
@@ -214,7 +222,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
             throw new InvalidRequestException(
                 'query_limit_reached',
                 'You have exceeded the maximum number of calls (' . $maxCalls . ') per time interval (' . $maxCallsType . ').',
-                403
+                429
             );
         }
     }
