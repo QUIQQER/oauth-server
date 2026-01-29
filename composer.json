@@ -28,6 +28,9 @@
         "bshaffer/oauth2-server-php": "^1",
         "psr/http-message": "^1|^2"
     },
+    "provide": {
+        "quiqqer/rest-authentication-implementation": "^1"
+    },
     "autoload": {
         "psr-4": {
             "QUI\\OAuth\\": "src/QUI/OAuth"
