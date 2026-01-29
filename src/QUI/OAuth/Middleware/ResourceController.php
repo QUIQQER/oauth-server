@@ -10,6 +10,8 @@ use QUI\OAuth\Clients\Handler as OAuthClients;
 use QUI\REST\Utils\RequestUtils;
 use QUI\REST\Server as RestServer;
 
+use function mb_strpos;
+
 class ResourceController extends OAuth2\Controller\ResourceController
 {
     /**
@@ -24,53 +26,61 @@ class ResourceController extends OAuth2\Controller\ResourceController
     public function verify(string $endpoint, ServerRequestInterface $Request): void
     {
         $VerificationResponse = new OAuth2\Response();
+        $clientData = OAuthClients::getOAuthClientDataByRequestWithClientSecretAsToken($Request);
 
-        /**
-         * General verification (token and scope)
-         *
-         * The request object used here implements \OAuth2\RequestInterface
-         */
-        parent::verifyResourceRequest(
-            OAuth2\Request::createFromGlobals(),
-            $VerificationResponse
-        );
-
-        $this->parseErrorFromResponseAndThrowException($VerificationResponse);
-
-        $tokenData = $this->getToken();
-
-        if (!empty($tokenData['access_token'])) {
-            $accessToken = $tokenData['access_token'];
-        } else {
-            $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
-        }
-
-        if (empty($accessToken)) {
-            throw new InvalidRequestException(
-                'token_missing',
-                'No access token provided. Please provide a valid access token with your request (access_token).',
-                401
+        if (is_null($clientData)) {
+            /**
+             * General verification (token and scope)
+             *
+             * The request object used here implements \OAuth2\RequestInterface
+             */
+            parent::verifyResourceRequest(
+                OAuth2\Request::createFromGlobals(),
+                $VerificationResponse
             );
-        }
 
-        try {
-            $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
-        } catch (Exception $Exception) {
-            QUI\System\Log::writeException($Exception);
+            $this->parseErrorFromResponseAndThrowException($VerificationResponse);
 
-            throw new InvalidRequestException(
-                'system_error',
-                'System error. Please contact an administrator.',
-                500
-            );
-        }
+            $tokenData = $this->getToken();
 
-        if (empty($clientData)) {
-            throw new InvalidRequestException(
-                'invalid_token',
-                'The access token provided is invalid.',
-                401
-            );
+            if (!empty($tokenData['access_token'])) {
+                $accessToken = $tokenData['access_token'];
+            } else {
+                $accessToken = RequestUtils::getFieldFromRequest($Request, 'access_token');
+            }
+
+            if (empty($accessToken)) {
+                throw new InvalidRequestException(
+                    'token_missing',
+                    'No access token provided. Please provide a valid access token with your request (access_token).',
+                    401
+                );
+            }
+
+            try {
+                $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
+            } catch (Exception $Exception) {
+                QUI\System\Log::writeException($Exception);
+                try {
+                    $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
+                } catch (\Exception $Exception) {
+                    QUI\System\Log::writeException($Exception);
+
+                    throw new InvalidRequestException(
+                        'system_error',
+                        'System error. Please contact an administrator.',
+                        500
+                    );
+                }
+
+                if (empty($clientData)) {
+                    throw new InvalidRequestException(
+                        'invalid_token',
+                        'The access token provided is invalid.',
+                        401
+                    );
+                }
+            }
         }
 
         $scope = self::parseScopeFromEndpoint($endpoint);
@@ -212,7 +222,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
             throw new InvalidRequestException(
                 'query_limit_reached',
                 'You have exceeded the maximum number of calls (' . $maxCalls . ') per time interval (' . $maxCallsType . ').',
-                403
+                429
             );
         }
     }
@@ -246,8 +256,6 @@ class ResourceController extends OAuth2\Controller\ResourceController
      */
     public static function parseScopeFromEndpoint(string $endpoint): bool|string
     {
-        $requestsScope = false;
-
         try {
             $availableScopes = RestServer::getInstance()->getEntryPoints();
         } catch (Exception $Exception) {
@@ -255,33 +263,32 @@ class ResourceController extends OAuth2\Controller\ResourceController
             return false;
         }
 
-        foreach ($availableScopes as $scope) {
-            $parts = explode('/', trim($scope, '/'));
-            $literalParts = [];
+        $endpointParts = explode('/', trim($endpoint, '/'));
 
-            foreach ($parts as $part) {
-                if (mb_strpos($part, '{') !== false) {
-                    break;
+        foreach ($availableScopes as $scope) {
+            $scopeParts = explode('/', trim($scope, '/'));
+
+            if (count($scopeParts) !== count($endpointParts)) {
+                continue;
+            }
+
+            foreach ($scopeParts as $k => $scopePart) {
+                $endpointPart = $endpointParts[$k];
+
+                // skip placeholders
+                if (mb_strpos($scopePart, '{') !== false) {
+                    continue;
                 }
 
-                $literalParts[] = $part;
+                if ($scopePart !== $endpointPart) {
+                    continue 2;
+                }
             }
 
-            $literalEndpoint = '/' . implode('/', $literalParts);
-
-            if (mb_strpos($endpoint, $literalEndpoint) !== 0) {
-                continue;
-            }
-
-            if (mb_substr_count($endpoint, '/') !== mb_substr_count($scope, '/')) {
-                continue;
-            }
-
-            $requestsScope = $scope;
-            break;
+            return $scope;
         }
 
-        return $requestsScope;
+        return false;
     }
 
     /**

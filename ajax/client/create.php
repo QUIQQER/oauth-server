@@ -22,7 +22,7 @@ QUI::$Ajax->registerFunction(
 
         try {
             $newClientId = OAuthClientsHandler::createOAuthClient(
-                QUI::getUsers()->get((int)$userId),
+                QUI::getUsers()->get($userId),
                 Orthos::clearArray(json_decode($scopeSettings, true)),
                 $title
             );

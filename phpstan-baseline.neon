@@ -1,0 +1,21 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Access to an undefined property OAuth2\\\\ResponseInterface\\:\\:\\$version\\.$#"
+			count: 1
+			path: src/QUI/OAuth/RestProvider.php
+
+		-
+			message: "#^Call to an undefined method OAuth2\\\\ResponseInterface\\:\\:getHttpHeaders\\(\\)\\.$#"
+			count: 1
+			path: src/QUI/OAuth/RestProvider.php
+
+		-
+			message: "#^Call to an undefined method OAuth2\\\\ResponseInterface\\:\\:getResponseBody\\(\\)\\.$#"
+			count: 1
+			path: src/QUI/OAuth/RestProvider.php
+
+		-
+			message: "#^Call to an undefined method OAuth2\\\\ResponseInterface\\:\\:getStatusCode\\(\\)\\.$#"
+			count: 1
+			path: src/QUI/OAuth/RestProvider.php

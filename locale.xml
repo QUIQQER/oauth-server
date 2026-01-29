@@ -265,6 +265,22 @@
             <de><![CDATA[Zugriffs-Einstellungen]]></de>
             <en><![CDATA[Access settings]]></en>
         </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelButtonGenerateSecret">
+            <de><![CDATA[Neues Secret generieren]]></de>
+            <en><![CDATA[Generate new secret]]></en>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelClientSecretIsToken">
+            <de><![CDATA[Client Secret als Token]]></de>
+            <en><![CDATA[Client secret as token]]></en>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.textClientSecretIsToken">
+            <de><![CDATA[Das Client Secret kann als permanent gültiges Access Token verwendet werden können]]></de>
+            <en><![CDATA[The client secret can be used as permanently valid access token]]></en>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.descriptionClientSecretIsToken">
+            <de><![CDATA[Mit dieser Option gilt das Client Secret als dauerhaft gültiges Access Token, welches nicht erneuert werden muss. Sinnvoll für Services, die API-Zugriff nur über ein festes Token benötigen.]]></de>
+            <en><![CDATA[With this option the Client secret is used as a permanent valid access token, which does not need to be renewed. Suitable for services that only need API access via a fixed token.]]></en>
+        </locale>
         <locale name="controls.backend.UserClient.createClient.popup.title">
             <de><![CDATA[Neuen OAuth2-Client erstellen]]></de>
             <en><![CDATA[Create new OAuth2 client]]></en>
