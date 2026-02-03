@@ -510,7 +510,7 @@ class Handler
      * @param QUIUserInterface $SessionUser
      * @return void
      */
-    public static function setSesstionUser(QUIUserInterface $SessionUser): void
+    public static function setSessionUser(QUIUserInterface $SessionUser): void
     {
         self::$SessionUser = $SessionUser;
     }
