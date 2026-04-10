@@ -1,20 +1,17 @@
 <?php
 
-/**
- * this file contains package_quiqqer_oauth-server_ajax_client_create
- */
-
 use QUI\Utils\Security\Orthos;
 use QUI\OAuth\Clients\Handler as OAuthClientsHandler;
+use QUI\OAuth\Permission;
 
-/**
- * Create a new OAuth2 client
- *
- * @return string
- * @throws \QUI\Exception
- */
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_create',
+    /**
+     * Create a new OAuth2 client
+     *
+     * @return string
+     * @throws \QUI\Exception
+     */
     function ($userId, $scopeSettings, $title = null) {
         if (!empty($title)) {
             $title = Orthos::clear($title);
@@ -62,5 +59,8 @@ QUI::$Ajax->registerFunction(
         );
     },
     ['userId', 'scopeSettings', 'title'],
-    'Permission::checkAdminUser'
+    [
+        'Permission::checkAdminUser',
+        Permission::MANAGE_CLIENTS->value
+    ]
 );

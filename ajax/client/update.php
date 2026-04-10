@@ -1,21 +1,17 @@
 <?php
 
-/**
- * this file contains package_quiqqer_oauth-server_ajax_client_update
- */
-
 use QUI\Utils\Security\Orthos;
+use QUI\OAuth\Permission;
 
-/**
- * Edit an Oauth2 client
- *
- * @param int $clientId
- * @param array $data
- * @return void
- * @throws \QUI\Exception
- */
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_update',
+    /**
+     * Edit an Oauth2 client
+     *
+     * @param int $clientId
+     * @param string $data (json_encoded array)
+     * @return void
+     */
     function ($clientId, $data) {
         try {
             QUI\OAuth\Clients\Handler::updateOAuthClient(
@@ -58,5 +54,8 @@ QUI::$Ajax->registerFunction(
         );
     },
     ['clientId', 'data'],
-    'Permission::checkAdminUser'
+    [
+        'Permission::checkAdminUser',
+        Permission::MANAGE_CLIENTS->value
+    ]
 );

@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use QUI;
 use QUI\Cache\LongTermCache;
 use QUI\Interfaces\Users\User as QUIUserInterface;
+use QUI\OAuth\Permission;
+use QUI\Permissions\PermissionOrder;
 use Ramsey\Uuid\Uuid;
 use Throwable;
 
@@ -26,27 +28,30 @@ class Handler
      */
     protected static ?QUIUserInterface $SessionUser = null;
 
+    /**
+     * @deprecated - Will be removed in next major version. Use {@see Permission::MANAGE_CLIENTS} instead.
+     */
     const PERMISSION_MANAGE_CLIENTS = 'quiqqer.oauth-server.manage_clients';
 
     /**
      * Creates oauth client credentials for the user
      *
-     * @param QUI\Interfaces\Users\User $User
-     * @param string $name
+     * @param QUIUserInterface $User
      * @param array $scopeSettings
+     * @param string $name
+     * @param bool $clientSecretIsPermanentAccessToken - If true, the client secret can be used as permanent access / Bearer token
      * @return string - New Client ID
      *
-     * @throws QUI\Permissions\Exception
+     * @throws QUI\Database\Exception
      * @throws QUI\Exception
-     * @throws Exception
+     * @throws QUI\OAuth\Exception
      */
     public static function createOAuthClient(
-        QUI\Interfaces\Users\User $User,
+        QUIUserInterface $User,
         array $scopeSettings,
-        string $name = ''
+        string $name = '',
+        bool $clientSecretIsPermanentAccessToken = false
     ): string {
-        self::checkManagePermission();
-
         if (QUI::getUsers()->isNobodyUser($User)) {
             throw new QUI\Exception('Could not create Client');
         }
@@ -84,7 +89,8 @@ class Handler
                 'name' => $name,
                 'c_date' => time(),
                 'scope' => empty($activeScopes) ? null : implode(' ', $activeScopes),
-                'scope_restrictions' => json_encode($scopeSettings)
+                'scope_restrictions' => json_encode($scopeSettings),
+                'client_secret_is_token' => $clientSecretIsPermanentAccessToken ? 1 : 0
             ]
         );
 
@@ -128,13 +134,10 @@ class Handler
      * @param QUI\Interfaces\Users\User $User
      * @return array
      *
-     * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
     public static function getOAuthClientsByUser(QUI\Interfaces\Users\User $User): array
     {
-        self::checkManagePermission();
-
         return QUI::getDataBase()->fetch([
             'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
             'where' => [
@@ -150,13 +153,10 @@ class Handler
      * @param string $clientId
      * @return array
      *
-     * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
     public static function getOAuthClientByUser(QUI\Interfaces\Users\User $User, string $clientId): array
     {
-        self::checkManagePermission();
-
         return QUI::getDataBase()->fetch([
             'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
             'where' => [
@@ -170,18 +170,39 @@ class Handler
      * Return a client by access token
      *
      * @param string $accessToken
+     * @param bool $includeClientWithClientSecretAsPermanentAccessToken
+     * This also fetches clients that have set the client secret as permanent access token
+     *
      * @return array|false
      *
+     * @throws QUI\Database\Exception
      * @throws QUI\Exception
      */
-    public static function getOAuthClientByAccessToken(string $accessToken): bool|array
-    {
+    public static function getOAuthClientByAccessToken(
+        string $accessToken,
+        bool $includeClientWithClientSecretAsPermanentAccessToken = false
+    ): bool | array {
         $result = QUI::getDataBase()->fetch([
             'select' => ['client_id'],
             'from' => QUI\OAuth\Setup::getTable('oauth_access_tokens'),
             'where' => [
                 'access_token' => $accessToken
-            ]
+            ],
+            'limit' => 1
+        ]);
+
+        if (empty($result) && $includeClientWithClientSecretAsPermanentAccessToken === false) {
+            return false;
+        }
+
+        $result = QUI::getDataBase()->fetch([
+            'select' => ['client_id'],
+            'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
+            'where' => [
+                'client_secret' => $accessToken,
+                'client_secret_is_token' => 1
+            ],
+            'limit' => 1
         ]);
 
         if (empty($result)) {
@@ -202,23 +223,10 @@ class Handler
      * @param array $data
      *
      * @throws QUI\OAuth\Exception
-     * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
     public static function updateOAuthClient(string $clientId, array $data = []): void
     {
-        self::checkManagePermission();
-
-        if (!is_array($data)) {
-            throw new QUI\OAuth\Exception(
-                [
-                    'quiqqer/oauth-server',
-                    'exception.client.could.not.save'
-                ],
-                404
-            );
-        }
-
         $update = [];
 
         if (!empty($data['title']) && is_string($data['title'])) {
@@ -298,13 +306,10 @@ class Handler
      * @param string $clientId
      * @return array
      *
-     * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
     public static function getOAuthClient(string $clientId): array
     {
-        self::checkManagePermission();
-
         $result = QUI::getDataBase()->fetch([
             'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
             'where' => [
@@ -329,14 +334,10 @@ class Handler
      * Delete an oauth client
      *
      * @param string $clientId
-     *
-     * @throws QUI\Permissions\Exception
      * @throws QUI\Exception
      */
     public static function removeOAuthClient(string $clientId): void
     {
-        self::checkManagePermission();
-
         $DB = QUI::getDataBase();
 
         foreach (QUI\OAuth\Setup::getClientTables() as $table) {
@@ -353,12 +354,9 @@ class Handler
      * @return array
      * @throws QUI\Database\Exception
      * @throws QUI\Exception
-     * @throws QUI\Permissions\Exception
      */
-    public static function getClientLimits(string $clientId, string $scope = null): array
+    public static function getClientLimits(string $clientId, ?string $scope = null): array
     {
-        self::checkManagePermission();
-
         $clientData = self::getOAuthClient($clientId);
         $scopRestrictions = json_decode($clientData['scope_restrictions'], true);
 
@@ -404,12 +402,9 @@ class Handler
      * @throws QUI\Database\Exception
      * @throws QUI\Exception
      * @throws QUI\OAuth\Exception
-     * @throws QUI\Permissions\Exception
      */
-    public static function resetClientLimits(string $clientId, string $scope = null): void
+    public static function resetClientLimits(string $clientId, ?string $scope = null): void
     {
-        self::checkManagePermission();
-
         $table = QUI\OAuth\Setup::getTable('oauth_access_limits');
 
         // Check if DB entry for scope exists
@@ -446,22 +441,6 @@ class Handler
             'first_usage' => 0,
             'last_usage' => 0
         ], $where);
-    }
-
-    /**
-     * Checks if the current user is allowed to manage OAuth clients
-     *
-     * @return void
-     * @throws QUI\Permissions\Exception
-     */
-    protected static function checkManagePermission(): void
-    {
-        // Client data must be at least readable if a REST request has to be authenticated
-        if (defined('OAUTH_REST_REQUEST') && OAUTH_REST_REQUEST) {
-            return;
-        }
-
-        QUI\Permissions\Permission::checkPermission(self::PERMISSION_MANAGE_CLIENTS);
     }
 
     /**
@@ -569,6 +548,58 @@ class Handler
             QUI\System\Log::writeException($exception);
             return null;
         }
+    }
+
+    /**
+     * @param QUIUserInterface $user
+     * @return int|null - null if no limit is set
+     */
+    public static function getMaxNumberOfPermanentAccessTokens(QUIUserInterface $user): ?int
+    {
+        try {
+            $maxNumberOfOauthClientsWithPermanentAccessToken = PermissionOrder::maxInteger(
+                Permission::MAX_NUMBER_OF_PERMANENT_ACCESS_TOKENS->value,
+                [$user]
+            );
+        } catch (\Exception $exception) {
+            QUI\System\Log::writeException($exception);
+            return 0;
+        }
+
+        if ($maxNumberOfOauthClientsWithPermanentAccessToken === -1) {
+            return null;
+        }
+
+        return $maxNumberOfOauthClientsWithPermanentAccessToken;
+    }
+
+    /**
+     * @param QUIUserInterface $user
+     * @return int
+     * @throws QUI\Exception
+     */
+    public static function getNumberOfPermanentAccessTokens(QUIUserInterface $user): int
+    {
+        return count(self::getOAuthClientsWithPermanentAccessToken($user));
+    }
+
+    /**
+     * @param QUIUserInterface $user
+     * @return array<array{client_id: string, client_secret: string, client_secret_is_token: int, user_id?: int|string, name?: string, c_date?: int|string}> - empty array if no clients exist
+     * @throws QUI\Exception
+     */
+    public static function getOAuthClientsWithPermanentAccessToken(QUIUserInterface $user): array
+    {
+        $oauthClients = self::getOAuthClientsByUser($user);
+        $oauthClientsWithPermanentAccessToken = [];
+
+        foreach ($oauthClients as $oauthClientData) {
+            if (!empty($oauthClientData['client_secret_is_token'])) {
+                $oauthClientsWithPermanentAccessToken[] = $oauthClientData;
+            }
+        }
+
+        return $oauthClientsWithPermanentAccessToken;
     }
 
     private static function getCacheNameForClientSecretsAsAccessTokens(string $token): string

@@ -1,14 +1,16 @@
 <?php
 
-/**
- * Create an oauth client entry
- *
- * @return string
- * @throws \QUI\Exception
- */
+use QUI\OAuth\Permission;
 
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_remove',
+    /**
+     * Delete an oauth client entry
+     *
+     * @param string $clientId
+     * @return void
+     * @throws \QUI\Exception
+     */
     function ($clientId) {
         try {
             QUI\OAuth\Clients\Handler::removeOAuthClient($clientId);
@@ -47,5 +49,9 @@ QUI::$Ajax->registerFunction(
             )
         );
     },
-    ['clientId']
+    ['clientId'],
+    [
+        'Permission::checkAdminUser',
+        Permission::MANAGE_CLIENTS->value
+    ]
 );
