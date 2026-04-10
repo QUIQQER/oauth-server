@@ -87,7 +87,7 @@ class FrontendController implements FrontendControllerInterface
             $oauthClients = OAuthClientsHandler::getOAuthClientsWithPermanentAccessToken(
                 $user
             );
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             QUI\System\Log::writeException($exception);
             throw new FrontendException([
                 'quiqqer/oauth-server',
@@ -130,6 +130,10 @@ class FrontendController implements FrontendControllerInterface
     public function deletePermanentAccessToken(QuiUserInterface $user, string $oauthClientUuid): void
     {
         try {
+            if (Permission::MANAGE_CLIENTS->has($user) === false) {
+                Permission::CREATE_PERMANENT_ACCESS_TOKEN_FOR_OWN_USER->check($user);
+            }
+
             $oauthClientUuid = Orthos::clear($oauthClientUuid);
             $oauthClient = OAuthClientsHandler::getOAuthClient($oauthClientUuid);
 
@@ -144,7 +148,13 @@ class FrontendController implements FrontendControllerInterface
         } catch (FrontendException $exception) {
             QUI\System\Log::writeDebugException($exception);
             throw $exception;
-        } catch (\Exception $exception) {
+        } catch (QuiPermissionException $exception) {
+            QUI\System\Log::writeDebugException($exception);
+            throw new FrontendException([
+                'quiqqer/oauth-server',
+                'exception.frontend.no_permission'
+            ]);
+        } catch (\Throwable $exception) {
             QUI\System\Log::writeException($exception);
             throw new FrontendException([
                 'quiqqer/oauth-server',
