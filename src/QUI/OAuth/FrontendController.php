@@ -14,6 +14,7 @@ class FrontendController implements FrontendControllerInterface
     /**
      * Creates a new OAuth client with client secret as permanent access token.
      *
+     * @param QuiUserInterface $user
      * @param ?string $title
      * @return string
      * @throws FrontendException
