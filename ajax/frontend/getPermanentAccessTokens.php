@@ -15,5 +15,5 @@ QUI::$Ajax->registerFunction(
         return new FrontendController()->getPermanentAccessTokens(QUI::getUserBySession());
     },
     [],
-    'Permission::checkAdminUser'
+    'Permission::checkUser'
 );

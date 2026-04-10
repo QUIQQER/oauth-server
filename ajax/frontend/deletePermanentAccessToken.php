@@ -18,5 +18,5 @@ QUI::$Ajax->registerFunction(
     [
         'id'
     ],
-    'Permission::checkAdminUser'
+    'Permission::checkUser'
 );
