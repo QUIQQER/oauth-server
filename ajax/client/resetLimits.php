@@ -1,21 +1,17 @@
 <?php
 
-/**
- * this file contains package_quiqqer_oauth-server_ajax_client_resetLimits
- */
-
 use QUI\OAuth\Clients\Handler as ClientsHandler;
+use QUI\OAuth\Permission;
 
-/**
- * Reset usage limits for an OAuth client for a specific scope
- *
- * @param int $clientId
- * @param string $scope
- * @return array
- * @throws \QUI\Exception
- */
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_resetLimits',
+    /**
+     * Reset usage limits for an OAuth client for a specific scope
+     *
+     * @param int $clientId
+     * @param string $scope
+     * @return void
+     */
     function ($clientId, $scope) {
         try {
             ClientsHandler::resetClientLimits($clientId, $scope);
@@ -56,5 +52,8 @@ QUI::$Ajax->registerFunction(
         );
     },
     ['clientId', 'scope'],
-    'Permission::checkAdminUser'
+    [
+        'Permission::checkAdminUser',
+        Permission::MANAGE_CLIENTS->value
+    ]
 );

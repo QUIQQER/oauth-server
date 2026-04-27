@@ -1,6 +1,14 @@
 <user>
 
     <window>
+        <tab name="APITokens">
+            <text>
+                <locale group="quiqqer/oauth-server" var="user.tab.apiTokens"/>
+            </text>
+            <image>fa fa-key</image>
+            <template>OPT_DIR/quiqqer/oauth-server/template/oauthTokens.html</template>
+        </tab>
+
         <tab name="OAuthClients">
             <text>OAuth Clients</text>
             <image>fa fa-key</image>

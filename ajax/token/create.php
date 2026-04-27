@@ -1,40 +1,27 @@
 <?php
 
-use QUI\Utils\Security\Orthos;
-use QUI\OAuth\Clients\Handler as OAuthClientsHandler;
 use QUI\OAuth\Permission;
 
 QUI::$Ajax->registerFunction(
-    'package_quiqqer_oauth-server_ajax_client_create',
-    /**
-     * Create a new OAuth2 client
-     *
-     * @return string
-     * @throws \QUI\Exception
-     */
-    function ($userId, $scopeSettings, $title = null) {
-        if (!empty($title)) {
-            $title = Orthos::clear($title);
-        }
-
+    'package_quiqqer_oauth-server_ajax_token_create',
+    static function ($userId, $title = null): array | bool {
         try {
-            $newClientId = OAuthClientsHandler::createOAuthClient(
+            $tokenData = (new QUI\OAuth\BackendController())->createPermanentAccessToken(
                 QUI::getUsers()->get($userId),
-                Orthos::clearArray(json_decode($scopeSettings, true)),
                 $title
             );
         } catch (QUI\OAuth\Exception $Exception) {
             QUI::getMessagesHandler()->addError(
                 QUI::getLocale()->get(
                     'quiqqer/oauth-server',
-                    'message.ajax.client.create.error',
+                    'message.ajax.token.create.error',
                     [
                         'error' => $Exception->getMessage()
                     ]
                 )
             );
 
-            return;
+            return false;
         } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
 
@@ -45,20 +32,22 @@ QUI::$Ajax->registerFunction(
                 )
             );
 
-            return;
+            return false;
         }
 
         QUI::getMessagesHandler()->addSuccess(
             QUI::getLocale()->get(
                 'quiqqer/oauth-server',
-                'message.ajax.client.create.success',
+                'message.ajax.token.create.success',
                 [
-                    'clientId' => $newClientId
+                    'title' => $tokenData['title']
                 ]
             )
         );
+
+        return $tokenData;
     },
-    ['userId', 'scopeSettings', 'title'],
+    ['userId', 'title'],
     [
         'Permission::checkAdminUser',
         Permission::MANAGE_CLIENTS->value

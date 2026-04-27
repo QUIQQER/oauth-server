@@ -14,4 +14,6 @@
         </table>
     </global>
 
+    <!-- Additional tables are created programmatically at \QUI\OAuth\Setup::execute -->
+
 </database>

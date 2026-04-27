@@ -1,0 +1,85 @@
+<section class="quiqqer-oauth-server-profile-tokens-section">
+    <div class="quiqqer-oauth-server-profile-tokens-card quiqqer-oauth-server-profile-tokens-card--intro">
+        <div class="quiqqer-oauth-server-profile-tokens-cardHeader">
+            <div>
+                <h2>{locale group="quiqqer/oauth-server" var="profile.tokens.title"}</h2>
+                <p class="quiqqer-oauth-server-profile-tokens-info">
+                    {locale group="quiqqer/oauth-server" var="profile.tokens.info"}
+                </p>
+            </div>
+        </div>
+
+        {if $canManageOwnTokens}
+        <div class="quiqqer-oauth-server-profile-tokens-create">
+            <label class="field-container">
+                <span>{locale group="quiqqer/oauth-server" var="profile.tokens.label.title"}</span>
+                <input type="text"
+                       name="tokenTitle"
+                       maxlength="255"
+                       placeholder="{locale group='quiqqer/oauth-server' var='profile.tokens.placeholder.title'}"/>
+            </label>
+
+            <div class="quiqqer-oauth-server-profile-tokens-actions">
+                <button type="button"
+                        class="btn btn-primary"
+                        data-role="create-token">
+                    <span class="fa fa-plus"></span>
+                    <span>{locale group="quiqqer/oauth-server" var="profile.tokens.btn.create"}</span>
+                </button>
+            </div>
+        </div>
+        {/if}
+    </div>
+
+    <div class="quiqqer-oauth-server-profile-tokens-list">
+        <h3>{locale group="quiqqer/oauth-server" var="profile.tokens.list.title"}</h3>
+
+        {if empty($tokens)}
+        <div class="quiqqer-oauth-server-profile-tokens-card quiqqer-oauth-server-profile-tokens-card--empty">
+            <p>{locale group="quiqqer/oauth-server" var="profile.tokens.list.empty"}</p>
+        </div>
+        {else}
+        <ul class="quiqqer-oauth-server-profile-tokens-items">
+            {foreach $tokens as $token}
+            <li class="quiqqer-oauth-server-profile-tokens-card quiqqer-oauth-server-profile-tokens-item">
+                <div class="quiqqer-oauth-server-profile-tokens-itemMeta">
+                    <div class="quiqqer-oauth-server-profile-tokens-itemTitleWrap">
+                        <strong class="quiqqer-oauth-server-profile-tokens-itemTitle">{$token.title}</strong>
+                        <span class="quiqqer-oauth-server-profile-tokens-itemDate">{$token.createDate}</span>
+                    </div>
+                </div>
+
+                <div class="quiqqer-oauth-server-profile-tokens-tokenRow">
+                    <code class="quiqqer-oauth-server-profile-tokens-token"
+                          data-role="token-value"
+                          data-token-value="{$token.token}"
+                          data-token-hidden="1">••••••••••••••••••••••••••••••••••••••••</code>
+
+                    <button type="button"
+                            class="btn btn-secondary quiqqer-oauth-server-profile-tokens-iconButton"
+                            data-role="toggle-token-visibility"
+                            data-show-text="{locale group='quiqqer/oauth-server' var='profile.tokens.btn.show'}"
+                            data-hide-text="{locale group='quiqqer/oauth-server' var='profile.tokens.btn.hide'}"
+                            title="{locale group='quiqqer/oauth-server' var='profile.tokens.btn.show'}"
+                            aria-label="{locale group='quiqqer/oauth-server' var='profile.tokens.btn.show'}">
+                        <span class="fa fa-eye"></span>
+                    </button>
+                </div>
+
+                {if $canManageOwnTokens}
+                <div class="quiqqer-oauth-server-profile-tokens-actions">
+                    <button type="button"
+                            class="btn btn-red"
+                            data-role="delete-token"
+                            data-token-id="{$token.id}">
+                        <span class="fa fa-trash"></span>
+                        <span>{locale group="quiqqer/oauth-server" var="profile.tokens.btn.delete"}</span>
+                    </button>
+                </div>
+                {/if}
+            </li>
+            {/foreach}
+        </ul>
+        {/if}
+    </div>
+</section>
