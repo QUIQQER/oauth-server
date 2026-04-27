@@ -12,7 +12,9 @@ QUI::$Ajax->registerFunction(
      * @throws FrontendException
      */
     function () {
-        return new FrontendController()->getPermanentAccessTokens(QUI::getUserBySession());
+        $FrontendController = new FrontendController();
+
+        return $FrontendController->getPermanentAccessTokens(QUI::getUserBySession());
     },
     [],
     'Permission::checkUser'

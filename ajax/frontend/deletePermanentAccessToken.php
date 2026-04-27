@@ -13,7 +13,9 @@ QUI::$Ajax->registerFunction(
      * @throws FrontendException
      */
     function ($uuid) {
-        new FrontendController()->deletePermanentAccessToken(QUI::getUserBySession(), $uuid);
+        $FrontendController = new FrontendController();
+
+        $FrontendController->deletePermanentAccessToken(QUI::getUserBySession(), $uuid);
     },
     [
         'id'
