@@ -191,7 +191,11 @@ class Handler
             'limit' => 1
         ]);
 
-        if (empty($result) && $includeClientWithClientSecretAsPermanentAccessToken === false) {
+        if (!empty($result)) {
+            return self::getOAuthClient($result[0]['client_id']);
+        }
+
+        if ($includeClientWithClientSecretAsPermanentAccessToken === false) {
             return false;
         }
 
