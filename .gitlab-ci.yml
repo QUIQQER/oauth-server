@@ -1,6 +1,18 @@
 include:
   - component: dev.quiqqer.com/quiqqer/stabilization/ci-cd-components/quiqqer-package-bundle/quiqqer-package-bundle@main
 
+# PHP 8.1 is below this package's supported range
+php-syntax-check-8.1:
+  stage: lint
+  rules:
+    - when: never
+
+# PHP 8.1 is below this package's supported range
+phpunit-php8.1:
+  stage: test
+  rules:
+    - when: never
+
 # The current PHPUnit tests do not work in CI (TODO: fix tests)
 phpunit-php8.2:
   rules:
