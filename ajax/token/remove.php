@@ -19,17 +19,6 @@ QUI::$Ajax->registerFunction(
             );
 
             return false;
-        } catch (Exception $Exception) {
-            QUI\System\Log::writeException($Exception);
-
-            QUI::getMessagesHandler()->addError(
-                QUI::getLocale()->get(
-                    'quiqqer/oauth-server',
-                    'message.ajax.general_error'
-                )
-            );
-
-            return false;
         }
 
         QUI::getMessagesHandler()->addSuccess(
