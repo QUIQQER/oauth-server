@@ -37,6 +37,62 @@
             <en><![CDATA[Maximum number of client secrets that are valid as permanent access tokens. (-1 = no limit)]]></en>
         </locale>
 
+        <locale name="profile.tokens.title">
+            <de><![CDATA[API Tokens]]></de>
+            <en><![CDATA[API tokens]]></en>
+        </locale>
+
+        <locale name="profile.tokens.info">
+            <de><![CDATA[Diese Tokens funktionieren wie persönliche Zugriffstokens. Behandle sie wie ein Passwort und verwende sie für Bearer-Authentifizierung, z.B. am MCP-Server.]]></de>
+            <en><![CDATA[These tokens work like personal access tokens. Treat them like a password and use them for bearer authentication, for example against the MCP server.]]></en>
+        </locale>
+
+        <locale name="profile.tokens.label.title">
+            <de><![CDATA[Titel]]></de>
+            <en><![CDATA[Title]]></en>
+        </locale>
+
+        <locale name="profile.tokens.placeholder.title">
+            <de><![CDATA[z.B. MCP Zugriff]]></de>
+            <en><![CDATA[e.g. MCP access]]></en>
+        </locale>
+
+        <locale name="profile.tokens.btn.create">
+            <de><![CDATA[Token erstellen]]></de>
+            <en><![CDATA[Create token]]></en>
+        </locale>
+
+        <locale name="profile.tokens.btn.delete">
+            <de><![CDATA[Token löschen]]></de>
+            <en><![CDATA[Delete token]]></en>
+        </locale>
+        <locale name="profile.tokens.btn.show">
+            <de><![CDATA[Token anzeigen]]></de>
+            <en><![CDATA[Show token]]></en>
+        </locale>
+        <locale name="profile.tokens.btn.hide">
+            <de><![CDATA[Token ausblenden]]></de>
+            <en><![CDATA[Hide token]]></en>
+        </locale>
+        <locale name="profile.tokens.delete.confirm.title">
+            <de><![CDATA[Token wirklich löschen?]]></de>
+            <en><![CDATA[Delete token?]]></en>
+        </locale>
+        <locale name="profile.tokens.delete.confirm.text">
+            <de><![CDATA[Möchtest du dieses API-Token wirklich löschen? Der Zugriff über dieses Token funktioniert danach nicht mehr.]]></de>
+            <en><![CDATA[Do you really want to delete this API token? Access using this token will stop working afterwards.]]></en>
+        </locale>
+
+        <locale name="profile.tokens.list.title">
+            <de><![CDATA[Vorhandene Tokens]]></de>
+            <en><![CDATA[Existing tokens]]></en>
+        </locale>
+
+        <locale name="profile.tokens.list.empty">
+            <de><![CDATA[Es sind noch keine Tokens vorhanden.]]></de>
+            <en><![CDATA[There are no tokens yet.]]></en>
+        </locale>
+
         <!-- Crons -->
         <locale name="cron.cleanupAccessTokens.title">
             <de><![CDATA[OAuth Access Tokens aufräumen]]></de>
