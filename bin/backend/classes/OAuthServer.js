@@ -107,6 +107,56 @@ define('package/quiqqer/oauth-server/bin/backend/classes/OAuthServer', [
         },
 
         /**
+         * Get all permanent API tokens linked to a QUIQQER user
+         *
+         * @param {Number} userId
+         * @returns {Promise}
+         */
+        getTokenList: function (userId) {
+            return new Promise(function (resolve, reject) {
+                QUIAjax.get('package_quiqqer_oauth-server_ajax_token_list', resolve, {
+                    'package': pkg,
+                    userId   : userId,
+                    onError  : reject
+                });
+            });
+        },
+
+        /**
+         * Create a permanent API token for a QUIQQER user
+         *
+         * @param {Number} userId
+         * @param {String} title
+         * @returns {Promise}
+         */
+        createToken: function (userId, title) {
+            return new Promise(function (resolve, reject) {
+                QUIAjax.post('package_quiqqer_oauth-server_ajax_token_create', resolve, {
+                    'package': pkg,
+                    userId   : userId,
+                    title    : title,
+                    onError  : reject
+                });
+            });
+        },
+
+        /**
+         * Delete a permanent API token
+         *
+         * @param {String} clientId
+         * @returns {Promise}
+         */
+        deleteToken: function (clientId) {
+            return new Promise(function (resolve, reject) {
+                QUIAjax.post('package_quiqqer_oauth-server_ajax_token_remove', resolve, {
+                    'package': pkg,
+                    clientId : clientId,
+                    onError  : reject
+                });
+            });
+        },
+
+        /**
          * Return all scopes (REST entry points) for clients
          *
          * @return {Promise}

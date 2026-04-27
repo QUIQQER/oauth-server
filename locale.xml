@@ -41,6 +41,10 @@
             <de><![CDATA[API Tokens]]></de>
             <en><![CDATA[API tokens]]></en>
         </locale>
+        <locale name="user.tab.apiTokens">
+            <de><![CDATA[API Tokens]]></de>
+            <en><![CDATA[API Tokens]]></en>
+        </locale>
 
         <locale name="profile.tokens.info">
             <de><![CDATA[Diese Tokens funktionieren wie persönliche Zugriffstokens. Behandle sie wie ein Passwort und verwende sie für Bearer-Authentifizierung, z.B. am MCP-Server.]]></de>
@@ -118,6 +122,14 @@
             <de><![CDATA[Du hast bereits die maximale Anzahl an Tokens erstellt ([maxTokens]).]]></de>
             <en><![CDATA[You have already created the maximum number of tokens ([maxTokens]).]]></en>
         </locale>
+        <locale name="exception.backend.permanent_access_token_limit_reached">
+            <de><![CDATA[Der Benutzer hat bereits die maximale Anzahl an Tokens erstellt ([maxTokens]).]]></de>
+            <en><![CDATA[The user has already created the maximum number of tokens ([maxTokens]).]]></en>
+        </locale>
+        <locale name="exception.backend.permanent_access_token_not_found">
+            <de><![CDATA[Das API-Token konnte nicht gefunden werden.]]></de>
+            <en><![CDATA[The API token could not be found.]]></en>
+        </locale>
 
         <!-- Labels -->
         <locale name="label.never">
@@ -191,6 +203,22 @@
         <locale name="message.ajax.client.update.success" html="true">
             <de><![CDATA[Der OAuth-Client <b>[clientId]</b> wurde erfolgreich aktualisiert.]]></de>
             <en><![CDATA[The OAuth client <b>[clientId]</b> has been updated successfully.]]></en>
+        </locale>
+        <locale name="message.ajax.token.create.error" html="true">
+            <de><![CDATA[Das API-Token konnte nicht erstellt werden:<br/><br/>[error]]]></de>
+            <en><![CDATA[The API token could not be created:<br/><br/>[error]]]></en>
+        </locale>
+        <locale name="message.ajax.token.create.success" html="true">
+            <de><![CDATA[Das API-Token <b>[title]</b> wurde erfolgreich erstellt.]]></de>
+            <en><![CDATA[The API token <b>[title]</b> has been created successfully.]]></en>
+        </locale>
+        <locale name="message.ajax.token.remove.error" html="true">
+            <de><![CDATA[Das API-Token konnte nicht gelöscht werden:<br/><br/>[error]]]></de>
+            <en><![CDATA[The API token could not be deleted:<br/><br/>[error]]]></en>
+        </locale>
+        <locale name="message.ajax.token.remove.success" html="true">
+            <de><![CDATA[Das API-Token <b>[clientId]</b> wurde erfolgreich gelöscht.]]></de>
+            <en><![CDATA[The API token <b>[clientId]</b> has been deleted successfully.]]></en>
         </locale>
 
     </groups>
@@ -399,6 +427,26 @@
                 <b>[name]</b><br />
                 <pre style="white-space: pre-wrap; word-wrap: break-word;">[clientId]</pre>
             ]]></en>
+        </locale>
+        <locale name="control.user.tokens.button.add">
+            <de><![CDATA[Token erstellen]]></de>
+            <en><![CDATA[Create token]]></en>
+        </locale>
+        <locale name="control.user.tokens.button.delete">
+            <de><![CDATA[Token löschen]]></de>
+            <en><![CDATA[Delete token]]></en>
+        </locale>
+        <locale name="control.user.tokens.window.create.title">
+            <de><![CDATA[API-Token erstellen]]></de>
+            <en><![CDATA[Create API token]]></en>
+        </locale>
+        <locale name="control.user.tokens.window.delete.title">
+            <de><![CDATA[API-Token löschen]]></de>
+            <en><![CDATA[Delete API token]]></en>
+        </locale>
+        <locale name="control.user.tokens.window.delete.text" html="1">
+            <de><![CDATA[Möchten Sie das API-Token <b>[title]</b> wirklich löschen?]]></de>
+            <en><![CDATA[Do you really want to delete the API token <b>[title]</b>?]]></en>
         </locale>
     </groups>
 </locales>
