@@ -22,7 +22,7 @@
         "url": "https://www.pcsg.de"
     },
     "require": {
-        "php": "^8.4",
+        "php": "^8.2",
         "quiqqer/core": "^2",
         "quiqqer/rest": "^3",
         "bshaffer/oauth2-server-php": "^1",
