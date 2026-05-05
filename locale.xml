@@ -28,6 +28,74 @@
             <de><![CDATA[Darf OAuth Clients verwalten (CRUD)]]></de>
             <en><![CDATA[Has permission to manage OAuth clients (CRUD)]]></en>
         </locale>
+        <locale name="permission.quiqqer.oauth-server.create_permanent_access_token_for_own_user">
+            <de><![CDATA[Darf für den eigenen Benutzer ein permanentes Access Token erstellen (OAuth-Client mit Client Secret und Setting "client_secret_is_token").]]></de>
+            <en><![CDATA[May create a permanent access token for the own user (Oauth client with client Secret and setting "client_secret_is_token").]]></en>
+        </locale>
+        <locale name="permission.quiqqer.oauth-server.max_number_of_permanent_access_tokens">
+            <de><![CDATA[Maximale Anzahl an Client Secrets, die als permanent gültiges Access Token gelten. (-1 = keine Obergrenze)]]></de>
+            <en><![CDATA[Maximum number of client secrets that are valid as permanent access tokens. (-1 = no limit)]]></en>
+        </locale>
+
+        <locale name="profile.tokens.title">
+            <de><![CDATA[API Tokens]]></de>
+            <en><![CDATA[API tokens]]></en>
+        </locale>
+        <locale name="user.tab.apiTokens">
+            <de><![CDATA[API Tokens]]></de>
+            <en><![CDATA[API Tokens]]></en>
+        </locale>
+
+        <locale name="profile.tokens.info">
+            <de><![CDATA[Diese Tokens funktionieren wie persönliche Zugriffstokens. Behandle sie wie ein Passwort und verwende sie für Bearer-Authentifizierung, z.B. am MCP-Server.]]></de>
+            <en><![CDATA[These tokens work like personal access tokens. Treat them like a password and use them for bearer authentication, for example against the MCP server.]]></en>
+        </locale>
+
+        <locale name="profile.tokens.label.title">
+            <de><![CDATA[Titel]]></de>
+            <en><![CDATA[Title]]></en>
+        </locale>
+
+        <locale name="profile.tokens.placeholder.title">
+            <de><![CDATA[z.B. MCP Zugriff]]></de>
+            <en><![CDATA[e.g. MCP access]]></en>
+        </locale>
+
+        <locale name="profile.tokens.btn.create">
+            <de><![CDATA[Token erstellen]]></de>
+            <en><![CDATA[Create token]]></en>
+        </locale>
+
+        <locale name="profile.tokens.btn.delete">
+            <de><![CDATA[Token löschen]]></de>
+            <en><![CDATA[Delete token]]></en>
+        </locale>
+        <locale name="profile.tokens.btn.show">
+            <de><![CDATA[Token anzeigen]]></de>
+            <en><![CDATA[Show token]]></en>
+        </locale>
+        <locale name="profile.tokens.btn.hide">
+            <de><![CDATA[Token ausblenden]]></de>
+            <en><![CDATA[Hide token]]></en>
+        </locale>
+        <locale name="profile.tokens.delete.confirm.title">
+            <de><![CDATA[Token wirklich löschen?]]></de>
+            <en><![CDATA[Delete token?]]></en>
+        </locale>
+        <locale name="profile.tokens.delete.confirm.text">
+            <de><![CDATA[Möchtest du dieses API-Token wirklich löschen? Der Zugriff über dieses Token funktioniert danach nicht mehr.]]></de>
+            <en><![CDATA[Do you really want to delete this API token? Access using this token will stop working afterwards.]]></en>
+        </locale>
+
+        <locale name="profile.tokens.list.title">
+            <de><![CDATA[Vorhandene Tokens]]></de>
+            <en><![CDATA[Existing tokens]]></en>
+        </locale>
+
+        <locale name="profile.tokens.list.empty">
+            <de><![CDATA[Es sind noch keine Tokens vorhanden.]]></de>
+            <en><![CDATA[There are no tokens yet.]]></en>
+        </locale>
 
         <!-- Crons -->
         <locale name="cron.cleanupAccessTokens.title">
@@ -41,6 +109,27 @@
     </groups>
 
     <groups name="quiqqer/oauth-server" datatype="php">
+
+        <locale name="exception.frontend.general_error">
+            <de><![CDATA[Das hat leider nicht geklappt. Bitte wiederhole den Vorgang oder kontaktiere den Support.]]></de>
+            <en><![CDATA[Something went wrong. Please repeat the process or contact support.]]></en>
+        </locale>
+        <locale name="exception.frontend.no_permission">
+            <de><![CDATA[Du hast nicht die benötigten Rechte, um diese Aktion auszuführen.]]></de>
+            <en><![CDATA[You don't have the required permissions to perform this action.]]]></en>
+        </locale>
+        <locale name="exception.frontend.permanent_access_token_limit_reached">
+            <de><![CDATA[Du hast bereits die maximale Anzahl an Tokens erstellt ([maxTokens]).]]></de>
+            <en><![CDATA[You have already created the maximum number of tokens ([maxTokens]).]]></en>
+        </locale>
+        <locale name="exception.backend.permanent_access_token_limit_reached">
+            <de><![CDATA[Der Benutzer hat bereits die maximale Anzahl an Tokens erstellt ([maxTokens]).]]></de>
+            <en><![CDATA[The user has already created the maximum number of tokens ([maxTokens]).]]></en>
+        </locale>
+        <locale name="exception.backend.permanent_access_token_not_found">
+            <de><![CDATA[Das API-Token konnte nicht gefunden werden.]]></de>
+            <en><![CDATA[The API token could not be found.]]></en>
+        </locale>
 
         <!-- Labels -->
         <locale name="label.never">
@@ -115,16 +204,32 @@
             <de><![CDATA[Der OAuth-Client <b>[clientId]</b> wurde erfolgreich aktualisiert.]]></de>
             <en><![CDATA[The OAuth client <b>[clientId]</b> has been updated successfully.]]></en>
         </locale>
+        <locale name="message.ajax.token.create.error" html="true">
+            <de><![CDATA[Das API-Token konnte nicht erstellt werden:<br/><br/>[error]]]></de>
+            <en><![CDATA[The API token could not be created:<br/><br/>[error]]]></en>
+        </locale>
+        <locale name="message.ajax.token.create.success" html="true">
+            <de><![CDATA[Das API-Token <b>[title]</b> wurde erfolgreich erstellt.]]></de>
+            <en><![CDATA[The API token <b>[title]</b> has been created successfully.]]></en>
+        </locale>
+        <locale name="message.ajax.token.remove.error" html="true">
+            <de><![CDATA[Das API-Token konnte nicht gelöscht werden:<br/><br/>[error]]]></de>
+            <en><![CDATA[The API token could not be deleted:<br/><br/>[error]]]></en>
+        </locale>
+        <locale name="message.ajax.token.remove.success" html="true">
+            <de><![CDATA[Das API-Token <b>[clientId]</b> wurde erfolgreich gelöscht.]]></de>
+            <en><![CDATA[The API token <b>[clientId]</b> has been deleted successfully.]]></en>
+        </locale>
 
     </groups>
 
     <groups name="quiqqer/oauth-server" datatype="php">
-        
+
         <locale name="RestProvider.title">
             <de><![CDATA[QUIQQER OAuth 2.0 Authentication API]]></de>
             <en><![CDATA[QUIQQER OAuth 2.0 Authentication API]]></en>
         </locale>
-        
+
         <locale name="exception.could.not.create.client">
             <de><![CDATA[
             Konnte OAUth Client nicht anlegen. Bitte versuchen Sie es noch einmal oder
@@ -322,6 +427,26 @@
                 <b>[name]</b><br />
                 <pre style="white-space: pre-wrap; word-wrap: break-word;">[clientId]</pre>
             ]]></en>
+        </locale>
+        <locale name="control.user.tokens.button.add">
+            <de><![CDATA[Token erstellen]]></de>
+            <en><![CDATA[Create token]]></en>
+        </locale>
+        <locale name="control.user.tokens.button.delete">
+            <de><![CDATA[Token löschen]]></de>
+            <en><![CDATA[Delete token]]></en>
+        </locale>
+        <locale name="control.user.tokens.window.create.title">
+            <de><![CDATA[API-Token erstellen]]></de>
+            <en><![CDATA[Create API token]]></en>
+        </locale>
+        <locale name="control.user.tokens.window.delete.title">
+            <de><![CDATA[API-Token löschen]]></de>
+            <en><![CDATA[Delete API token]]></en>
+        </locale>
+        <locale name="control.user.tokens.window.delete.text" html="1">
+            <de><![CDATA[Möchten Sie das API-Token <b>[title]</b> wirklich löschen?]]></de>
+            <en><![CDATA[Do you really want to delete the API token <b>[title]</b>?]]></en>
         </locale>
     </groups>
 </locales>

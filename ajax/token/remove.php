@@ -3,51 +3,35 @@
 use QUI\OAuth\Permission;
 
 QUI::$Ajax->registerFunction(
-    'package_quiqqer_oauth-server_ajax_client_remove',
-    /**
-     * Delete an oauth client entry
-     *
-     * @param string $clientId
-     * @return void
-     * @throws \QUI\Exception
-     */
-    function ($clientId) {
+    'package_quiqqer_oauth-server_ajax_token_remove',
+    static function ($clientId): bool {
         try {
-            QUI\OAuth\Clients\Handler::removeOAuthClient($clientId);
+            (new QUI\OAuth\BackendController())->deletePermanentAccessToken($clientId);
         } catch (QUI\OAuth\Exception $Exception) {
             QUI::getMessagesHandler()->addError(
                 QUI::getLocale()->get(
                     'quiqqer/oauth-server',
-                    'message.ajax.client.remove.error',
+                    'message.ajax.token.remove.error',
                     [
                         'error' => $Exception->getMessage()
                     ]
                 )
             );
 
-            return;
-        } catch (Exception $Exception) {
-            QUI\System\Log::writeException($Exception);
-
-            QUI::getMessagesHandler()->addError(
-                QUI::getLocale()->get(
-                    'quiqqer/oauth-server',
-                    'message.ajax.general_error'
-                )
-            );
-
-            return;
+            return false;
         }
 
         QUI::getMessagesHandler()->addSuccess(
             QUI::getLocale()->get(
                 'quiqqer/oauth-server',
-                'message.ajax.client.remove.success',
+                'message.ajax.token.remove.success',
                 [
                     'clientId' => $clientId
                 ]
             )
         );
+
+        return true;
     },
     ['clientId'],
     [

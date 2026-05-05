@@ -1,20 +1,17 @@
 <?php
 
-/**
- * this file contains package_quiqqer_oauth-server_ajax_client_getLimits
- */
-
 use QUI\OAuth\Clients\Handler as ClientsHandler;
+use QUI\OAuth\Permission;
 
-/**
- * Return all scope usage limits for an OAuth client
- *
- * @param int $clientId
- * @return array
- * @throws \QUI\Exception
- */
 QUI::$Ajax->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_getLimits',
+    /**
+     * Return all scope usage limits for an OAuth client
+     *
+     * @param int $clientId
+     * @return array
+     * @throws \QUI\Exception
+     */
     function ($clientId) {
         $limits = ClientsHandler::getClientLimits($clientId);
         $L = QUI::getLocale();
@@ -38,5 +35,8 @@ QUI::$Ajax->registerFunction(
         return $limits;
     },
     ['clientId'],
-    'Permission::checkAdminUser'
+    [
+        'Permission::checkAdminUser',
+        Permission::MANAGE_CLIENTS->value
+    ]
 );
