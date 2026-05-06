@@ -102,7 +102,7 @@ class RestProvider implements QUI\REST\ProviderInterface
      * @param QUI\Locale|null $Locale (optional)
      * @return string
      */
-    public function getTitle(QUI\Locale $Locale = null): string
+    public function getTitle(?QUI\Locale $Locale = null): string
     {
         if (empty($Locale)) {
             $Locale = QUI::getLocale();

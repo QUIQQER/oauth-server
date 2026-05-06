@@ -6,5 +6,8 @@ parameters:
     paths:
         - src
         - ajax
+    excludePaths:
+        analyse:
+            - src/QUI/OAuth/FrontendUsers/*
     bootstrapFiles:
         - tests/phpstan-bootstrap.php

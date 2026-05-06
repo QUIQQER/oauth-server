@@ -1,0 +1,190 @@
+.quiqqer-oauth-server-profile-tokens-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 1rem;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    padding: 1.25rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-cardHeader h2,
+.quiqqer-oauth-server-profile-tokens-list h3 {
+    margin: 0;
+}
+
+.quiqqer-oauth-server-profile-tokens-card--intro {
+    gap: 1rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-create {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-create .field-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-create .field-container span {
+    color: #475569;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.quiqqer-oauth-server-profile-tokens-create input {
+    min-height: 3rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-info {
+    color: #334155;
+    line-height: 1.6;
+    margin: 0.5rem 0 0;
+}
+
+.quiqqer-oauth-server-profile-tokens-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-itemMeta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.quiqqer-oauth-server-profile-tokens-itemTitleWrap {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-itemTitle {
+    color: #0f172a;
+    font-size: 1.05rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-itemDate {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-tokenRow {
+    align-items: center;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 0.85rem;
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-token {
+    display: block;
+    flex: 1;
+    font-size: 0.96rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.quiqqer-oauth-server-profile-tokens-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.quiqqer-oauth-server-profile-tokens-actions .btn,
+.quiqqer-oauth-server-profile-tokens-iconButton {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.quiqqer-oauth-server-profile-tokens-iconButton {
+    min-height: 3rem;
+    min-width: 3rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-iconButton .fa {
+    font-size: 1rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-confirmContent {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+.quiqqer-oauth-server-profile-tokens-confirmContent h1,
+.quiqqer-oauth-server-profile-tokens-confirmContent p {
+    margin: 0;
+}
+
+.quiqqer-oauth-server-profile-tokens-confirmContent p {
+    color: #334155;
+    line-height: 1.6;
+    max-width: 26rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-confirmIcon {
+    align-items: center;
+    background: rgba(220, 38, 38, 0.1);
+    border-radius: 999px;
+    color: #b91c1c;
+    display: inline-flex;
+    height: 3.5rem;
+    justify-content: center;
+    width: 3.5rem;
+}
+
+.quiqqer-oauth-server-profile-tokens-confirmIcon .fa {
+    font-size: 1.25rem;
+}
+
+@media (max-width: 767px) {
+    .quiqqer-oauth-server-profile-tokens-card {
+        border-radius: 0.85rem;
+        padding: 1rem;
+    }
+
+    .quiqqer-oauth-server-profile-tokens-tokenRow {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .quiqqer-oauth-server-profile-tokens-actions .btn,
+    .quiqqer-oauth-server-profile-tokens-iconButton {
+        width: 100%;
+    }
+}

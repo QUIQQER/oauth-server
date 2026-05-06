@@ -1,0 +1,20 @@
+<quiqqer>
+    <frontend-users>
+        <profile>
+            <categories>
+                <category name="user">
+                    <settings control="\QUI\OAuth\FrontendUsers\Profile\Tokens"
+                              name="oauthTokens"
+                              icon="fa fa-key"
+                              showinprofile="1"
+                              showinprofilebar="0"
+                    >
+                        <title>
+                            <locale group="quiqqer/oauth-server" var="profile.tokens.title"/>
+                        </title>
+                    </settings>
+                </category>
+            </categories>
+        </profile>
+    </frontend-users>
+</quiqqer>
