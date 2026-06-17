@@ -266,29 +266,76 @@ class ResourceController extends OAuth2\Controller\ResourceController
         $endpointParts = explode('/', trim($endpoint, '/'));
 
         foreach ($availableScopes as $scope) {
-            $scopeParts = explode('/', trim($scope, '/'));
+            $scopeVariants = self::expandOptionalScopeSegments($scope);
 
-            if (count($scopeParts) !== count($endpointParts)) {
-                continue;
-            }
+            foreach ($scopeVariants as $scopeVariant) {
+                $scopeParts = explode('/', trim($scopeVariant, '/'));
 
-            foreach ($scopeParts as $k => $scopePart) {
-                $endpointPart = $endpointParts[$k];
-
-                // skip placeholders
-                if (mb_strpos($scopePart, '{') !== false) {
+                if (count($scopeParts) !== count($endpointParts)) {
                     continue;
                 }
 
-                if ($scopePart !== $endpointPart) {
-                    continue 2;
-                }
-            }
+                foreach ($scopeParts as $k => $scopePart) {
+                    $endpointPart = $endpointParts[$k];
 
-            return $scope;
+                    // skip placeholders
+                    if (mb_strpos($scopePart, '{') !== false) {
+                        continue;
+                    }
+
+                    if ($scopePart !== $endpointPart) {
+                        continue 2;
+                    }
+                }
+
+                return $scope;
+            }
         }
 
         return false;
+    }
+
+    /**
+     * Expands Slim optional route segments into concrete scope variants.
+     *
+     * Example: /check[/{iban}] becomes /check and /check/{iban}.
+     *
+     * @param string $scope
+     * @return array<int, string>
+     */
+    protected static function expandOptionalScopeSegments(string $scope): array
+    {
+        if (mb_strpos($scope, '[') === false) {
+            return [$scope];
+        }
+
+        $variants = [$scope];
+
+        while (true) {
+            $expanded = [];
+            $changed = false;
+
+            foreach ($variants as $variant) {
+                if (!preg_match('/\[([^\[\]]*)\]/', $variant, $matches, PREG_OFFSET_CAPTURE)) {
+                    $expanded[] = $variant;
+                    continue;
+                }
+
+                $changed = true;
+                $optional = $matches[1][0];
+                $offset = $matches[0][1];
+                $length = strlen($matches[0][0]);
+
+                $expanded[] = substr($variant, 0, $offset) . substr($variant, $offset + $length);
+                $expanded[] = substr($variant, 0, $offset) . $optional . substr($variant, $offset + $length);
+            }
+
+            $variants = array_values(array_unique($expanded));
+
+            if (!$changed) {
+                return $variants;
+            }
+        }
     }
 
     /**
