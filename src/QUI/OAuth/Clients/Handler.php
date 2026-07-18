@@ -10,7 +10,6 @@ use QUI;
 use QUI\Cache\LongTermCache;
 use QUI\Interfaces\Users\User as QUIUserInterface;
 use QUI\OAuth\Permission;
-use QUI\Permissions\PermissionOrder;
 use Ramsey\Uuid\Uuid;
 use Throwable;
 
@@ -604,20 +603,24 @@ class Handler
     public static function getMaxNumberOfPermanentAccessTokens(QUIUserInterface $user): ?int
     {
         try {
-            $maxNumberOfOauthClientsWithPermanentAccessToken = PermissionOrder::maxInteger(
+            $permissionValue = $user->getPermission(
                 Permission::MAX_NUMBER_OF_PERMANENT_ACCESS_TOKENS->value,
-                [$user]
+                'maxInteger'
             );
         } catch (\Exception $exception) {
             QUI\System\Log::writeException($exception);
             return 0;
         }
 
-        if ($maxNumberOfOauthClientsWithPermanentAccessToken === -1) {
+        if ($permissionValue === -1 || $permissionValue === '-1') {
             return null;
         }
 
-        return $maxNumberOfOauthClientsWithPermanentAccessToken;
+        if (!is_int($permissionValue) && !is_numeric($permissionValue)) {
+            return 0;
+        }
+
+        return (int)$permissionValue;
     }
 
     /**
