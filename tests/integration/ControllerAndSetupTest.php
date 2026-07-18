@@ -2,6 +2,7 @@
 
 namespace QUITest\QUI\OAuth\Integration;
 
+use GuzzleHttp\Psr7\ServerRequest;
 use QUI;
 use QUI\OAuth\BackendController;
 use QUI\OAuth\EventHandler;
@@ -224,6 +225,44 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
             $specification['paths']['/example']['get']['security']
         );
         self::assertArrayHasKey('4XX', $specification['paths']['/example']['get']['responses']);
+    }
+
+    public function testRestProviderIssuesTokenFromPsrRequest(): void
+    {
+        $clientId = self::createClient();
+        $client = QUI\OAuth\Clients\Handler::getOAuthClient($clientId);
+        $RestServer = new QUI\REST\Server(['basePath' => '/api']);
+        (new RestProvider())->register($RestServer);
+
+        $_GET = [];
+        $_POST = [];
+        $_REQUEST = [];
+        unset(
+            $_SERVER['HTTP_AUTHORIZATION'],
+            $_SERVER['PHP_AUTH_USER'],
+            $_SERVER['PHP_AUTH_PW']
+        );
+
+        $Request = (new ServerRequest(
+            'POST',
+            '/api/oauth/token',
+            [
+                'Authorization' => 'Basic ' . base64_encode(
+                    $clientId . ':' . $client['client_secret']
+                ),
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ]
+        ))->withParsedBody([
+            'grant_type' => 'client_credentials'
+        ]);
+
+        $Response = $RestServer->getSlim()->handle($Request);
+        $payload = json_decode((string)$Response->getBody(), true);
+
+        self::assertSame(200, $Response->getStatusCode());
+        self::assertIsArray($payload);
+        self::assertArrayHasKey('access_token', $payload);
+        self::assertSame('Bearer', $payload['token_type']);
     }
 
     public function testPackageSetupHandlerIgnoresOtherPackagesAndHandlesOwnPackage(): void

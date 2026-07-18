@@ -50,7 +50,7 @@ class RestProvider implements QUI\REST\ProviderInterface
                     $OAuthServerResponse = new OAuth2\Response();
 
                     $OAuth2Server->handleTokenRequest(
-                        OAuth2\Request::createFromGlobals(),
+                        RequestFactory::fromPsr($Request),
                         $OAuthServerResponse
                     );
 
