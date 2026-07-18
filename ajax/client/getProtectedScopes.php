@@ -10,16 +10,16 @@
 QUI::getAjax()->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_getProtectedScopes',
     function () {
-        $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
-        $protectedScopes = $Conf->get('general', 'protected_scopes');
+        $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+        $protectedScopes = $Config?->get('general', 'protected_scopes');
 
-        if (!empty($protectedScopes)) {
-            $protectedScopes = json_decode($protectedScopes, true);
-        } else {
-            $protectedScopes = [];
+        if (!is_string($protectedScopes) || $protectedScopes === '') {
+            return [];
         }
 
-        return $protectedScopes;
+        $protectedScopes = json_decode($protectedScopes, true);
+
+        return is_array($protectedScopes) ? $protectedScopes : [];
     },
     [],
     'Permission::checkAdminUser'
