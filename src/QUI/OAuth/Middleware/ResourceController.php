@@ -273,7 +273,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
     public static function parseScopeFromEndpoint(string $endpoint): bool|string
     {
         try {
-            $availableScopes = RestServer::getInstance()->getEntryPoints();
+            $availableScopes = RestServer::getCurrentInstance()->getEntryPoints();
         } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
             return false;

@@ -13,6 +13,7 @@ use QUI\OAuth\Server;
 use QUI\OAuth\Setup;
 use QUI\OAuth\Storage;
 use QUI\OAuth\StorageFactory;
+use QUI\REST\Server as RestServer;
 use QUITest\QUI\OAuth\Support\OAuthDatabaseTestCase;
 
 class TokenAndResourceTest extends OAuthDatabaseTestCase
@@ -214,59 +215,65 @@ class TokenAndResourceTest extends OAuthDatabaseTestCase
 
     public function testResourceControllerCoversAllLimitIntervalsAndInactiveScopes(): void
     {
-        $scopeSettings = [
-            '/help' => [
+        $scope = '/quiqqer_oauth_test';
+        $Controller = Server::getInstance()->getOAuth2Server()->getResourceController();
+        $limitsTable = QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_access_limits'));
+        $unlimitedClientId = self::createClient([
+            $scope => [
                 'active' => true,
                 'unlimitedCalls' => true,
                 'maxCalls' => 0,
                 'maxCallsType' => 'absolute'
-            ],
-            '/blz-test' => $this->limitedScope('minute'),
-            '/generate' => $this->limitedScope('hour'),
-            '/invoice/create' => $this->limitedScope('day'),
-            '/menus/get' => $this->limitedScope('month'),
-            '/menus/update' => $this->limitedScope('year'),
-            '/menus/delete' => [
-                'active' => false,
-                'unlimitedCalls' => true,
-                'maxCalls' => 0,
-                'maxCallsType' => 'absolute'
             ]
-        ];
-        $clientId = self::createClient($scopeSettings, true);
-        $client = Handler::getOAuthClient($clientId);
-        $request = new ServerRequest('GET', '/resource', [
-            'Authorization' => 'Bearer ' . $client['client_secret']
-        ]);
-        $Controller = Server::getInstance()->getOAuth2Server()->getResourceController();
-        $limitsTable = QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_access_limits'));
+        ], true);
 
-        $Controller->verify('/help', $request);
+        $Controller->verify($scope, $this->secretTokenRequest($unlimitedClientId));
 
-        foreach (['/blz-test', '/generate', '/invoice/create', '/menus/get', '/menus/update'] as $scope) {
+        foreach (['minute', 'hour', 'day', 'month', 'year'] as $interval) {
+            $clientId = self::createClient([
+                $scope => $this->limitedScope($interval)
+            ], true);
+
             self::getConnection()->update(
                 $limitsTable,
                 ['interval_usage_count' => 3, 'first_usage' => time() - 70000000],
                 ['client_id' => $clientId, 'scope' => $scope]
             );
-            $Controller->verify($scope, $request);
+            $Controller->verify($scope, $this->secretTokenRequest($clientId));
             self::assertSame(1, (int)Handler::getClientLimits($clientId, $scope)[$scope]['interval_usage_count']);
         }
 
+        $inactiveClientId = self::createClient([
+            $scope => [
+                'active' => false,
+                'unlimitedCalls' => true,
+                'maxCalls' => 0,
+                'maxCallsType' => 'absolute'
+            ]
+        ], true);
+
         try {
-            $Controller->verify('/menus/delete', $request);
+            $Controller->verify($scope, $this->secretTokenRequest($inactiveClientId));
             self::fail('Inactive scopes must be rejected.');
         } catch (InvalidRequestException $Exception) {
             self::assertSame(403, $Exception->getCode());
         }
 
+        $missingLimitClientId = self::createClient([
+            $scope => [
+                'active' => true,
+                'unlimitedCalls' => true,
+                'maxCalls' => 0,
+                'maxCallsType' => 'absolute'
+            ]
+        ], true);
         self::getConnection()->delete($limitsTable, [
-            'client_id' => $clientId,
-            'scope' => '/help'
+            'client_id' => $missingLimitClientId,
+            'scope' => $scope
         ]);
 
         try {
-            $Controller->verify('/help', $request);
+            $Controller->verify($scope, $this->secretTokenRequest($missingLimitClientId));
             self::fail('Scopes without limit metadata must be rejected.');
         } catch (InvalidRequestException $Exception) {
             self::assertSame(403, $Exception->getCode());
@@ -275,6 +282,10 @@ class TokenAndResourceTest extends OAuthDatabaseTestCase
 
     public function testScopeParsingSupportsRequiredOptionalAndInvalidPaths(): void
     {
+        $RestServer = RestServer::getInstance();
+        $RestServer->getSlim()->get('/check[/{iban}]', static fn() => null);
+        $RestServer->getSlim()->get('/hello/{name}', static fn() => null);
+
         self::assertSame('/check[/{iban}]', ResourceController::parseScopeFromEndpoint('/check'));
         self::assertSame('/check[/{iban}]', ResourceController::parseScopeFromEndpoint('/check/DE44500105175407324931'));
         self::assertSame('/hello/{name}', ResourceController::parseScopeFromEndpoint('/hello/Ada'));
@@ -314,6 +325,15 @@ class TokenAndResourceTest extends OAuthDatabaseTestCase
                 'PHP_AUTH_PW' => $clientSecret
             ]
         );
+    }
+
+    private function secretTokenRequest(string $clientId): ServerRequest
+    {
+        $client = Handler::getOAuthClient($clientId);
+
+        return new ServerRequest('GET', '/resource', [
+            'Authorization' => 'Bearer ' . $client['client_secret']
+        ]);
     }
 
     /**
