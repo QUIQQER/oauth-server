@@ -13,3 +13,5 @@ if (!defined('SYSTEM_INTERN')) {
 }
 
 require_once __DIR__ . '/../../../../bootstrap.php';
+
+require_once __DIR__ . '/Support/OAuthDatabaseTestCase.php';
