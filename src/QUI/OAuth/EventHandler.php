@@ -79,9 +79,9 @@ class EventHandler
      */
     public static function onRequest(QUI\Rewrite $Rewrite, string $url): void
     {
-        $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+        $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
-        if (!$Conf->getValue('general', 'active')) {
+        if (!$Config?->getValue('general', 'active')) {
             return;
         }
 
@@ -99,9 +99,9 @@ class EventHandler
     public static function onQuiqqerRestLoadOpenApiSpecification(string $apiName, array &$specification): void
     {
         try {
-            $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+            $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
-            if (!$Conf->getValue('general', 'active')) {
+            if (!$Config?->getValue('general', 'active')) {
                 return;
             }
 
