@@ -59,27 +59,20 @@ class ResourceController extends OAuth2\Controller\ResourceController
 
             try {
                 $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
-            } catch (Exception $Exception) {
-                QUI\System\Log::writeException($Exception);
-                try {
-                    $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
-                } catch (\Exception $Exception) {
-                    QUI\System\Log::writeException($Exception);
+            } catch (Exception) {
+                throw new InvalidRequestException(
+                    'system_error',
+                    'System error. Please contact an administrator.',
+                    500
+                );
+            }
 
-                    throw new InvalidRequestException(
-                        'system_error',
-                        'System error. Please contact an administrator.',
-                        500
-                    );
-                }
-
-                if (empty($clientData)) {
-                    throw new InvalidRequestException(
-                        'invalid_token',
-                        'The access token provided is invalid.',
-                        401
-                    );
-                }
+            if ($clientData === false) {
+                throw new InvalidRequestException(
+                    'invalid_token',
+                    'The access token provided is invalid.',
+                    401
+                );
             }
         }
 
