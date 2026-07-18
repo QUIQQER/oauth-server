@@ -230,6 +230,9 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
     public function testRestProviderIssuesTokenFromPsrRequest(): void
     {
         $clientId = self::createClient();
+        QUI\OAuth\Clients\Handler::updateOAuthClient($clientId, [
+            'clientSecret' => 'secret:with:multiple:colons'
+        ]);
         $client = QUI\OAuth\Clients\Handler::getOAuthClient($clientId);
         $RestServer = new QUI\REST\Server(['basePath' => '/api']);
         (new RestProvider())->register($RestServer);
@@ -258,8 +261,11 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
 
         $Response = $RestServer->getSlim()->handle($Request);
         $payload = json_decode((string)$Response->getBody(), true);
+        $oauthError = is_array($payload) && isset($payload['error'])
+            ? (string)$payload['error']
+            : 'unknown_oauth_error';
 
-        self::assertSame(200, $Response->getStatusCode());
+        self::assertSame(200, $Response->getStatusCode(), $oauthError);
         self::assertIsArray($payload);
         self::assertArrayHasKey('access_token', $payload);
         self::assertSame('Bearer', $payload['token_type']);

@@ -17,6 +17,16 @@ final class RequestFactory
 
         if ($authorization !== '') {
             $server['HTTP_AUTHORIZATION'] = $authorization;
+
+            if (preg_match('/^Basic\s+(\S+)$/i', $authorization, $matches) === 1) {
+                $credentials = base64_decode($matches[1], true);
+
+                if (is_string($credentials) && str_contains($credentials, ':')) {
+                    [$clientId, $clientSecret] = explode(':', $credentials, 2);
+                    $server['PHP_AUTH_USER'] = $clientId;
+                    $server['PHP_AUTH_PW'] = $clientSecret;
+                }
+            }
         }
 
         if ($contentType !== '') {
