@@ -155,6 +155,13 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         self::assertArrayHasKey('client_id', $clientColumns);
         self::assertArrayHasKey('client_secret_is_token', $clientColumns);
 
+        $schema = QUI\Utils\Text\XML::getDataBaseFromXml(dirname(__DIR__, 2) . '/database.xml');
+        self::assertCount(7, $schema['globals']);
+        $tablesByName = array_column($schema['globals'], null, 'suffix');
+        self::assertSame('true', $tablesByName['oauth_clients']['field_attributes']['client_id']['primary']);
+        self::assertSame('datetime', $tablesByName['oauth_access_tokens']['field_attributes']['expires']['type']);
+        self::assertSame(['client_id', 'scope'], $tablesByName['oauth_access_limits']['primary']);
+
         $this->expectException(QUI\Exception::class);
         Setup::getTable('untrusted_table_name');
     }

@@ -135,22 +135,24 @@ class ResourceController extends OAuth2\Controller\ResourceController
             );
         }
 
-        $result = QUI::getDataBase()->fetch([
-            'select' => ['total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage'],
-            'from' => $table,
-            'where' => [
-                'client_id' => $clientData['client_id'],
-                'scope' => $scope
-            ],
-            'limit' => 1
-        ]);
+        $QueryBuilder = QUI::getQueryBuilder();
+        $result = $QueryBuilder
+            ->select('total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage')
+            ->from(QUI\Utils\Doctrine::quoteIdentifier($table))
+            ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
+            ->andWhere($QueryBuilder->expr()->eq('scope', ':scope'))
+            ->setParameter('clientId', $clientData['client_id'])
+            ->setParameter('scope', $scope)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
 
-        if (empty($result)) {
+        if ($result === false) {
             $this->throwInvalidScopeException();
         }
 
         $now = time();
-        $data = current($result);
+        $data = $result;
         $writeToDatabase = false;
         $firstUsage = empty($data['first_usage']) ? $now : $data['first_usage'];
         $lastUsage = empty($data['last_usage']) ? $now : $data['last_usage'];
@@ -207,15 +209,19 @@ class ResourceController extends OAuth2\Controller\ResourceController
         }
 
         if ($writeToDatabase) {
-            QUI::getDataBase()->update($table, [
-                'total_usage_count' => $totalUsageCount,
-                'interval_usage_count' => $intervalUsageCount,
-                'first_usage' => $firstUsage,
-                'last_usage' => $now
-            ], [
-                'client_id' => $clientData['client_id'],
-                'scope' => $scope
-            ]);
+            QUI::getDataBaseConnection()->update(
+                QUI\Utils\Doctrine::quoteIdentifier($table),
+                [
+                    'total_usage_count' => $totalUsageCount,
+                    'interval_usage_count' => $intervalUsageCount,
+                    'first_usage' => $firstUsage,
+                    'last_usage' => $now
+                ],
+                [
+                    'client_id' => $clientData['client_id'],
+                    'scope' => $scope
+                ]
+            );
         }
 
         if ($maxCallsExceeded) {

@@ -12,6 +12,7 @@ use QUI\OAuth\Middleware\ResourceController;
 use QUI\OAuth\Server;
 use QUI\OAuth\Setup;
 use QUI\OAuth\Storage;
+use QUI\OAuth\StorageFactory;
 use QUITest\QUI\OAuth\Support\OAuthDatabaseTestCase;
 
 class TokenAndResourceTest extends OAuthDatabaseTestCase
@@ -21,7 +22,7 @@ class TokenAndResourceTest extends OAuthDatabaseTestCase
         $nativeConnection = self::getConnection()->getNativeConnection();
         self::assertInstanceOf(PDO::class, $nativeConnection);
 
-        $Storage = new Storage($nativeConnection);
+        $Storage = StorageFactory::create();
         $clientId = self::createClient([
             '/quiqqer_oauth_test' => [
                 'active' => true,
@@ -32,6 +33,7 @@ class TokenAndResourceTest extends OAuthDatabaseTestCase
 
         self::assertTrue($Storage->checkClientCredentials($clientId, $client['client_secret']));
         self::assertFalse($Storage->checkClientCredentials($clientId, 'wrong-secret'));
+        self::assertFalse($Storage->checkClientCredentials(strtoupper($clientId), $client['client_secret']));
         self::assertFalse($Storage->isPublicClient($clientId));
         self::assertSame($clientId, $Storage->getClientDetails($clientId)['client_id']);
 

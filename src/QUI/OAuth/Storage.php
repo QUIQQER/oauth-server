@@ -38,6 +38,86 @@ class Storage extends OAuth2\Storage\Pdo
     }
 
     /**
+     * Use a timing-safe, case-sensitive comparison for confidential clients.
+     *
+     * @param string $client_id
+     * @param string|null $client_secret
+     */
+    public function checkClientCredentials($client_id, $client_secret = null): bool
+    {
+        $client = $this->getClientDetails($client_id);
+
+        if (!is_array($client) || !is_string($client_secret)) {
+            return false;
+        }
+
+        return hash_equals((string)$client['client_secret'], $client_secret);
+    }
+
+    /**
+     * @param string $client_id
+     * @return array|false
+     */
+    public function getClientDetails($client_id): array|false
+    {
+        $client = parent::getClientDetails($client_id);
+
+        if (!is_array($client) || !hash_equals((string)$client['client_id'], $client_id)) {
+            return false;
+        }
+
+        return $client;
+    }
+
+    /**
+     * @param string $access_token
+     * @return array|false
+     */
+    public function getAccessToken($access_token): array|false
+    {
+        $token = parent::getAccessToken($access_token);
+
+        if (!is_array($token) || !hash_equals((string)$token['access_token'], $access_token)) {
+            return false;
+        }
+
+        return $token;
+    }
+
+    /**
+     * @param string $refresh_token
+     * @return array|false
+     */
+    public function getRefreshToken($refresh_token): array|false
+    {
+        $token = parent::getRefreshToken($refresh_token);
+
+        if (!is_array($token) || !hash_equals((string)$token['refresh_token'], $refresh_token)) {
+            return false;
+        }
+
+        return $token;
+    }
+
+    /**
+     * @param string $code
+     * @return array|false
+     */
+    public function getAuthorizationCode($code): array|false
+    {
+        $authorizationCode = parent::getAuthorizationCode($code);
+
+        if (
+            !is_array($authorizationCode)
+            || !hash_equals((string)$authorizationCode['authorization_code'], $code)
+        ) {
+            return false;
+        }
+
+        return $authorizationCode;
+    }
+
+    /**
      * @param string $username
      * @return array|bool
      */

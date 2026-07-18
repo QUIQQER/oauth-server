@@ -3,8 +3,8 @@
 namespace QUI\OAuth\Clients;
 
 use DateTime;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
-use PDOException;
 use Psr\Http\Message\ServerRequestInterface;
 use QUI;
 use QUI\Cache\LongTermCache;
@@ -80,8 +80,9 @@ class Handler
             }
         }
 
-        QUI::getDataBase()->insert(
-            QUI\OAuth\Setup::getTable('oauth_clients'),
+        $Connection = QUI::getDataBaseConnection();
+        $Connection->insert(
+            QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')),
             [
                 'client_id' => $clientId,
                 'client_secret' => self::generatePassword(),
@@ -96,8 +97,8 @@ class Handler
 
         // Insert default access limit data for all active scopes
         foreach ($activeScopes as $scope) {
-            QUI::getDataBase()->insert(
-                QUI\OAuth\Setup::getTable('oauth_access_limits'),
+            $Connection->insert(
+                QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_access_limits')),
                 [
                     'client_id' => $clientId,
                     'scope' => $scope
@@ -138,12 +139,15 @@ class Handler
      */
     public static function getOAuthClientsByUser(QUI\Interfaces\Users\User $User): array
     {
-        return QUI::getDataBase()->fetch([
-            'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => [
-                'user_id' => $User->getId()
-            ]
-        ]);
+        $QueryBuilder = QUI::getQueryBuilder();
+
+        return $QueryBuilder
+            ->select('*')
+            ->from(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')))
+            ->where($QueryBuilder->expr()->eq('user_id', ':userId'))
+            ->setParameter('userId', $User->getId())
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -157,13 +161,17 @@ class Handler
      */
     public static function getOAuthClientByUser(QUI\Interfaces\Users\User $User, string $clientId): array
     {
-        return QUI::getDataBase()->fetch([
-            'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => [
-                'user_id' => $User->getId(),
-                'client_id' => $clientId
-            ]
-        ]);
+        $QueryBuilder = QUI::getQueryBuilder();
+
+        return $QueryBuilder
+            ->select('*')
+            ->from(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')))
+            ->where($QueryBuilder->expr()->eq('user_id', ':userId'))
+            ->andWhere($QueryBuilder->expr()->eq('client_id', ':clientId'))
+            ->setParameter('userId', $User->getId())
+            ->setParameter('clientId', $clientId)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -182,38 +190,41 @@ class Handler
         string $accessToken,
         bool $includeClientWithClientSecretAsPermanentAccessToken = false
     ): bool | array {
-        $result = QUI::getDataBase()->fetch([
-            'select' => ['client_id'],
-            'from' => QUI\OAuth\Setup::getTable('oauth_access_tokens'),
-            'where' => [
-                'access_token' => $accessToken
-            ],
-            'limit' => 1
-        ]);
+        $QueryBuilder = QUI::getQueryBuilder();
+        $result = $QueryBuilder
+            ->select('client_id')
+            ->from(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_access_tokens')))
+            ->where($QueryBuilder->expr()->eq('access_token', ':accessToken'))
+            ->setParameter('accessToken', $accessToken)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
 
-        if (!empty($result)) {
-            return self::getOAuthClient($result[0]['client_id']);
+        if ($result !== false) {
+            return self::getOAuthClient((string)$result['client_id']);
         }
 
         if ($includeClientWithClientSecretAsPermanentAccessToken === false) {
             return false;
         }
 
-        $result = QUI::getDataBase()->fetch([
-            'select' => ['client_id'],
-            'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => [
-                'client_secret' => $accessToken,
-                'client_secret_is_token' => 1
-            ],
-            'limit' => 1
-        ]);
+        $QueryBuilder = QUI::getQueryBuilder();
+        $result = $QueryBuilder
+            ->select('client_id', 'client_secret')
+            ->from(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')))
+            ->where($QueryBuilder->expr()->eq('client_secret', ':accessToken'))
+            ->andWhere($QueryBuilder->expr()->eq('client_secret_is_token', ':secretIsToken'))
+            ->setParameter('accessToken', $accessToken)
+            ->setParameter('secretIsToken', 1)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
 
-        if (empty($result)) {
+        if ($result === false || !hash_equals((string)$result['client_secret'], $accessToken)) {
             return false;
         }
 
-        return self::getOAuthClient($result[0]['client_id']);
+        return self::getOAuthClient((string)$result['client_id']);
     }
 
     /**
@@ -264,9 +275,10 @@ class Handler
         $clientSecretIsToken = !empty($data['clientSecretIsToken']);
         $update['client_secret_is_token'] = $clientSecretIsToken ? 1 : 0;
 
-        $tableClients = QUI\OAuth\Setup::getTable('oauth_clients');
+        $tableClients = QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients'));
+        $previousClientData = self::getOAuthClient($clientId);
 
-        QUI::getDataBase()->update(
+        QUI::getDataBaseConnection()->update(
             $tableClients,
             $update,
             [
@@ -275,31 +287,47 @@ class Handler
         );
 
         // If client secret is not a permanent access token (anymore), we have to delete it from cache
-        if ($clientSecretIsToken === false) {
-            self::clearCacheForClientSecretAsAccessTokenByClientId($clientId);
+        if (
+            !empty($previousClientData['client_secret_is_token'])
+            && (
+                $clientSecretIsToken === false
+                || (
+                    isset($update['client_secret'])
+                    && !hash_equals((string)$previousClientData['client_secret'], (string)$update['client_secret'])
+                )
+            )
+        ) {
+            self::clearCacheForClientSecretAsAccessToken((string)$previousClientData['client_secret']);
         }
 
         // Write limit data for all active scopes to database
-        $PDO = QUI::getDataBase()->getPDO();
-        $table = QUI\OAuth\Setup::getTable('oauth_access_limits');
+        $Connection = QUI::getDataBaseConnection();
+        $table = QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_access_limits'));
 
         foreach ($activeScopes as $scope) {
-            try {
-                $Statement = $PDO->prepare(
-                    'INSERT INTO `' . $table . '` (`client_id`, `scope`)'
-                    . ' SELECT ' . $PDO->quote($clientId) . ', ' . $PDO->quote($scope)
-                    . ' FROM DUAL'
-                    . ' WHERE NOT EXISTS ('
-                    . '   SELECT 1 FROM `' . $table . '`'
-                    . '   WHERE `client_id` =' . $PDO->quote($clientId)
-                    . '   AND `scope` =' . $PDO->quote($scope)
-                    . ')'
-                    . ' LIMIT 1'
-                );
+            $QueryBuilder = QUI::getQueryBuilder();
+            $exists = $QueryBuilder
+                ->select('1')
+                ->from($table)
+                ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
+                ->andWhere($QueryBuilder->expr()->eq('scope', ':scope'))
+                ->setParameter('clientId', $clientId)
+                ->setParameter('scope', $scope)
+                ->setMaxResults(1)
+                ->executeQuery()
+                ->fetchOne();
 
-                $Statement->execute();
-            } catch (PDOException $Exception) {
-                QUI\System\Log::writeException($Exception);
+            if ($exists !== false) {
+                continue;
+            }
+
+            try {
+                $Connection->insert($table, [
+                    'client_id' => $clientId,
+                    'scope' => $scope
+                ]);
+            } catch (UniqueConstraintViolationException) {
+                // Another request created the same client/scope metadata concurrently.
             }
         }
     }
@@ -314,14 +342,17 @@ class Handler
      */
     public static function getOAuthClient(string $clientId): array
     {
-        $result = QUI::getDataBase()->fetch([
-            'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => [
-                'client_id' => $clientId
-            ]
-        ]);
+        $QueryBuilder = QUI::getQueryBuilder();
+        $result = $QueryBuilder
+            ->select('*')
+            ->from(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')))
+            ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
+            ->setParameter('clientId', $clientId)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
 
-        if (!isset($result[0])) {
+        if ($result === false) {
             throw new QUI\OAuth\Exception(
                 [
                     'quiqqer/oauth-server',
@@ -331,7 +362,7 @@ class Handler
             );
         }
 
-        return $result[0];
+        return $result;
     }
 
     /**
@@ -342,11 +373,14 @@ class Handler
      */
     public static function removeOAuthClient(string $clientId): void
     {
-        $DB = QUI::getDataBase();
+        self::clearCacheForClientSecretAsAccessTokenByClientId($clientId);
+        $Connection = QUI::getDataBaseConnection();
 
         foreach (QUI\OAuth\Setup::getClientTables() as $table) {
-            self::clearCacheForClientSecretAsAccessTokenByClientId($clientId);
-            $DB->delete($table, ['client_id' => $clientId]);
+            $Connection->delete(
+                QUI\Utils\Doctrine::quoteIdentifier($table),
+                ['client_id' => $clientId]
+            );
         }
     }
 
@@ -365,19 +399,20 @@ class Handler
         $scopRestrictions = json_decode($clientData['scope_restrictions'], true);
 
         $limits = [];
-        $where = [
-            'client_id' => $clientId
-        ];
+        $QueryBuilder = QUI::getQueryBuilder();
+        $QueryBuilder
+            ->select('scope', 'total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage')
+            ->from(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_access_limits')))
+            ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
+            ->setParameter('clientId', $clientId);
 
-        if (!is_null($scope)) {
-            $where['scope'] = $scope;
+        if ($scope !== null) {
+            $QueryBuilder
+                ->andWhere($QueryBuilder->expr()->eq('scope', ':scope'))
+                ->setParameter('scope', $scope);
         }
 
-        $result = QUI::getDataBase()->fetch([
-            'select' => ['scope', 'total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage'],
-            'from' => QUI::getDBTableName('oauth_access_limits'),
-            'where' => $where
-        ]);
+        $result = $QueryBuilder->executeQuery()->fetchAllAssociative();
 
         foreach ($result as $row) {
             $scope = $row['scope'];
@@ -413,16 +448,19 @@ class Handler
 
         // Check if DB entry for scope exists
         if (!is_null($scope)) {
-            $result = QUI::getDataBase()->fetch([
-                'select' => 1,
-                'from' => $table,
-                'where' => [
-                    'client_id' => $clientId,
-                    'scope' => $scope
-                ]
-            ]);
+            $QueryBuilder = QUI::getQueryBuilder();
+            $result = $QueryBuilder
+                ->select('1')
+                ->from(QUI\Utils\Doctrine::quoteIdentifier($table))
+                ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
+                ->andWhere($QueryBuilder->expr()->eq('scope', ':scope'))
+                ->setParameter('clientId', $clientId)
+                ->setParameter('scope', $scope)
+                ->setMaxResults(1)
+                ->executeQuery()
+                ->fetchOne();
 
-            if (empty($result)) {
+            if ($result === false) {
                 throw new QUI\OAuth\Exception(
                     QUI::getLocale()->get(
                         'quiqqer/oauth-server',
@@ -440,15 +478,19 @@ class Handler
             $where['scope'] = $scope;
         }
 
-        QUI::getDataBase()->update($table, [
-            'interval_usage_count' => 0,
-            'first_usage' => 0,
-            'last_usage' => 0
-        ], $where);
+        QUI::getDataBaseConnection()->update(
+            QUI\Utils\Doctrine::quoteIdentifier($table),
+            [
+                'interval_usage_count' => 0,
+                'first_usage' => 0,
+                'last_usage' => 0
+            ],
+            $where
+        );
     }
 
     /**
-     * Deletes all access tokens that are expired for at least 24 hours
+     * Deletes expired OAuth credentials after a 24-hour diagnostics window.
      *
      * @return void
      * @throws QUI\Database\Exception
@@ -458,15 +500,14 @@ class Handler
     {
         $MinAge = new DateTime('-24 hours');
 
-        QUI::getDataBase()->delete(
-            QUI\OAuth\Setup::getTable('oauth_access_tokens'),
-            [
-                'expires' => [
-                    'type' => '<=',
-                    'value' => $MinAge->format('Y-m-d H:i:s')
-                ]
-            ]
-        );
+        foreach (['oauth_access_tokens', 'oauth_refresh_tokens', 'oauth_authorization_codes'] as $table) {
+            $QueryBuilder = QUI::getQueryBuilder();
+            $QueryBuilder
+                ->delete(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable($table)))
+                ->where($QueryBuilder->expr()->lte('expires', ':minimumExpiration'))
+                ->setParameter('minimumExpiration', $MinAge->format('Y-m-d H:i:s'))
+                ->executeStatement();
+        }
     }
 
     /**
@@ -531,23 +572,25 @@ class Handler
         }
 
         try {
-            $result = QUI::getDataBase()->fetch([
-                'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
-                'where' => [
-                    'client_secret' => $token, // TODO: hashing!
-                    'client_secret_is_token' => 1
-                ],
-                'limit' => 1
-            ]);
+            $QueryBuilder = QUI::getQueryBuilder();
+            $result = $QueryBuilder
+                ->select('*')
+                ->from(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')))
+                ->where($QueryBuilder->expr()->eq('client_secret', ':token'))
+                ->andWhere($QueryBuilder->expr()->eq('client_secret_is_token', ':secretIsToken'))
+                ->setParameter('token', $token)
+                ->setParameter('secretIsToken', 1)
+                ->setMaxResults(1)
+                ->executeQuery()
+                ->fetchAssociative();
 
-            if (empty($result)) {
+            if ($result === false || !hash_equals((string)$result['client_secret'], $token)) {
                 return null;
             }
 
-            $clientData = $result[0];
-            LongTermCache::set($cacheName, $clientData);
+            LongTermCache::set($cacheName, $result);
 
-            return $clientData;
+            return $result;
         } catch (\Exception $exception) {
             QUI\System\Log::writeException($exception);
             return null;
@@ -608,7 +651,7 @@ class Handler
 
     private static function getCacheNameForClientSecretsAsAccessTokens(string $token): string
     {
-        return 'quiqqer/oauth-server/client-data-with-secret-as-access-token/' . $token;
+        return 'quiqqer/oauth-server/client-data-with-secret-as-access-token/' . hash('sha256', $token);
     }
 
     /**
@@ -619,17 +662,23 @@ class Handler
      */
     private static function clearCacheForClientSecretAsAccessTokenByClientId(string $clientId): void
     {
-        $result = QUI::getDatabase()->fetch([
-            'select' => ['client_secret'],
-            'from' => QUI\OAuth\Setup::getTable('oauth_clients'),
-            'where' => [
-                'client_id' => $clientId
-            ],
-            'limit' => 1
-        ]);
+        $QueryBuilder = QUI::getQueryBuilder();
+        $result = $QueryBuilder
+            ->select('client_secret')
+            ->from(QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')))
+            ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
+            ->setParameter('clientId', $clientId)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
 
-        if (!empty($result)) {
-            LongTermCache::clear(self::getCacheNameForClientSecretsAsAccessTokens($result[0]['client_secret']));
+        if ($result !== false && !empty($result['client_secret'])) {
+            self::clearCacheForClientSecretAsAccessToken((string)$result['client_secret']);
         }
+    }
+
+    private static function clearCacheForClientSecretAsAccessToken(string $secret): void
+    {
+        LongTermCache::clear(self::getCacheNameForClientSecretsAsAccessTokens($secret));
     }
 }

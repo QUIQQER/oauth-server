@@ -165,40 +165,95 @@ class ClientLifecycleTest extends OAuthDatabaseTestCase
         }
     }
 
-    public function testCleanupOnlyDeletesTokensExpiredForAtLeastOneDay(): void
+    public function testSecretRotationInvalidatesCacheAndKeepsComparisonsCaseSensitive(): void
+    {
+        $clientId = self::createClient([], true);
+        $client = Handler::getOAuthClient($clientId);
+        $oldSecret = (string)$client['client_secret'];
+        $request = new ServerRequest('GET', '/resource', ['Authorization' => 'Bearer ' . $oldSecret]);
+
+        self::assertIsArray(Handler::getOAuthClientDataByRequestWithClientSecretAsToken($request));
+
+        $newSecret = Handler::generatePassword();
+        Handler::updateOAuthClient($clientId, [
+            'clientSecret' => $newSecret,
+            'clientSecretIsToken' => true
+        ]);
+        self::resetLongTermCacheRuntime();
+
+        try {
+            LongTermCache::get(self::cacheName($oldSecret));
+            self::fail('The cache entry for the rotated secret must be removed.');
+        } catch (CacheException) {
+            self::assertTrue(true);
+        }
+
+        self::assertNull(Handler::getOAuthClientDataByRequestWithClientSecretAsToken($request));
+        self::assertSame(
+            $clientId,
+            Handler::getOAuthClientDataByRequestWithClientSecretAsToken(
+                new ServerRequest('GET', '/resource', ['Authorization' => 'Bearer ' . $newSecret])
+            )['client_id']
+        );
+
+        preg_match('/[A-Za-z]/', $newSecret, $matches, PREG_OFFSET_CAPTURE);
+        self::assertNotEmpty($matches);
+        $offset = $matches[0][1];
+        $letter = $matches[0][0];
+        $caseChangedSecret = substr_replace(
+            $newSecret,
+            strtolower($letter) === $letter ? strtoupper($letter) : strtolower($letter),
+            $offset,
+            1
+        );
+        self::assertFalse(Handler::getOAuthClientByAccessToken($caseChangedSecret, true));
+    }
+
+    public function testCleanupDeletesOldAccessRefreshAndAuthorizationCredentials(): void
     {
         $clientId = self::createClient();
         $client = Handler::getOAuthClient($clientId);
-        $table = QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_access_tokens'));
-        $oldToken = 'old-' . bin2hex(random_bytes(8));
-        $recentToken = 'recent-' . bin2hex(random_bytes(8));
-
-        $tokensByExpiration = [
-            $oldToken => time() - 90000,
-            $recentToken => time() - 3600
+        $credentials = [
+            'oauth_access_tokens' => 'access_token',
+            'oauth_refresh_tokens' => 'refresh_token',
+            'oauth_authorization_codes' => 'authorization_code'
         ];
 
-        foreach ($tokensByExpiration as $token => $expires) {
-            self::getConnection()->insert($table, [
-                'access_token' => $token,
-                'client_id' => $clientId,
-                'user_id' => $client['user_id'],
-                'expires' => date('Y-m-d H:i:s', $expires),
-                'scope' => null
-            ]);
+        foreach ($credentials as $tableName => $credentialColumn) {
+            $table = QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable($tableName));
+
+            foreach (['old' => time() - 90000, 'recent' => time() - 3600] as $age => $expires) {
+                $value = $age . '-' . substr($credentialColumn, 0, 3) . '-' . bin2hex(random_bytes(6));
+                $row = [
+                    $credentialColumn => $value,
+                    'client_id' => $clientId,
+                    'user_id' => $client['user_id'],
+                    'expires' => date('Y-m-d H:i:s', $expires),
+                    'scope' => null
+                ];
+
+                if ($tableName === 'oauth_authorization_codes') {
+                    $row['redirect_uri'] = '';
+                }
+
+                self::getConnection()->insert($table, $row);
+            }
         }
 
         Handler::cleanupAccessTokens();
 
-        self::assertFalse(
-            self::getConnection()->fetchOne(
-                'SELECT access_token FROM ' . $table . ' WHERE access_token = ?',
-                [$oldToken]
-            )
-        );
-        self::assertSame($recentToken, self::getConnection()->fetchOne(
-            'SELECT access_token FROM ' . $table . ' WHERE access_token = ?',
-            [$recentToken]
-        ));
+        foreach ($credentials as $tableName => $credentialColumn) {
+            $table = QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable($tableName));
+            $remaining = self::getConnection()->createQueryBuilder()
+                ->select($credentialColumn)
+                ->from($table)
+                ->where('client_id = :clientId')
+                ->setParameter('clientId', $clientId)
+                ->executeQuery()
+                ->fetchFirstColumn();
+
+            self::assertCount(1, $remaining);
+            self::assertStringStartsWith('recent-', (string)$remaining[0]);
+        }
     }
 }

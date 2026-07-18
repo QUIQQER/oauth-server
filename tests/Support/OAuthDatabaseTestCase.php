@@ -111,7 +111,7 @@ abstract class OAuthDatabaseTestCase extends TestCase
 
     protected static function cacheName(string $secret): string
     {
-        return 'quiqqer/oauth-server/client-data-with-secret-as-access-token/' . $secret;
+        return 'quiqqer/oauth-server/client-data-with-secret-as-access-token/' . hash('sha256', $secret);
     }
 
     protected static function resetLongTermCacheRuntime(): void

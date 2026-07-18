@@ -52,7 +52,7 @@ class Server extends QUI\Utils\Singleton
             'unset_refresh_token_after_use' => true
         ];
 
-        $Storage = new Storage(QUI::getDataBase()->getPDO());
+        $Storage = StorageFactory::create();
 
         // Build server
         $this->OAuth2Server = new OAuth2\Server($Storage, $config);
