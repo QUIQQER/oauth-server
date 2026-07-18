@@ -108,9 +108,6 @@ class RestMiddleware
             }
         }
 
-        // This constant tells the OAuth client handler to ignore permission checks
-        define('OAUTH_REST_REQUEST', 1);
-
         // Verify resource request
         $OAuth2Server = QUI\OAuth\Server::getInstance()->getOAuth2Server();
         /** @var ResourceController $ResourceController */
