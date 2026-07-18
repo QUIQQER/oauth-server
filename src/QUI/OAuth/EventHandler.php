@@ -8,6 +8,8 @@ namespace QUI\OAuth;
 
 use QUI;
 use QUI\Cron\Manager as CronManager;
+use QUI\REST\Server as RestServer;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class Server
@@ -68,16 +70,16 @@ class EventHandler
     }
 
     /**
-     * quiqqer/quiqqer: onRequest
+     * quiqqer/rest: restInit
      *
      * Add REST API OAuth2 middleware to validate requests
      *
-     * @param QUI\Rewrite $Rewrite
-     * @param string $url
+     * @param RestServer $Server
+     * @param Request $Request
      *
      * @throws \QUI\Exception
      */
-    public static function onRequest(QUI\Rewrite $Rewrite, string $url): void
+    public static function onRestInit(RestServer $Server, Request $Request): void
     {
         $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
@@ -85,7 +87,6 @@ class EventHandler
             return;
         }
 
-        $Server = QUI\REST\Server::getCurrentInstance();
         $Server->getSlim()->add(new QUI\OAuth\Middleware\RestMiddleware());
     }
 

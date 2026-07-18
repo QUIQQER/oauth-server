@@ -282,22 +282,43 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         self::assertTrue(QUI::getSchemaManager()->tablesExist([Setup::getTable('oauth_clients')]));
     }
 
-    public function testRequestEventHonorsActiveSetting(): void
+    public function testRestInitEventHonorsActiveSetting(): void
     {
         $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
         $previousActive = $Config->getValue('general', 'active');
-        $Rewrite = $this->createMock(QUI\Rewrite::class);
+        $Request = QUI::getRequest();
+        $InactiveSlim = $this->createMock(\Slim\App::class);
+        $InactiveSlim->expects($this->never())->method('add');
+        $InactiveServer = $this->createMock(QUI\REST\Server::class);
+        $InactiveServer->method('getSlim')->willReturn($InactiveSlim);
+        $ActiveSlim = $this->createMock(\Slim\App::class);
+        $ActiveSlim
+            ->expects($this->once())
+            ->method('add')
+            ->with($this->isInstanceOf(QUI\OAuth\Middleware\RestMiddleware::class))
+            ->willReturnSelf();
+        $ActiveServer = $this->createMock(QUI\REST\Server::class);
+        $ActiveServer->method('getSlim')->willReturn($ActiveSlim);
 
         try {
             $Config->setValue('general', 'active', 0);
-            EventHandler::onRequest($Rewrite, '/ignored');
+            EventHandler::onRestInit($InactiveServer, $Request);
 
             $Config->setValue('general', 'active', 1);
-            EventHandler::onRequest($Rewrite, '/protected');
+            EventHandler::onRestInit($ActiveServer, $Request);
         } finally {
             $Config->setValue('general', 'active', $previousActive);
         }
 
-        self::assertTrue(true);
+        $Events = simplexml_load_file(dirname(__DIR__, 2) . '/events.xml');
+        self::assertInstanceOf(\SimpleXMLElement::class, $Events);
+        $eventNames = [];
+
+        foreach ($Events->event as $Event) {
+            $eventNames[(string)$Event['fire']] = (string)$Event['on'];
+        }
+
+        self::assertSame('restInit', $eventNames['\QUI\OAuth\EventHandler::onRestInit']);
+        self::assertArrayNotHasKey('\QUI\OAuth\EventHandler::onRequest', $eventNames);
     }
 }

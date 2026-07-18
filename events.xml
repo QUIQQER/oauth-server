@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <events>
     <event on="onPackageSetup" fire="\QUI\OAuth\EventHandler::onPackageSetup"/>
-    <event on="onRequest" fire="\QUI\OAuth\EventHandler::onRequest" priority="-1"/>
+    <event on="restInit" fire="\QUI\OAuth\EventHandler::onRestInit"/>
 
     <event on="onQuiqqerRestLoadOpenApiSpecification" fire="\QUI\OAuth\EventHandler::onQuiqqerRestLoadOpenApiSpecification"/>
 </events>
