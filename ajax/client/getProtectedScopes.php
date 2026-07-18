@@ -7,7 +7,7 @@
  * @throws \QUI\Exception
  */
 
-QUI::$Ajax->registerFunction(
+QUI::getAjax()->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_getProtectedScopes',
     function () {
         $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
