@@ -366,8 +366,8 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                                         '.quiqqer-oauth-client-secret > span'
                                     );
 
-                                    newClientSecret             = await OAuthServer.generateClientSecret();
-                                    clientSecretInput.innerHTML = newClientSecret;
+                                    newClientSecret = await OAuthServer.generateClientSecret();
+                                    clientSecretInput.textContent = newClientSecret;
                                 }
                             );
 
