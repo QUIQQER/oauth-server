@@ -49,7 +49,12 @@ class RestProvider implements QUI\REST\ProviderInterface
             $RouteCollector->post(
                 '/token',
                 function (RequestInterface $Request, ResponseInterface $Response, $args) use ($OAuth2Server) {
-                    $OAuthServerResponse = $OAuth2Server->handleTokenRequest(OAuth2\Request::createFromGlobals());
+                    $OAuthServerResponse = new OAuth2\Response();
+
+                    $OAuth2Server->handleTokenRequest(
+                        OAuth2\Request::createFromGlobals(),
+                        $OAuthServerResponse
+                    );
 
                     $RestResponse = new Response(
                         $OAuthServerResponse->getStatusCode(),
