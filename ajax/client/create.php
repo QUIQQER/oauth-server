@@ -13,9 +13,7 @@ QUI::getAjax()->registerFunction(
      * @throws \QUI\Exception
      */
     function ($userId, $scopeSettings, $title = null) {
-        if (!empty($title)) {
-            $title = Orthos::clear($title);
-        }
+        $title = Orthos::clear(is_string($title) ? $title : null);
 
         try {
             $newClientId = OAuthClientsHandler::createOAuthClient(
