@@ -11,8 +11,6 @@ use OAuth2;
 use QUI\OAuth\Server as OAuth2Server;
 use Slim\Routing\RouteCollectorProxy;
 
-use function json_encode;
-
 /**
  * Class RestProvider
  *
@@ -71,11 +69,12 @@ class RestProvider implements QUI\REST\ProviderInterface
         // Test path
         $Slim->post('/quiqqer_oauth_test', function (RequestInterface $Request, ResponseInterface $Response, $args) {
             /** @var Response $Response */
-            $Response->withHeader('Content-Type', 'application/json');
+            $Response = $Response->withHeader(
+                'Content-Type',
+                'application/json'
+            );
 
-            return $Response->write(json_encode([
-                'success' => true
-            ]));
+            return $Response->write('{"success":true}');
         });
     }
 
