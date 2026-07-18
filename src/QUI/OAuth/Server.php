@@ -26,12 +26,16 @@ class Server extends QUI\Utils\Singleton
     public function __construct()
     {
         $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+        $configuredLifetime = $Config?->getValue(
+            'general',
+            'access_lifetime'
+        );
 
         // config
         $accessLifeTime = 3600;
 
-        if ($Config->getValue('general', 'access_lifetime')) {
-            $accessLifeTime = $Config->getValue('general', 'access_lifetime');
+        if (is_numeric($configuredLifetime) && (int)$configuredLifetime > 0) {
+            $accessLifeTime = (int)$configuredLifetime;
         }
 
         $config = [
