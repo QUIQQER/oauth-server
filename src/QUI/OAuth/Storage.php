@@ -14,7 +14,7 @@ class Storage extends OAuth2\Storage\Pdo
 {
     /**
      * @param mixed $connection
-     * @param array $config
+     * @param array<string, mixed> $config
      */
     public function __construct($connection, $config = [])
     {
@@ -56,7 +56,7 @@ class Storage extends OAuth2\Storage\Pdo
 
     /**
      * @param string $client_id
-     * @return array|false
+     * @return array<string, mixed>|false
      */
     public function getClientDetails($client_id): array|false
     {
@@ -71,7 +71,7 @@ class Storage extends OAuth2\Storage\Pdo
 
     /**
      * @param string $access_token
-     * @return array|false
+     * @return array<string, mixed>|false
      */
     public function getAccessToken($access_token): array|false
     {
@@ -86,7 +86,7 @@ class Storage extends OAuth2\Storage\Pdo
 
     /**
      * @param string $refresh_token
-     * @return array|false
+     * @return array<string, mixed>|false
      */
     public function getRefreshToken($refresh_token): array|false
     {
@@ -101,7 +101,7 @@ class Storage extends OAuth2\Storage\Pdo
 
     /**
      * @param string $code
-     * @return array|false
+     * @return array<string, mixed>|false
      */
     public function getAuthorizationCode($code): array|false
     {
@@ -119,7 +119,7 @@ class Storage extends OAuth2\Storage\Pdo
 
     /**
      * @param string $username
-     * @return array|bool
+     * @return array<string, mixed>|false
      */
     public function getUserDetails($username): bool|array
     {

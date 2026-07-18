@@ -93,7 +93,7 @@ class EventHandler
      * quiqqer/rest: onQuiqqerRestLoadOpenApiSpecification
      *
      * @param string $apiName
-     * @param array $specification
+     * @param array<string, mixed> $specification
      * @return void
      */
     public static function onQuiqqerRestLoadOpenApiSpecification(string $apiName, array &$specification): void

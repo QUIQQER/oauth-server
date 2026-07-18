@@ -101,7 +101,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
     /**
      * Check if the current request is allowed to access the requested endpoint (scope)
      *
-     * @param array $clientData - OAuth Client data
+     * @param array<string, mixed> $clientData - OAuth Client data
      * @param string $scope
      * @return void
      * @throws InvalidRequestException
@@ -347,6 +347,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
     /**
      * Throws InvalidRequestException for an invalid scope
      *
+     * @return never
      * @throws InvalidRequestException
      */
     protected function throwInvalidScopeException()

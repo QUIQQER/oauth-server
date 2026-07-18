@@ -37,7 +37,7 @@ class Handler
      * Creates oauth client credentials for the user
      *
      * @param QUIUserInterface $User
-     * @param array $scopeSettings
+     * @param array<string, array<string, mixed>> $scopeSettings
      * @param string $name
      * @param bool $clientSecretIsPermanentAccessToken - If true, the client secret can be used as permanent access / Bearer token
      * @return string - New Client ID
@@ -133,7 +133,7 @@ class Handler
      * Return all oauth clients from the user
      *
      * @param QUI\Interfaces\Users\User $User
-     * @return array
+     * @return list<array<string, mixed>>
      *
      * @throws QUI\Exception
      */
@@ -155,7 +155,7 @@ class Handler
      *
      * @param QUI\Interfaces\Users\User $User
      * @param string $clientId
-     * @return array
+     * @return list<array<string, mixed>>
      *
      * @throws QUI\Exception
      */
@@ -181,7 +181,7 @@ class Handler
      * @param bool $includeClientWithClientSecretAsPermanentAccessToken
      * This also fetches clients that have set the client secret as permanent access token
      *
-     * @return array|false
+     * @return array<string, mixed>|false
      *
      * @throws QUI\Database\Exception
      * @throws QUI\Exception
@@ -235,7 +235,7 @@ class Handler
      * - scope_restrictions
      *
      * @param string $clientId
-     * @param array $data
+     * @param array<string, mixed> $data
      *
      * @throws QUI\OAuth\Exception
      * @throws QUI\Exception
@@ -336,7 +336,7 @@ class Handler
      * Return oauth client data
      *
      * @param string $clientId
-     * @return array
+     * @return array<string, mixed>
      *
      * @throws QUI\Exception
      */
@@ -389,7 +389,7 @@ class Handler
      *
      * @param string $clientId
      * @param string|null $scope (optional) - Restrict results to a specific scope
-     * @return array
+     * @return array<string, array<string, mixed>>
      * @throws QUI\Database\Exception
      * @throws QUI\Exception
      */
@@ -540,7 +540,7 @@ class Handler
      * as a permanent access token.
      *
      * @param ServerRequestInterface $request
-     * @return array|null - OAuth Client data or null if no such client exists
+     * @return array<string, mixed>|null - OAuth Client data or null if no such client exists
      */
     public static function getOAuthClientDataByRequestWithClientSecretAsToken(ServerRequestInterface $request): ?array
     {
@@ -632,7 +632,7 @@ class Handler
 
     /**
      * @param QUIUserInterface $user
-     * @return array<array{client_id: string, client_secret: string, client_secret_is_token: int, user_id?: int|string, name?: string, c_date?: int|string}> - empty array if no clients exist
+     * @return list<array<string, mixed>> - empty list if no clients exist
      * @throws QUI\Exception
      */
     public static function getOAuthClientsWithPermanentAccessToken(QUIUserInterface $user): array
