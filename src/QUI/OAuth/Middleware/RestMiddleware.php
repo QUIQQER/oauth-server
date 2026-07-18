@@ -27,11 +27,23 @@ class RestMiddleware
         } catch (InvalidRequestException $Exception) {
             $Response = new QUI\REST\Response($Exception->getCode());
 
-            $Response->getBody()->write(json_encode([
+            $responseBody = json_encode([
                 'error' => $Exception->getMessage(),
                 'error_description' => $Exception->getErrorDescription(),
                 'error_code' => $Exception->getCode()
-            ]));
+            ]);
+
+            if ($responseBody === false) {
+                $responseBody = json_encode([
+                    'error' => 'system_error',
+                    'error_description' => 'The error response could not be encoded.',
+                    'error_code' => 500
+                ]);
+            }
+
+            $Response->getBody()->write(
+                $responseBody === false ? '{}' : $responseBody
+            );
 
             return $Response;
         }
