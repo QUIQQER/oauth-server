@@ -2,6 +2,7 @@
 
 namespace QUI\OAuth\Middleware;
 
+use Doctrine\DBAL\Connection;
 use Exception;
 use QUI;
 use OAuth2;
@@ -129,94 +130,109 @@ class ResourceController extends OAuth2\Controller\ResourceController
             );
         }
 
-        $QueryBuilder = QUI::getQueryBuilder();
-        $result = $QueryBuilder
-            ->select('total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage')
-            ->from(QUI\Utils\Doctrine::quoteIdentifier($table))
-            ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
-            ->andWhere($QueryBuilder->expr()->eq('scope', ':scope'))
-            ->setParameter('clientId', $clientData['client_id'])
-            ->setParameter('scope', $scope)
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchAssociative();
-
-        if ($result === false) {
-            $this->throwInvalidScopeException();
-        }
-
-        $now = time();
-        $data = $result;
-        $writeToDatabase = false;
-        $firstUsage = empty($data['first_usage']) ? $now : $data['first_usage'];
-        $lastUsage = empty($data['last_usage']) ? $now : $data['last_usage'];
-        $totalUsageCount = $data['total_usage_count'];
-        $intervalUsageCount = $data['interval_usage_count'];
         $maxCalls = $scopeSettings['maxCalls'];
         $maxCallsType = $scopeSettings['maxCallsType'];
-        $maxCallsExceeded = false;
+        $quotedTable = QUI\Utils\Doctrine::quoteIdentifier($table);
+        $Connection = QUI::getDataBaseConnection();
+        $maxCallsExceeded = $Connection->transactional(
+            function (Connection $Connection) use (
+                $quotedTable,
+                $clientData,
+                $scope,
+                $scopeSettings,
+                $unlimitedCalls
+            ): bool {
+                $QueryBuilder = $Connection->createQueryBuilder();
+                $result = $QueryBuilder
+                    ->select('total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage')
+                    ->from($quotedTable)
+                    ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
+                    ->andWhere($QueryBuilder->expr()->eq('scope', ':scope'))
+                    ->setParameter('clientId', $clientData['client_id'])
+                    ->setParameter('scope', $scope)
+                    ->setMaxResults(1)
+                    ->forUpdate()
+                    ->executeQuery()
+                    ->fetchAssociative();
 
-        // absolute call count restriction
-        $totalUsageCount++;
-        $intervalUsageCount++;
+                if ($result === false) {
+                    $this->throwInvalidScopeException();
+                }
 
-        if ($unlimitedCalls) {
-            $writeToDatabase = true;
-        } elseif ($maxCallsType === 'absolute') {
-            if ($intervalUsageCount > $maxCalls) {
-                $maxCallsExceeded = true;
-            } else {
-                $writeToDatabase = true;
+                $now = time();
+                $writeToDatabase = false;
+                $firstUsage = empty($result['first_usage']) ? $now : $result['first_usage'];
+                $totalUsageCount = $result['total_usage_count'];
+                $intervalUsageCount = $result['interval_usage_count'];
+                $maxCalls = $scopeSettings['maxCalls'];
+                $maxCallsType = $scopeSettings['maxCallsType'];
+                $maxCallsExceeded = false;
+
+                // absolute call count restriction
+                $totalUsageCount++;
+                $intervalUsageCount++;
+
+                if ($unlimitedCalls) {
+                    $writeToDatabase = true;
+                } elseif ($maxCallsType === 'absolute') {
+                    if ($intervalUsageCount > $maxCalls) {
+                        $maxCallsExceeded = true;
+                    } else {
+                        $writeToDatabase = true;
+                    }
+                } else {
+                    // interval call count restriction
+                    $intervalSeconds = 60;
+
+                    switch ($maxCallsType) {
+                        case 'hour':
+                            $intervalSeconds *= 60;
+                            break;
+
+                        case 'day':
+                            $intervalSeconds *= 60 * 24;
+                            break;
+
+                        case 'month':
+                            $intervalSeconds *= 60 * 24 * 30;   // 30 days
+                            break;
+
+                        case 'year':
+                            $intervalSeconds *= 60 * 24 * 365;  // 365 days
+                            break;
+                    }
+
+                    if (($now - $firstUsage) > $intervalSeconds) {
+                        $intervalUsageCount = 1;
+                        $firstUsage = $now;
+                    }
+
+                    if ($intervalUsageCount > $maxCalls) {
+                        $maxCallsExceeded = true;
+                    } else {
+                        $writeToDatabase = true;
+                    }
+                }
+
+                if ($writeToDatabase) {
+                    $Connection->update(
+                        $quotedTable,
+                        [
+                            'total_usage_count' => $totalUsageCount,
+                            'interval_usage_count' => $intervalUsageCount,
+                            'first_usage' => $firstUsage,
+                            'last_usage' => $now
+                        ],
+                        [
+                            'client_id' => $clientData['client_id'],
+                            'scope' => $scope
+                        ]
+                    );
+                }
+
+                return $maxCallsExceeded;
             }
-        } else {
-            // interval call count restriction
-            $intervalSeconds = 60;
-
-            switch ($maxCallsType) {
-                case 'hour':
-                    $intervalSeconds *= 60;
-                    break;
-
-                case 'day':
-                    $intervalSeconds *= 60 * 24;
-                    break;
-
-                case 'month':
-                    $intervalSeconds *= 60 * 24 * 30;   // 30 days
-                    break;
-
-                case 'year':
-                    $intervalSeconds *= 60 * 24 * 365;  // 365 days
-                    break;
-            }
-
-            if (($now - $firstUsage) > $intervalSeconds) {
-                $intervalUsageCount = 1;
-                $firstUsage = $now;
-            }
-
-            if ($intervalUsageCount > $maxCalls) {
-                $maxCallsExceeded = true;
-            } else {
-                $writeToDatabase = true;
-            }
-        }
-
-        if ($writeToDatabase) {
-            QUI::getDataBaseConnection()->update(
-                QUI\Utils\Doctrine::quoteIdentifier($table),
-                [
-                    'total_usage_count' => $totalUsageCount,
-                    'interval_usage_count' => $intervalUsageCount,
-                    'first_usage' => $firstUsage,
-                    'last_usage' => $now
-                ],
-                [
-                    'client_id' => $clientData['client_id'],
-                    'scope' => $scope
-                ]
-            );
-        }
+        );
 
         if ($maxCallsExceeded) {
             throw new InvalidRequestException(
