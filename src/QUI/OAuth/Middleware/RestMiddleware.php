@@ -73,7 +73,18 @@ class RestMiddleware
             );
         }
 
-        $basePath = ltrim($RESTConfig->getValue('general', 'basePath'), '/');
+        if ($RESTConfig === null || $OAuthConfig === null) {
+            throw new InvalidRequestException(
+                'system_error',
+                'System error. Please contact an administrator.',
+                500
+            );
+        }
+
+        $basePathValue = $RESTConfig->getValue('general', 'basePath');
+        $basePath = is_string($basePathValue)
+            ? ltrim($basePathValue, '/')
+            : '';
         $query = $Request->getQueryParams();
         $endpoint = '/' . str_replace($basePath, '', ltrim($query['_url'], '/'));
 
@@ -84,7 +95,10 @@ class RestMiddleware
 
         // Check if OAuth2 authentication is required for the endpoint (scope)
         $scope = ResourceController::parseScopeFromEndpoint($endpoint);
-        $protectedScopes = $OAuthConfig->get('general', 'protected_scopes');
+        $protectedScopes = $OAuthConfig->get(
+            'general',
+            'protected_scopes'
+        );
 
         if (!empty($protectedScopes)) {
             $protectedScopes = json_decode($protectedScopes, true);
