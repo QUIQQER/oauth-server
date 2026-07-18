@@ -70,7 +70,7 @@ class Server extends QUI\Utils\Singleton
                     'token_param_name' => $config['token_param_name'],
                     'token_bearer_header_name' => $config['token_bearer_header_name']
                 ]),
-                $this->OAuth2Server->getStorage('access_token'),
+                $Storage,
                 ['www_realm' => $config['www_realm']],
                 $this->OAuth2Server->getScopeUtil()
             )
