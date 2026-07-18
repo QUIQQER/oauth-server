@@ -22,11 +22,18 @@
         "url": "https://www.pcsg.de"
     },
     "require": {
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
         "php": "^8.2",
-        "quiqqer/core": "^2",
-        "quiqqer/rest": "^3",
-        "bshaffer/oauth2-server-php": "^1",
-        "psr/http-message": "^1|^2"
+        "bshaffer/oauth2-server-php": "^1.14.2",
+        "doctrine/dbal": "^4.4",
+        "guzzlehttp/psr7": "^2",
+        "psr/http-message": "^1|^2",
+        "quiqqer/core": "^2.25.1",
+        "quiqqer/rest": "^3.1",
+        "ramsey/uuid": "^4",
+        "slim/slim": "^4"
     },
     "provide": {
         "quiqqer/rest-authentication-implementation": "^1"
@@ -34,6 +41,11 @@
     "autoload": {
         "psr-4": {
             "QUI\\OAuth\\": "src/QUI/OAuth"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "QUITest\\": "tests/QUITest"
         }
     },
     "scripts": {
@@ -44,11 +56,13 @@
         "dev:phpunit": "./tools/phpunit",
         "dev:lint": [
             "@dev:lint:phpstan",
-            "@dev:lint:style"
+            "@dev:lint:style",
+            "@dev:lint:dependencies"
         ],
         "dev:lint:phpstan": "./tools/phpstan",
         "dev:lint:style": "./tools/phpcs",
         "dev:lint:style:fix": "./tools/phpcbf",
+        "dev:lint:dependencies": "./tools/composer-require-checker check composer.json",
         "dev:init": [
             "@dev:init:check-requirements",
             "@dev:init:tools",
@@ -73,6 +87,7 @@
         "dev:lint:phpstan": "Run PHPStan",
         "dev:lint:style": "Run code style check (PHP_CodeSniffer)",
         "dev:lint:style:fix": "Try to fix code style errors automatically",
+        "dev:lint:dependencies": "Check that all used symbols have declared Composer dependencies",
         "dev:init": "Initialize the developer tooling (tools and git hooks)",
         "dev:init:check-requirements": "Check if the necessary requirements are met",
         "dev:init:tools": "Install all developer tools (requires PHIVE)",
