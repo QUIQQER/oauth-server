@@ -119,9 +119,22 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
 
         $tokens = (new FrontendController())->getPermanentAccessTokens($SystemUser);
         self::assertCount(1, $tokens);
+
+        self::getConnection()->update(
+            QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_clients')),
+            [
+                'name' => '<script>alert(1)</script>',
+                'client_secret' => '" onmouseover="alert(1)'
+            ],
+            ['client_id' => $tokens[0]['id']]
+        );
+
         $body = $Control->getBody();
         self::assertStringContainsString('data-token-hidden="1"', $body);
         self::assertStringContainsString($tokens[0]['id'], $body);
+        self::assertStringNotContainsString('<script>alert(1)</script>', $body);
+        self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $body);
+        self::assertStringNotContainsString('data-token-value="" onmouseover=', $body);
 
         QUI::getRequest()->request->replace([
             'oauthTokenAction' => 'delete',
