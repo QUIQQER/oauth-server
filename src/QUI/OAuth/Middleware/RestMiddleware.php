@@ -3,7 +3,6 @@
 namespace QUI\OAuth\Middleware;
 
 use Exception;
-use GuzzleHttp\Psr7\ServerRequest;
 use QUI;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -116,6 +115,6 @@ class RestMiddleware
         $OAuth2Server = QUI\OAuth\Server::getInstance()->getOAuth2Server();
         /** @var ResourceController $ResourceController */
         $ResourceController = $OAuth2Server->getResourceController();
-        $ResourceController->verify($endpoint, ServerRequest::fromGlobals());
+        $ResourceController->verify($endpoint, $Request);
     }
 }

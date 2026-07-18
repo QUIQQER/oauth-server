@@ -66,13 +66,12 @@ class RestMiddlewareValidationTest extends OAuthDatabaseTestCase
             self::assertSame(204, $unprotectedResponse->getStatusCode());
 
             $OAuthConfig->setValue('general', 'protected_scopes', json_encode([$scope => true]));
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-            $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . $client['client_secret'];
-            $_GET = ['_url' => $urlPrefix . ltrim($scope, '/')];
-            $_REQUEST = $_GET;
+            $protectedQuery = ['_url' => $urlPrefix . ltrim($scope, '/')];
 
             $protectedResponse = $Middleware(
-                (new ServerRequest('GET', $scope))->withQueryParams($_GET),
+                (new ServerRequest('GET', $scope, [
+                    'Authorization' => 'Bearer ' . $client['client_secret']
+                ]))->withQueryParams($protectedQuery),
                 $Handler
             );
             self::assertSame(204, $protectedResponse->getStatusCode());
