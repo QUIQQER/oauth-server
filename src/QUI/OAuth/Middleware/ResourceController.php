@@ -7,6 +7,7 @@ use QUI;
 use OAuth2;
 use Psr\Http\Message\ServerRequestInterface;
 use QUI\OAuth\Clients\Handler as OAuthClients;
+use QUI\OAuth\RequestFactory;
 use QUI\REST\Utils\RequestUtils;
 use QUI\REST\Server as RestServer;
 
@@ -35,7 +36,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
              * The request object used here implements \OAuth2\RequestInterface
              */
             parent::verifyResourceRequest(
-                OAuth2\Request::createFromGlobals(),
+                RequestFactory::fromPsr($Request),
                 $VerificationResponse
             );
 

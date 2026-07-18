@@ -190,22 +190,20 @@ class TokenAndResourceTest extends OAuthDatabaseTestCase
         $accessToken = (string)$tokenResponse->getParameters()['access_token'];
         $Controller = $OAuthServer->getResourceController();
 
-        $_GET = ['access_token' => $accessToken];
-        $_REQUEST = $_GET;
-        $_SERVER['REQUEST_METHOD'] = 'GET';
         $Controller->verify(
             $scope,
-            (new ServerRequest('GET', '/resource'))->withQueryParams($_GET)
+            (new ServerRequest('GET', '/resource'))->withQueryParams([
+                'access_token' => $accessToken
+            ])
         );
         self::assertSame((int)$client['user_id'], Handler::getSessionUser()->getId());
-
-        $_GET = ['access_token' => 'invalid-access-token'];
-        $_REQUEST = $_GET;
 
         try {
             $Controller->verify(
                 $scope,
-                (new ServerRequest('GET', '/resource'))->withQueryParams($_GET)
+                (new ServerRequest('GET', '/resource'))->withQueryParams([
+                    'access_token' => 'invalid-access-token'
+                ])
             );
             self::fail('Invalid access tokens must be rejected.');
         } catch (InvalidRequestException $Exception) {
