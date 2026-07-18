@@ -11,3 +11,7 @@ if (!defined('QUIQQER_AJAX')) {
 putenv("QUIQQER_OTHER_AUTOLOADERS=KEEP");
 
 require_once __DIR__ . '/../../../../bootstrap.php';
+
+if (!class_exists(QUI\FrontendUsers\Controls\Profile\AbstractProfileControl::class)) {
+    require_once __DIR__ . '/phpstan-shims/AbstractProfileControl.php';
+}

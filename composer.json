@@ -45,7 +45,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "QUITest\\": "tests/QUITest"
+            "QUITest\\": "tests/"
         }
     },
     "scripts": {
