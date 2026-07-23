@@ -129,12 +129,15 @@ class BackendController
             IntlDateFormatter::SHORT,
             IntlDateFormatter::SHORT
         );
+        $createDate = $localeDateFormatter->format(
+            (int)($oauthClient['c_date'] ?? 0)
+        );
 
         return [
             'id' => isset($oauthClient['client_id']) ? (string)$oauthClient['client_id'] : '',
             'title' => isset($oauthClient['name']) ? (string)$oauthClient['name'] : '',
             'token' => isset($oauthClient['client_secret']) ? (string)$oauthClient['client_secret'] : '',
-            'createDate' => $localeDateFormatter->format((int)($oauthClient['c_date'] ?? 0))
+            'createDate' => $createDate === false ? '' : $createDate
         ];
     }
 }

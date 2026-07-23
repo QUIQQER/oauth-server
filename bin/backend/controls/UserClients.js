@@ -356,8 +356,6 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                                 c_date                        : new Date(parseInt(clientData.c_date * 1000)).toISOString()
                             }));
 
-                            console.log(clientData);
-
                             clientSecretIsTokenCheckbox = Content.getElement('[name="client_secret_is_token"]');
                             clientSecretIsTokenCheckbox.checked = !!clientData.client_secret_is_token;
 
@@ -368,8 +366,8 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                                         '.quiqqer-oauth-client-secret > span'
                                     );
 
-                                    newClientSecret             = await OAuthServer.generateClientSecret();
-                                    clientSecretInput.innerHTML = newClientSecret;
+                                    newClientSecret = await OAuthServer.generateClientSecret();
+                                    clientSecretInput.textContent = newClientSecret;
                                 }
                             );
 

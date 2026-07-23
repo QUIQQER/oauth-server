@@ -4,7 +4,7 @@ use QUI\Utils\Security\Orthos;
 use QUI\OAuth\Clients\Handler as OAuthClientsHandler;
 use QUI\OAuth\Permission;
 
-QUI::$Ajax->registerFunction(
+QUI::getAjax()->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_create',
     /**
      * Create a new OAuth2 client
@@ -13,9 +13,7 @@ QUI::$Ajax->registerFunction(
      * @throws \QUI\Exception
      */
     function ($userId, $scopeSettings, $title = null) {
-        if (!empty($title)) {
-            $title = Orthos::clear($title);
-        }
+        $title = Orthos::clear(is_string($title) ? $title : null);
 
         try {
             $newClientId = OAuthClientsHandler::createOAuthClient(

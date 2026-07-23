@@ -2,11 +2,13 @@
 
 namespace QUI\OAuth\Middleware;
 
+use Doctrine\DBAL\Connection;
 use Exception;
 use QUI;
 use OAuth2;
 use Psr\Http\Message\ServerRequestInterface;
 use QUI\OAuth\Clients\Handler as OAuthClients;
+use QUI\OAuth\RequestFactory;
 use QUI\REST\Utils\RequestUtils;
 use QUI\REST\Server as RestServer;
 
@@ -26,7 +28,14 @@ class ResourceController extends OAuth2\Controller\ResourceController
     public function verify(string $endpoint, ServerRequestInterface $Request): void
     {
         $VerificationResponse = new OAuth2\Response();
-        $clientData = OAuthClients::getOAuthClientDataByRequestWithClientSecretAsToken($Request);
+        $OAuthRequest = RequestFactory::fromPsr($Request);
+        $accessToken = $this->tokenType->getAccessTokenParameter(
+            $OAuthRequest,
+            $VerificationResponse
+        );
+        $clientData = is_string($accessToken)
+            ? OAuthClients::getOAuthClientByPermanentAccessToken($accessToken)
+            : null;
 
         if (is_null($clientData)) {
             /**
@@ -35,7 +44,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
              * The request object used here implements \OAuth2\RequestInterface
              */
             parent::verifyResourceRequest(
-                OAuth2\Request::createFromGlobals(),
+                $OAuthRequest,
                 $VerificationResponse
             );
 
@@ -59,27 +68,20 @@ class ResourceController extends OAuth2\Controller\ResourceController
 
             try {
                 $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
-            } catch (Exception $Exception) {
-                QUI\System\Log::writeException($Exception);
-                try {
-                    $clientData = OAuthClients::getOAuthClientByAccessToken($accessToken);
-                } catch (\Exception $Exception) {
-                    QUI\System\Log::writeException($Exception);
+            } catch (Exception) {
+                throw new InvalidRequestException(
+                    'system_error',
+                    'System error. Please contact an administrator.',
+                    500
+                );
+            }
 
-                    throw new InvalidRequestException(
-                        'system_error',
-                        'System error. Please contact an administrator.',
-                        500
-                    );
-                }
-
-                if (empty($clientData)) {
-                    throw new InvalidRequestException(
-                        'invalid_token',
-                        'The access token provided is invalid.',
-                        401
-                    );
-                }
+            if ($clientData === false) {
+                throw new InvalidRequestException(
+                    'invalid_token',
+                    'The access token provided is invalid.',
+                    401
+                );
             }
         }
 
@@ -101,7 +103,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
     /**
      * Check if the current request is allowed to access the requested endpoint (scope)
      *
-     * @param array $clientData - OAuth Client data
+     * @param array<string, mixed> $clientData - OAuth Client data
      * @param string $scope
      * @return void
      * @throws InvalidRequestException
@@ -135,88 +137,109 @@ class ResourceController extends OAuth2\Controller\ResourceController
             );
         }
 
-        $result = QUI::getDataBase()->fetch([
-            'select' => ['total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage'],
-            'from' => $table,
-            'where' => [
-                'client_id' => $clientData['client_id'],
-                'scope' => $scope
-            ],
-            'limit' => 1
-        ]);
-
-        if (empty($result)) {
-            $this->throwInvalidScopeException();
-        }
-
-        $now = time();
-        $data = current($result);
-        $writeToDatabase = false;
-        $firstUsage = empty($data['first_usage']) ? $now : $data['first_usage'];
-        $lastUsage = empty($data['last_usage']) ? $now : $data['last_usage'];
-        $totalUsageCount = $data['total_usage_count'];
-        $intervalUsageCount = $data['interval_usage_count'];
         $maxCalls = $scopeSettings['maxCalls'];
         $maxCallsType = $scopeSettings['maxCallsType'];
-        $maxCallsExceeded = false;
+        $quotedTable = QUI\Utils\Doctrine::quoteIdentifier($table);
+        $Connection = QUI::getDataBaseConnection();
+        $maxCallsExceeded = $Connection->transactional(
+            function (Connection $Connection) use (
+                $quotedTable,
+                $clientData,
+                $scope,
+                $scopeSettings,
+                $unlimitedCalls
+            ): bool {
+                $QueryBuilder = $Connection->createQueryBuilder();
+                $result = $QueryBuilder
+                    ->select('total_usage_count', 'interval_usage_count', 'first_usage', 'last_usage')
+                    ->from($quotedTable)
+                    ->where($QueryBuilder->expr()->eq('client_id', ':clientId'))
+                    ->andWhere($QueryBuilder->expr()->eq('scope', ':scope'))
+                    ->setParameter('clientId', $clientData['client_id'])
+                    ->setParameter('scope', $scope)
+                    ->setMaxResults(1)
+                    ->forUpdate()
+                    ->executeQuery()
+                    ->fetchAssociative();
 
-        // absolute call count restriction
-        $totalUsageCount++;
-        $intervalUsageCount++;
+                if ($result === false) {
+                    $this->throwInvalidScopeException();
+                }
 
-        if ($unlimitedCalls) {
-            $writeToDatabase = true;
-        } elseif ($maxCallsType === 'absolute') {
-            if ($intervalUsageCount > $maxCalls) {
-                $maxCallsExceeded = true;
-            } else {
-                $writeToDatabase = true;
+                $now = time();
+                $writeToDatabase = false;
+                $firstUsage = empty($result['first_usage']) ? $now : $result['first_usage'];
+                $totalUsageCount = $result['total_usage_count'];
+                $intervalUsageCount = $result['interval_usage_count'];
+                $maxCalls = $scopeSettings['maxCalls'];
+                $maxCallsType = $scopeSettings['maxCallsType'];
+                $maxCallsExceeded = false;
+
+                // absolute call count restriction
+                $totalUsageCount++;
+                $intervalUsageCount++;
+
+                if ($unlimitedCalls) {
+                    $writeToDatabase = true;
+                } elseif ($maxCallsType === 'absolute') {
+                    if ($intervalUsageCount > $maxCalls) {
+                        $maxCallsExceeded = true;
+                    } else {
+                        $writeToDatabase = true;
+                    }
+                } else {
+                    // interval call count restriction
+                    $intervalSeconds = 60;
+
+                    switch ($maxCallsType) {
+                        case 'hour':
+                            $intervalSeconds *= 60;
+                            break;
+
+                        case 'day':
+                            $intervalSeconds *= 60 * 24;
+                            break;
+
+                        case 'month':
+                            $intervalSeconds *= 60 * 24 * 30;   // 30 days
+                            break;
+
+                        case 'year':
+                            $intervalSeconds *= 60 * 24 * 365;  // 365 days
+                            break;
+                    }
+
+                    if (($now - $firstUsage) > $intervalSeconds) {
+                        $intervalUsageCount = 1;
+                        $firstUsage = $now;
+                    }
+
+                    if ($intervalUsageCount > $maxCalls) {
+                        $maxCallsExceeded = true;
+                    } else {
+                        $writeToDatabase = true;
+                    }
+                }
+
+                if ($writeToDatabase) {
+                    $Connection->update(
+                        $quotedTable,
+                        [
+                            'total_usage_count' => $totalUsageCount,
+                            'interval_usage_count' => $intervalUsageCount,
+                            'first_usage' => $firstUsage,
+                            'last_usage' => $now
+                        ],
+                        [
+                            'client_id' => $clientData['client_id'],
+                            'scope' => $scope
+                        ]
+                    );
+                }
+
+                return $maxCallsExceeded;
             }
-        } else {
-            // interval call count restriction
-            $intervalSeconds = 60;
-
-            switch ($maxCallsType) {
-                case 'hour':
-                    $intervalSeconds *= 60;
-                    break;
-
-                case 'day':
-                    $intervalSeconds *= 60 * 24;
-                    break;
-
-                case 'month':
-                    $intervalSeconds *= 60 * 24 * 30;   // 30 days
-                    break;
-
-                case 'year':
-                    $intervalSeconds *= 60 * 24 * 365;  // 365 days
-                    break;
-            }
-
-            if (($now - $firstUsage) > $intervalSeconds) {
-                $intervalUsageCount = 1;
-                $firstUsage = $now;
-            }
-
-            if ($intervalUsageCount > $maxCalls) {
-                $maxCallsExceeded = true;
-            } else {
-                $writeToDatabase = true;
-            }
-        }
-
-        if ($writeToDatabase) {
-            QUI::getDataBase()->update($table, [
-                'total_usage_count' => $totalUsageCount,
-                'interval_usage_count' => $intervalUsageCount,
-                'first_usage' => $firstUsage,
-                'last_usage' => $now
-            ], [
-                'client_id' => $clientData['client_id'],
-                'scope' => $scope
-            ]);
-        }
+        );
 
         if ($maxCallsExceeded) {
             throw new InvalidRequestException(
@@ -257,7 +280,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
     public static function parseScopeFromEndpoint(string $endpoint): bool|string
     {
         try {
-            $availableScopes = RestServer::getInstance()->getEntryPoints();
+            $availableScopes = RestServer::getCurrentInstance()->getEntryPoints();
         } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
             return false;
@@ -341,6 +364,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
     /**
      * Throws InvalidRequestException for an invalid scope
      *
+     * @return never
      * @throws InvalidRequestException
      */
     protected function throwInvalidScopeException()

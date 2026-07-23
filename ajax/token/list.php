@@ -2,7 +2,7 @@
 
 use QUI\OAuth\Permission;
 
-QUI::$Ajax->registerFunction(
+QUI::getAjax()->registerFunction(
     'package_quiqqer_oauth-server_ajax_token_list',
     static function ($userId): array {
         try {

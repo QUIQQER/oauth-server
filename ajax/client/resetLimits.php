@@ -3,7 +3,7 @@
 use QUI\OAuth\Clients\Handler as ClientsHandler;
 use QUI\OAuth\Permission;
 
-QUI::$Ajax->registerFunction(
+QUI::getAjax()->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_resetLimits',
     /**
      * Reset usage limits for an OAuth client for a specific scope

@@ -79,9 +79,12 @@ class EventHandler
      */
     public static function onRequest(QUI\Rewrite $Rewrite, string $url): void
     {
-        $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+        $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
-        if (!$Conf->getValue('general', 'active')) {
+        if (
+            !$Config?->getValue('general', 'active')
+            || !self::isRestRequestEvent()
+        ) {
             return;
         }
 
@@ -90,18 +93,53 @@ class EventHandler
     }
 
     /**
+     * Check if the current onRequest event belongs to the REST API.
+     */
+    protected static function isRestRequestEvent(): bool
+    {
+        try {
+            $requestPath = QUI::getRequest()->getPathInfo();
+            $restPath = QUI::getPackage('quiqqer/rest')->getConfig()?->get('general', 'basePath');
+        } catch (QUI\Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+            return false;
+        }
+
+        if (!is_string($restPath)) {
+            return false;
+        }
+
+        return self::isRestRequestPath($requestPath, $restPath);
+    }
+
+    /**
+     * Check a request path against the configured REST base path.
+     */
+    protected static function isRestRequestPath(string $requestPath, string $restPath): bool
+    {
+        $restPath = '/' . trim($restPath, '/');
+
+        if ($restPath === '/') {
+            return false;
+        }
+
+        return $requestPath === $restPath
+            || str_starts_with($requestPath, $restPath . '/');
+    }
+
+    /**
      * quiqqer/rest: onQuiqqerRestLoadOpenApiSpecification
      *
      * @param string $apiName
-     * @param array $specification
+     * @param array<string, mixed> $specification
      * @return void
      */
     public static function onQuiqqerRestLoadOpenApiSpecification(string $apiName, array &$specification): void
     {
         try {
-            $Conf = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+            $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
-            if (!$Conf->getValue('general', 'active')) {
+            if (!$Config?->getValue('general', 'active')) {
                 return;
             }
 

@@ -1,19 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database>
-
     <global>
-        <table name="oauth_access_limits">
-            <field type="VARCHAR(80) NOT NULL">client_id</field>
-            <field type="VARCHAR(255) NOT NULL">scope</field>
-            <field type="BIGINT NOT NULL DEFAULT 0">total_usage_count</field>
-            <field type="BIGINT NOT NULL DEFAULT 0">interval_usage_count</field>
-            <field type="INT(8) NOT NULL DEFAULT 0">first_usage</field>
-            <field type="INT(8) NOT NULL DEFAULT 0">last_usage</field>
+        <table name="oauth_clients">
+            <field type="string" length="250">name</field>
+            <field type="string" length="80" primary="true">client_id</field>
+            <field type="string" length="80" nullable="true">client_secret</field>
+            <field type="boolean" default="0">client_secret_is_token</field>
+            <field type="string" length="2000" default="">redirect_uri</field>
+            <field type="string" length="80" nullable="true">grant_types</field>
+            <field type="string" length="4000" nullable="true">scope</field>
+            <field type="text" nullable="true">scope_restrictions</field>
+            <field type="string" length="50">user_id</field>
+            <field type="integer">c_date</field>
 
+            <index>user_id</index>
+            <index>client_secret</index>
+            <index>user_id,client_secret_is_token</index>
+        </table>
+
+        <table name="oauth_access_tokens">
+            <field type="string" length="40" primary="true">access_token</field>
+            <field type="string" length="80">client_id</field>
+            <field type="string" length="50" nullable="true">user_id</field>
+            <field type="datetime">expires</field>
+            <field type="string" length="2000" nullable="true">scope</field>
+
+            <index>client_id</index>
+            <index>expires</index>
+        </table>
+
+        <table name="oauth_refresh_tokens">
+            <field type="string" length="40" primary="true">refresh_token</field>
+            <field type="string" length="80">client_id</field>
+            <field type="string" length="50" nullable="true">user_id</field>
+            <field type="datetime">expires</field>
+            <field type="string" length="2000" nullable="true">scope</field>
+
+            <index>client_id</index>
+            <index>expires</index>
+        </table>
+
+        <table name="oauth_authorization_codes">
+            <field type="string" length="40" primary="true">authorization_code</field>
+            <field type="string" length="80">client_id</field>
+            <field type="string" length="50" nullable="true">user_id</field>
+            <field type="string" length="2000" nullable="true">redirect_uri</field>
+            <field type="datetime">expires</field>
+            <field type="string" length="2000" nullable="true">scope</field>
+            <field type="string" length="1000" nullable="true">id_token</field>
+            <field type="string" length="1000" nullable="true">code_challenge</field>
+            <field type="string" length="20" nullable="true">code_challenge_method</field>
+
+            <index>client_id</index>
+            <index>expires</index>
+        </table>
+
+        <table name="oauth_scopes">
+            <field type="string" length="80" primary="true">scope</field>
+            <field type="boolean" default="0">is_default</field>
+        </table>
+
+        <table name="oauth_jwt">
+            <field type="string" length="80" primary="true">client_id</field>
+            <field type="string" length="80" nullable="true">subject</field>
+            <field type="string" length="2000" nullable="true">public_key</field>
+        </table>
+
+        <table name="oauth_access_limits">
+            <field type="string" length="80">client_id</field>
+            <field type="string" length="255">scope</field>
+            <field type="bigint" default="0">total_usage_count</field>
+            <field type="bigint" default="0">interval_usage_count</field>
+            <field type="integer" default="0">first_usage</field>
+            <field type="integer" default="0">last_usage</field>
+
+            <primary>client_id,scope</primary>
             <index>client_id</index>
         </table>
     </global>
-
-    <!-- Additional tables are created programmatically at \QUI\OAuth\Setup::execute -->
-
 </database>
