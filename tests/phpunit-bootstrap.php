@@ -13,3 +13,9 @@ if (!defined('SYSTEM_INTERN')) {
 }
 
 require_once __DIR__ . '/../../../../bootstrap.php';
+
+if (!class_exists(QUI\FrontendUsers\Controls\Profile\AbstractProfileControl::class)) {
+    require_once __DIR__ . '/phpstan-shims/AbstractProfileControl.php';
+}
+
+require_once __DIR__ . '/Support/OAuthDatabaseTestCase.php';

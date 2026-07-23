@@ -41,4 +41,4 @@ We will transfer your message to the responsible developers.
 
 License
 -------
-GPL-3.0+
+LGPL-3.0-or-later

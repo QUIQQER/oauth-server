@@ -9,7 +9,7 @@
 
 use QUI\REST\Server;
 
-QUI::$Ajax->registerFunction(
+QUI::getAjax()->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_getScopes',
     function () {
         $scopes = Server::getInstance()->getEntryPoints();

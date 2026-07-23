@@ -14,7 +14,7 @@ class InvalidRequestException extends Exception
      * @param string $error - Error code (string representation)
      * @param string $errorDescription - Error description
      * @param integer $code - Error code (numeric representation)
-     * @param array $context - [optional] Context data, which data
+     * @param array<string, mixed> $context - [optional] Context data
      */
     public function __construct($error, $errorDescription, $code = 0, array $context = [])
     {

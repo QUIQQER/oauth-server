@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="tests/phpunit-bootstrap.php">
     <testsuites>
-        <testsuite name="Tests">
-            <directory>tests/</directory>
+        <testsuite name="quiqqer/oauth-server Unit Test Suite">
+            <directory>tests/unit</directory>
+        </testsuite>
+        <testsuite name="quiqqer/oauth-server Integration Test Suite">
+            <directory>tests/integration</directory>
         </testsuite>
     </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+    </source>
+    <coverage includeUncoveredFiles="true"/>
 </phpunit>

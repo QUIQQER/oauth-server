@@ -2,7 +2,7 @@
 
 use QUI\OAuth\Clients\Handler as OAuthClientsHandler;
 
-QUI::$Ajax->registerFunction(
+QUI::getAjax()->registerFunction(
     'package_quiqqer_oauth-server_ajax_client_generateSecret',
     /**
      * Generate a client secret.

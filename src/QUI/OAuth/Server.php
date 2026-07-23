@@ -26,12 +26,16 @@ class Server extends QUI\Utils\Singleton
     public function __construct()
     {
         $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+        $configuredLifetime = $Config?->getValue(
+            'general',
+            'access_lifetime'
+        );
 
         // config
         $accessLifeTime = 3600;
 
-        if ($Config->getValue('general', 'access_lifetime')) {
-            $accessLifeTime = $Config->getValue('general', 'access_lifetime');
+        if (is_numeric($configuredLifetime) && (int)$configuredLifetime > 0) {
+            $accessLifeTime = (int)$configuredLifetime;
         }
 
         $config = [
@@ -52,7 +56,7 @@ class Server extends QUI\Utils\Singleton
             'unset_refresh_token_after_use' => true
         ];
 
-        $Storage = new Storage(QUI::getDataBase()->getPDO());
+        $Storage = StorageFactory::create();
 
         // Build server
         $this->OAuth2Server = new OAuth2\Server($Storage, $config);
@@ -66,7 +70,7 @@ class Server extends QUI\Utils\Singleton
                     'token_param_name' => $config['token_param_name'],
                     'token_bearer_header_name' => $config['token_bearer_header_name']
                 ]),
-                $this->OAuth2Server->getStorage('access_token'),
+                $Storage,
                 ['www_realm' => $config['www_realm']],
                 $this->OAuth2Server->getScopeUtil()
             )
