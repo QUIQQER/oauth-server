@@ -213,6 +213,37 @@ class TokenAndResourceTest extends OAuthDatabaseTestCase
         }
     }
 
+    public function testResourceControllerAcceptsPermanentTokenFromServerAuthorizationParam(): void
+    {
+        $scope = '/quiqqer_oauth_test';
+        $clientId = self::createClient([
+            $scope => [
+                'active' => true,
+                'unlimitedCalls' => true,
+                'maxCalls' => 0,
+                'maxCallsType' => 'absolute'
+            ]
+        ], true);
+        $client = Handler::getOAuthClient($clientId);
+        $request = new ServerRequest(
+            'GET',
+            '/resource',
+            [],
+            null,
+            '1.1',
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $client['client_secret']]
+        );
+
+        self::assertSame('', $request->getHeaderLine('Authorization'));
+
+        Server::getInstance()
+            ->getOAuth2Server()
+            ->getResourceController()
+            ->verify($scope, $request);
+
+        self::assertSame((int)$client['user_id'], Handler::getSessionUser()->getId());
+    }
+
     public function testResourceControllerCoversAllLimitIntervalsAndInactiveScopes(): void
     {
         $scope = '/quiqqer_oauth_test';

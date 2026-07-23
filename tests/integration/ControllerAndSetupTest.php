@@ -17,6 +17,17 @@ use QUITest\QUI\OAuth\Support\OAuthDatabaseTestCase;
 
 class ControllerAndSetupTest extends OAuthDatabaseTestCase
 {
+    public function testOAuthMiddlewareIsInitializedOnlyForRestPaths(): void
+    {
+        $Method = new \ReflectionMethod(EventHandler::class, 'isRestRequestPath');
+
+        self::assertTrue($Method->invoke(null, '/api', '/api/'));
+        self::assertTrue($Method->invoke(null, '/api/v2/iban/validate', '/api/'));
+        self::assertFalse($Method->invoke(null, '/', '/api/'));
+        self::assertFalse($Method->invoke(null, '/apiary', '/api/'));
+        self::assertFalse($Method->invoke(null, '/api/v2', ''));
+    }
+
     public function testBackendAndFrontendPermanentTokenWorkflows(): void
     {
         $SystemUser = QUI::getUsers()->getSystemUser();
@@ -282,11 +293,14 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         self::assertTrue(QUI::getSchemaManager()->tablesExist([Setup::getTable('oauth_clients')]));
     }
 
-    public function testRestInitEventHonorsActiveSetting(): void
+    public function testOnRequestEventHonorsActiveSettingAndRestPath(): void
     {
         $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
         $previousActive = $Config->getValue('general', 'active');
-        $Request = QUI::getRequest();
+        $previousRequest = QUI::$Request;
+        $ServerProperty = new \ReflectionProperty(QUI\REST\Server::class, 'currentInstance');
+        $previousServer = $ServerProperty->getValue();
+        $Rewrite = $this->createMock(QUI\Rewrite::class);
         $InactiveSlim = $this->createMock(\Slim\App::class);
         $InactiveSlim->expects($this->never())->method('add');
         $InactiveServer = $this->createMock(QUI\REST\Server::class);
@@ -301,13 +315,22 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         $ActiveServer->method('getSlim')->willReturn($ActiveSlim);
 
         try {
+            $ServerProperty->setValue(null, $InactiveServer);
+            QUI::$Request = \Symfony\Component\HttpFoundation\Request::create('/api/v2/example');
             $Config->setValue('general', 'active', 0);
-            EventHandler::onRestInit($InactiveServer, $Request);
+            EventHandler::onRequest($Rewrite, 'api/v2/example');
 
             $Config->setValue('general', 'active', 1);
-            EventHandler::onRestInit($ActiveServer, $Request);
+            QUI::$Request = \Symfony\Component\HttpFoundation\Request::create('/ordinary-page');
+            EventHandler::onRequest($Rewrite, 'ordinary-page');
+
+            $ServerProperty->setValue(null, $ActiveServer);
+            QUI::$Request = \Symfony\Component\HttpFoundation\Request::create('/api/v2/example');
+            EventHandler::onRequest($Rewrite, 'api/v2/example');
         } finally {
             $Config->setValue('general', 'active', $previousActive);
+            QUI::$Request = $previousRequest;
+            $ServerProperty->setValue(null, $previousServer);
         }
 
         $Events = simplexml_load_file(dirname(__DIR__, 2) . '/events.xml');
@@ -318,7 +341,7 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
             $eventNames[(string)$Event['fire']] = (string)$Event['on'];
         }
 
-        self::assertSame('restInit', $eventNames['\QUI\OAuth\EventHandler::onRestInit']);
-        self::assertArrayNotHasKey('\QUI\OAuth\EventHandler::onRequest', $eventNames);
+        self::assertSame('onRequest', $eventNames['\QUI\OAuth\EventHandler::onRequest']);
+        self::assertArrayNotHasKey('\QUI\OAuth\EventHandler::onRestInit', $eventNames);
     }
 }

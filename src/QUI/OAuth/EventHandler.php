@@ -8,8 +8,6 @@ namespace QUI\OAuth;
 
 use QUI;
 use QUI\Cron\Manager as CronManager;
-use QUI\REST\Server as RestServer;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class Server
@@ -70,24 +68,63 @@ class EventHandler
     }
 
     /**
-     * quiqqer/rest: restInit
+     * quiqqer/quiqqer: onRequest
      *
      * Add REST API OAuth2 middleware to validate requests
      *
-     * @param RestServer $Server
-     * @param Request $Request
+     * @param QUI\Rewrite $Rewrite
+     * @param string $url
      *
      * @throws \QUI\Exception
      */
-    public static function onRestInit(RestServer $Server, Request $Request): void
+    public static function onRequest(QUI\Rewrite $Rewrite, string $url): void
     {
         $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
-        if (!$Config?->getValue('general', 'active')) {
+        if (
+            !$Config?->getValue('general', 'active')
+            || !self::isRestRequestEvent()
+        ) {
             return;
         }
 
+        $Server = QUI\REST\Server::getCurrentInstance();
         $Server->getSlim()->add(new QUI\OAuth\Middleware\RestMiddleware());
+    }
+
+    /**
+     * Check if the current onRequest event belongs to the REST API.
+     */
+    protected static function isRestRequestEvent(): bool
+    {
+        try {
+            $requestPath = QUI::getRequest()->getPathInfo();
+            $restPath = QUI::getPackage('quiqqer/rest')->getConfig()?->get('general', 'basePath');
+        } catch (QUI\Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+            return false;
+        }
+
+        if (!is_string($restPath)) {
+            return false;
+        }
+
+        return self::isRestRequestPath($requestPath, $restPath);
+    }
+
+    /**
+     * Check a request path against the configured REST base path.
+     */
+    protected static function isRestRequestPath(string $requestPath, string $restPath): bool
+    {
+        $restPath = '/' . trim($restPath, '/');
+
+        if ($restPath === '/') {
+            return false;
+        }
+
+        return $requestPath === $restPath
+            || str_starts_with($requestPath, $restPath . '/');
     }
 
     /**

@@ -560,6 +560,17 @@ class Handler
             return null;
         }
 
+        return self::getOAuthClientByPermanentAccessToken($token);
+    }
+
+    /**
+     * Return the OAuth client for a client secret that is enabled as a permanent access token.
+     *
+     * @param string $token
+     * @return array<string, mixed>|null
+     */
+    public static function getOAuthClientByPermanentAccessToken(string $token): ?array
+    {
         $cacheName = self::getCacheNameForClientSecretsAsAccessTokens($token);
 
         try {

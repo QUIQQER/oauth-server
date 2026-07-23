@@ -28,7 +28,14 @@ class ResourceController extends OAuth2\Controller\ResourceController
     public function verify(string $endpoint, ServerRequestInterface $Request): void
     {
         $VerificationResponse = new OAuth2\Response();
-        $clientData = OAuthClients::getOAuthClientDataByRequestWithClientSecretAsToken($Request);
+        $OAuthRequest = RequestFactory::fromPsr($Request);
+        $accessToken = $this->tokenType->getAccessTokenParameter(
+            $OAuthRequest,
+            $VerificationResponse
+        );
+        $clientData = is_string($accessToken)
+            ? OAuthClients::getOAuthClientByPermanentAccessToken($accessToken)
+            : null;
 
         if (is_null($clientData)) {
             /**
@@ -37,7 +44,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
              * The request object used here implements \OAuth2\RequestInterface
              */
             parent::verifyResourceRequest(
-                RequestFactory::fromPsr($Request),
+                $OAuthRequest,
                 $VerificationResponse
             );
 
