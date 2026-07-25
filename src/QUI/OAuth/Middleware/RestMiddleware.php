@@ -44,7 +44,10 @@ class RestMiddleware
                 $responseBody === false ? '{}' : $responseBody
             );
 
-            return $Response;
+            return $Response->withHeader(
+                'Content-Type',
+                'application/json; charset=utf-8'
+            );
         }
     }
 

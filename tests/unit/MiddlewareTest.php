@@ -63,6 +63,7 @@ class MiddlewareTest extends TestCase
         $payload = json_decode((string)$response->getBody(), true);
 
         self::assertSame(403, $response->getStatusCode());
+        self::assertSame('application/json; charset=utf-8', $response->getHeaderLine('Content-Type'));
         self::assertSame('insufficient_scope', $payload['error']);
         self::assertSame('Scope denied', $payload['error_description']);
         self::assertSame(403, $payload['error_code']);
