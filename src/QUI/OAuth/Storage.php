@@ -117,6 +117,33 @@ class Storage extends OAuth2\Storage\Pdo
         return $authorizationCode;
     }
 
+    public function setAuthorizationCodeResource(string $code, string $resource): void
+    {
+        QUI::getDataBaseConnection()->update(
+            QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_authorization_codes')),
+            ['resource' => $resource],
+            ['authorization_code' => $code]
+        );
+    }
+
+    public function setAccessTokenResource(string $accessToken, string $resource): void
+    {
+        QUI::getDataBaseConnection()->update(
+            QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_access_tokens')),
+            ['resource' => $resource],
+            ['access_token' => $accessToken]
+        );
+    }
+
+    public function setRefreshTokenResource(string $refreshToken, string $resource): void
+    {
+        QUI::getDataBaseConnection()->update(
+            QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_refresh_tokens')),
+            ['resource' => $resource],
+            ['refresh_token' => $refreshToken]
+        );
+    }
+
     /**
      * @param string $username
      * @return array<string, mixed>|false

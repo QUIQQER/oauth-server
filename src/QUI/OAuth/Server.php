@@ -50,9 +50,10 @@ class Server extends QUI\Utils\Singleton
             'enforce_state' => true,
             'require_exact_redirect_uri' => true,
             'allow_implicit' => false,
+            'enforce_pkce' => true,
             'allow_credentials_in_request_body' => true,
             'allow_public_clients' => true,
-            'always_issue_new_refresh_token' => false,
+            'always_issue_new_refresh_token' => true,
             'unset_refresh_token_after_use' => true
         ];
 
@@ -63,6 +64,24 @@ class Server extends QUI\Utils\Singleton
 
         // Add client credentials grant type
         $this->OAuth2Server->addGrantType(new OAuth2\GrantType\ClientCredentials($Storage, $config));
+        $this->OAuth2Server->addGrantType(new OAuth2\GrantType\AuthorizationCode($Storage));
+        $this->OAuth2Server->addGrantType(new OAuth2\GrantType\RefreshToken($Storage, $config));
+
+        $AuthorizationCodeResponseType = new AuthorizationCodeResponseType(
+            $Storage,
+            [
+                'auth_code_lifetime' => 300,
+                'enforce_redirect' => true
+            ]
+        );
+        $this->OAuth2Server->setAuthorizeController(
+            new AuthorizationController(
+                $Storage,
+                ['code' => $AuthorizationCodeResponseType],
+                $config,
+                $this->OAuth2Server->getScopeUtil()
+            )
+        );
 
         $this->OAuth2Server->setResourceController(
             new ResourceController(
