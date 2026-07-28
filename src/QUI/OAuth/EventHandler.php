@@ -8,6 +8,10 @@ namespace QUI\OAuth;
 
 use QUI;
 use QUI\Cron\Manager as CronManager;
+use QUI\REST\Server as RestServer;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class Server
@@ -81,15 +85,63 @@ class EventHandler
     {
         $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
 
-        if (
-            !$Config?->getValue('general', 'active')
-            || !self::isRestRequestEvent()
-        ) {
+        if (!$Config?->getValue('general', 'active')) {
             return;
         }
 
-        $Server = QUI\REST\Server::getCurrentInstance();
+        $DiscoveryResponse = self::getDiscoveryResponse(QUI::getRequest(), $url);
+
+        if ($DiscoveryResponse) {
+            $DiscoveryResponse->send();
+            exit;
+        }
+
+        if (!self::isRestRequestEvent()) {
+            return;
+        }
+
+        $Server = RestServer::getCurrentInstance();
         $Server->getSlim()->add(new QUI\OAuth\Middleware\RestMiddleware());
+    }
+
+    /**
+     * Handle OAuth discovery on the origin root, outside the REST base path.
+     */
+    public static function getDiscoveryResponse(
+        Request $Request,
+        string $url,
+        ?RestServer $Server = null
+    ): ?Response {
+        $path = '/' . trim($url, '/');
+
+        if (
+            $path !== '/.well-known/oauth-authorization-server'
+            && $path !== '/.well-known/oauth-protected-resource'
+        ) {
+            return null;
+        }
+
+        if (!$Request->isMethod(Request::METHOD_GET)) {
+            return new JsonResponse(
+                ['error' => 'method_not_allowed'],
+                Response::HTTP_METHOD_NOT_ALLOWED,
+                [
+                    'Allow' => Request::METHOD_GET,
+                    'Cache-Control' => 'no-store'
+                ]
+            );
+        }
+
+        $Server ??= RestServer::getCurrentInstance();
+        $metadata = $path === '/.well-known/oauth-authorization-server'
+            ? Metadata::authorizationServer($Server)
+            : Metadata::protectedResource($Server);
+
+        return new JsonResponse(
+            $metadata,
+            Response::HTTP_OK,
+            ['Cache-Control' => 'no-store']
+        );
     }
 
     /**
@@ -148,14 +200,21 @@ class EventHandler
                 $specification['components']['securitySchemes'] = [];
             }
 
+            $baseUrl = QUI\REST\Server::getInstance()->getBasePathWithHost();
+            $scopes = array_fill_keys(QUI\REST\Server::getInstance()->getEntryPoints(), '');
             $specification['components']['securitySchemes']['oAuth2'] = [
                 'type' => 'oauth2',
-                'description' => 'This API uses OAuth 2 with the clientCredentials grant flow.',
+                'description' => 'OAuth 2 Authorization Code with PKCE for users and Client Credentials for services.',
                 'flows' => [
-                    'clientCredentials' => [
-                        'tokenUrl' => QUI\REST\Server::getInstance()->getBasePathWithHost() . 'oauth/token'
+                    'authorizationCode' => [
+                        'authorizationUrl' => $baseUrl . 'oauth/authorize',
+                        'tokenUrl' => $baseUrl . 'oauth/token',
+                        'scopes' => $scopes
                     ],
-                    'scopes' => [] // @todo add scopes
+                    'clientCredentials' => [
+                        'tokenUrl' => $baseUrl . 'oauth/token',
+                        'scopes' => $scopes
+                    ]
                 ]
             ];
 

@@ -179,12 +179,14 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         $clientColumns = QUI::getSchemaManager()->listTableColumns(Setup::getTable('oauth_clients'));
         self::assertArrayHasKey('client_id', $clientColumns);
         self::assertArrayHasKey('client_secret_is_token', $clientColumns);
+        self::assertArrayHasKey('allowed_resources', $clientColumns);
 
         $schema = QUI\Utils\Text\XML::getDataBaseFromXml(dirname(__DIR__, 2) . '/database.xml');
         self::assertCount(7, $schema['globals']);
         $tablesByName = array_column($schema['globals'], null, 'suffix');
         self::assertSame('true', $tablesByName['oauth_clients']['field_attributes']['client_id']['primary']);
         self::assertSame('datetime', $tablesByName['oauth_access_tokens']['field_attributes']['expires']['type']);
+        self::assertSame('string', $tablesByName['oauth_access_tokens']['field_attributes']['resource']['type']);
         self::assertSame(['client_id', 'scope'], $tablesByName['oauth_access_limits']['primary']);
 
         $this->expectException(QUI\Exception::class);
@@ -206,6 +208,10 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
             $RestServer->getSlim()->getRouteCollector()->getRoutes()
         );
         self::assertContains('/oauth/token', $routePatterns);
+        self::assertContains('/oauth/authorize', $routePatterns);
+        self::assertContains('/oauth/revoke', $routePatterns);
+        self::assertNotContains('/.well-known/oauth-authorization-server', $routePatterns);
+        self::assertNotContains('/.well-known/oauth-protected-resource', $routePatterns);
         self::assertContains('/quiqqer_oauth_test', $routePatterns);
 
         $specification = [
@@ -229,6 +235,10 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         self::assertSame(
             'oauth2',
             $specification['components']['securitySchemes']['oAuth2']['type']
+        );
+        self::assertArrayHasKey(
+            'authorizationCode',
+            $specification['components']['securitySchemes']['oAuth2']['flows']
         );
         self::assertArrayHasKey('OAuth2Error', $specification['components']['responses']);
         self::assertSame(
@@ -343,5 +353,49 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
 
         self::assertSame('onRequest', $eventNames['\QUI\OAuth\EventHandler::onRequest']);
         self::assertArrayNotHasKey('\QUI\OAuth\EventHandler::onRestInit', $eventNames);
+    }
+
+    public function testDiscoveryIsHandledAtOriginRootOutsideSlim(): void
+    {
+        $Server = new QUI\REST\Server([
+            'basePath' => '/api/',
+            'baseHost' => 'https://project.example/'
+        ]);
+        $Request = \Symfony\Component\HttpFoundation\Request::create(
+            'https://project.example/.well-known/oauth-authorization-server'
+        );
+        $Response = EventHandler::getDiscoveryResponse(
+            $Request,
+            '.well-known/oauth-authorization-server',
+            $Server
+        );
+
+        self::assertInstanceOf(\Symfony\Component\HttpFoundation\JsonResponse::class, $Response);
+        self::assertSame(200, $Response->getStatusCode());
+        $metadata = json_decode((string)$Response->getContent(), true);
+        self::assertIsArray($metadata);
+        self::assertSame('https://project.example/api', $metadata['issuer']);
+        self::assertSame(
+            'https://project.example/api/oauth/authorize',
+            $metadata['authorization_endpoint']
+        );
+
+        self::assertNull(EventHandler::getDiscoveryResponse(
+            $Request,
+            'api/.well-known/oauth-authorization-server',
+            $Server
+        ));
+
+        $MethodNotAllowed = EventHandler::getDiscoveryResponse(
+            \Symfony\Component\HttpFoundation\Request::create(
+                'https://project.example/.well-known/oauth-protected-resource',
+                'POST'
+            ),
+            '/.well-known/oauth-protected-resource',
+            $Server
+        );
+        self::assertInstanceOf(\Symfony\Component\HttpFoundation\JsonResponse::class, $MethodNotAllowed);
+        self::assertSame(405, $MethodNotAllowed->getStatusCode());
+        self::assertSame('GET', $MethodNotAllowed->headers->get('Allow'));
     }
 }

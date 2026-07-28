@@ -1,0 +1,256 @@
+.quiqqer-oauth-authorization {
+    --_page-background: var(
+        --quiqqer-oauth-server-authorization-page-background,
+        var(--qui-colors-gray-25)
+    );
+    --_page-background-accent: var(
+        --quiqqer-oauth-server-authorization-page-background-accent,
+        var(--qui-colors-primary-50)
+    );
+    --_card-background: var(
+        --quiqqer-oauth-server-authorization-card-background,
+        var(--qui-colors-white)
+    );
+    --_card-border: var(
+        --quiqqer-oauth-server-authorization-card-border,
+        var(--qui-colors-gray-100)
+    );
+    --_text: var(
+        --quiqqer-oauth-server-authorization-text,
+        var(--qui-colors-dark)
+    );
+    --_text-muted: var(
+        --quiqqer-oauth-server-authorization-text-muted,
+        var(--qui-colors-gray-700)
+    );
+    --_primary: var(
+        --quiqqer-oauth-server-authorization-primary,
+        var(--qui-colors-primary)
+    );
+    --_primary-hover: var(
+        --quiqqer-oauth-server-authorization-primary-hover,
+        var(--qui-colors-primary-700)
+    );
+    --_primary-contrast: var(
+        --quiqqer-oauth-server-authorization-primary-contrast,
+        var(--qui-colors-primary--accent)
+    );
+    --_secondary-background: var(
+        --quiqqer-oauth-server-authorization-secondary-background,
+        var(--qui-colors-white)
+    );
+    --_secondary-hover: var(
+        --quiqqer-oauth-server-authorization-secondary-hover,
+        var(--qui-colors-gray-50)
+    );
+    --_permission-background: var(
+        --quiqqer-oauth-server-authorization-permission-background,
+        var(--qui-colors-gray-25)
+    );
+    --_focus: var(
+        --quiqqer-oauth-server-authorization-focus,
+        var(--qui-colors-primary-300)
+    );
+    --_shadow: var(
+        --quiqqer-oauth-server-authorization-shadow,
+        0 24px 70px color-mix(in srgb, var(--qui-colors-black) 12%, transparent)
+    );
+    --_card-radius: var(--quiqqer-oauth-server-authorization-card-radius, 1.5rem);
+    --_control-radius: var(--quiqqer-oauth-server-authorization-control-radius, 0.75rem);
+    --_card-width: var(--quiqqer-oauth-server-authorization-card-width, 38rem);
+    --_content-spacing: var(--quiqqer-oauth-server-authorization-content-spacing, clamp(1.5rem, 5vw, 2.75rem));
+
+    background: linear-gradient(145deg, var(--_page-background), var(--_page-background-accent));
+    color: var(--_text);
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    margin: 0;
+    min-height: 100vh;
+}
+
+.quiqqer-oauth-authorization *,
+.quiqqer-oauth-authorization *::before,
+.quiqqer-oauth-authorization *::after {
+    box-sizing: border-box;
+}
+
+.quiqqer-oauth-authorization-main {
+    display: grid;
+    min-height: 100vh;
+    padding: clamp(1rem, 4vw, 3rem);
+    place-items: center;
+}
+
+.quiqqer-oauth-authorization-card {
+    background: var(--_card-background);
+    border: 1px solid var(--_card-border);
+    border-radius: var(--_card-radius);
+    box-shadow: var(--_shadow);
+    max-width: var(--_card-width);
+    overflow: hidden;
+    width: 100%;
+}
+
+.quiqqer-oauth-authorization-brand {
+    align-items: center;
+    border-bottom: 1px solid var(--_card-border);
+    display: flex;
+    justify-content: center;
+    min-height: 7.5rem;
+    padding: 1.5rem var(--_content-spacing);
+}
+
+.quiqqer-oauth-authorization-logo {
+    display: block;
+    max-height: 5rem;
+    max-width: min(100%, 20rem);
+    object-fit: contain;
+}
+
+.quiqqer-oauth-authorization-brandName {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-align: center;
+}
+
+.quiqqer-oauth-authorization-content {
+    padding: var(--_content-spacing);
+}
+
+.quiqqer-oauth-authorization h1 {
+    font-size: clamp(1.75rem, 5vw, 2.25rem);
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    margin: 0 0 1rem;
+}
+
+.quiqqer-oauth-authorization-description {
+    color: var(--_text-muted);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    margin: 0;
+}
+
+.quiqqer-oauth-authorization-permissions {
+    background: var(--_permission-background);
+    border: 1px solid var(--_card-border);
+    border-radius: var(--_control-radius);
+    margin-top: 2rem;
+    padding: 1.25rem;
+}
+
+.quiqqer-oauth-authorization-permissions h2 {
+    color: var(--_text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.875rem;
+    text-transform: uppercase;
+}
+
+.quiqqer-oauth-authorization-permissions ul {
+    display: grid;
+    gap: 0.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.quiqqer-oauth-authorization-permissions li {
+    align-items: start;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+.quiqqer-oauth-authorization-permissions li::before {
+    color: var(--_primary);
+    content: "✓";
+    font-weight: 800;
+}
+
+.quiqqer-oauth-authorization-permissions code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    overflow-wrap: anywhere;
+}
+
+.quiqqer-oauth-authorization-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.quiqqer-oauth-authorization-button {
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: var(--_control-radius);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-weight: 700;
+    justify-content: center;
+    min-height: 3rem;
+    padding: 0.75rem 1.25rem;
+    text-decoration: none;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+}
+
+.quiqqer-oauth-authorization-button:hover {
+    transform: translateY(-1px);
+}
+
+.quiqqer-oauth-authorization-button:focus-visible {
+    outline: 3px solid var(--_focus);
+    outline-offset: 3px;
+}
+
+.quiqqer-oauth-authorization-button--primary {
+    background: var(--_primary);
+    color: var(--_primary-contrast);
+}
+
+.quiqqer-oauth-authorization-button--primary:hover {
+    background: var(--_primary-hover);
+}
+
+.quiqqer-oauth-authorization-button--secondary {
+    background: var(--_secondary-background);
+    border-color: var(--_card-border);
+    color: var(--_text);
+}
+
+.quiqqer-oauth-authorization-button--secondary:hover {
+    background: var(--_secondary-hover);
+}
+
+@media (max-width: 34rem) {
+    .quiqqer-oauth-authorization-actions {
+        flex-direction: column;
+    }
+
+    .quiqqer-oauth-authorization-button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .quiqqer-oauth-authorization-button {
+        transition: none;
+    }
+
+    .quiqqer-oauth-authorization-button:hover {
+        transform: none;
+    }
+}

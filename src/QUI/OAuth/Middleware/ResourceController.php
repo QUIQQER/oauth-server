@@ -33,6 +33,7 @@ class ResourceController extends OAuth2\Controller\ResourceController
             $OAuthRequest,
             $VerificationResponse
         );
+        $tokenData = null;
         $clientData = is_string($accessToken)
             ? OAuthClients::getOAuthClientByPermanentAccessToken($accessToken)
             : null;
@@ -91,12 +92,76 @@ class ResourceController extends OAuth2\Controller\ResourceController
             $this->throwInvalidScopeException();
         }
 
+        if (is_array($tokenData)) {
+            $this->verifyTokenBindings($tokenData, $scope);
+        }
+
         $this->verifyScopePermission($clientData, $scope);
+        $userId = is_array($tokenData) && !empty($tokenData['user_id'])
+            ? $tokenData['user_id']
+            : ($clientData['user_id'] ?? null);
 
         try {
-            QUI\OAuth\Clients\Handler::setSessionUser(QUI::getUsers()->get($clientData['user_id']));
+            if ($userId === null || $userId === '') {
+                throw new InvalidRequestException(
+                    'invalid_token',
+                    'The access token does not represent a QUIQQER user.',
+                    401
+                );
+            }
+
+            QUI\OAuth\Clients\Handler::setSessionUser(QUI::getUsers()->get($userId));
+        } catch (InvalidRequestException $Exception) {
+            throw $Exception;
         } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
+
+            throw new InvalidRequestException(
+                'invalid_token',
+                'The QUIQQER user represented by the access token no longer exists.',
+                401
+            );
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $tokenData
+     * @throws InvalidRequestException
+     */
+    private function verifyTokenBindings(array $tokenData, string $requiredScope): void
+    {
+        $tokenScopes = isset($tokenData['scope']) && is_string($tokenData['scope'])
+            ? array_values(array_filter(explode(' ', $tokenData['scope'])))
+            : [];
+
+        if (!in_array($requiredScope, $tokenScopes, true)) {
+            $this->throwInvalidScopeException();
+        }
+
+        $resource = $tokenData['resource'] ?? null;
+
+        if (!is_string($resource) || $resource === '') {
+            return;
+        }
+
+        try {
+            $expectedResource = QUI\OAuth\Metadata::resource(RestServer::getCurrentInstance());
+        } catch (Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+
+            throw new InvalidRequestException(
+                'system_error',
+                'The protected resource identifier could not be determined.',
+                500
+            );
+        }
+
+        if (!hash_equals($resource, $expectedResource)) {
+            throw new InvalidRequestException(
+                'invalid_token',
+                'The access token was issued for another protected resource.',
+                401
+            );
         }
     }
 

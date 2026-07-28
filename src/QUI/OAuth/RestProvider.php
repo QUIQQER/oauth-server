@@ -8,7 +8,6 @@ use QUI;
 use QUI\REST\Response;
 use QUI\REST\Server;
 use OAuth2;
-use QUI\OAuth\Server as OAuth2Server;
 use Slim\Routing\RouteCollectorProxy;
 
 /**
@@ -24,33 +23,47 @@ class RestProvider implements QUI\REST\ProviderInterface
     public function register(Server $Server): void
     {
         $Slim = $Server->getSlim();
-        $OAuth2Server = OAuth2Server::getInstance()->getOAuth2Server();
+        $AuthorizationEndpoint = new AuthorizationEndpoint();
+        $TokenEndpoint = new TokenEndpoint();
 
-        $Slim->group('/oauth', function (RouteCollectorProxy $RouteCollector) use ($OAuth2Server) {
-            // @todo the /authorize endpoint functionality has to be rewritten
-            // as soon as quiqqer/oauth-server allows `Authorization Code` grant type
+        $Slim->group(
+            '/oauth',
+            function (RouteCollectorProxy $RouteCollector) use ($AuthorizationEndpoint, $TokenEndpoint) {
+                $RouteCollector->map(
+                    ['GET', 'POST'],
+                    '/authorize',
+                    static function (
+                        RequestInterface $Request,
+                        ResponseInterface $Response,
+                        array $args
+                    ) use ($AuthorizationEndpoint) {
+                        return $AuthorizationEndpoint->handle($Request);
+                    }
+                );
 
-            $RouteCollector->post(
-                '/token',
-                function (RequestInterface $Request, ResponseInterface $Response, $args) use ($OAuth2Server) {
-                    $OAuthServerResponse = new OAuth2\Response();
+                $RouteCollector->post(
+                    '/token',
+                    static function (
+                        RequestInterface $Request,
+                        ResponseInterface $Response,
+                        array $args
+                    ) use ($TokenEndpoint) {
+                        return $TokenEndpoint->handle($Request);
+                    }
+                );
 
-                    $OAuth2Server->handleTokenRequest(
-                        RequestFactory::fromPsr($Request),
-                        $OAuthServerResponse
-                    );
-
-                    $RestResponse = new Response(
-                        $OAuthServerResponse->getStatusCode(),
-                        $OAuthServerResponse->getHttpHeaders(),
-                        $OAuthServerResponse->getResponseBody(),
-                        $OAuthServerResponse->version
-                    );
-
-                    return $RestResponse->withHeader('Content-Type', 'application/json');
-                }
-            );
-        });
+                $RouteCollector->post(
+                    '/revoke',
+                    static function (
+                        RequestInterface $Request,
+                        ResponseInterface $Response,
+                        array $args
+                    ) use ($TokenEndpoint) {
+                        return $TokenEndpoint->revoke($Request);
+                    }
+                );
+            }
+        );
 
         // Test path
         $Slim->post('/quiqqer_oauth_test', function (RequestInterface $Request, ResponseInterface $Response, $args) {
@@ -99,5 +112,17 @@ class RestProvider implements QUI\REST\ProviderInterface
         }
 
         return $Locale->get('quiqqer/oauth-server', 'RestProvider.title');
+    }
+
+    public static function fromOAuthResponse(OAuth2\Response $OAuthResponse): Response
+    {
+        $RestResponse = new Response(
+            $OAuthResponse->getStatusCode(),
+            $OAuthResponse->getHttpHeaders(),
+            $OAuthResponse->getResponseBody(),
+            $OAuthResponse->version
+        );
+
+        return $RestResponse->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
 }

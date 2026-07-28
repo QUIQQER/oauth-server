@@ -10,6 +10,8 @@
             <field type="string" length="80" nullable="true">grant_types</field>
             <field type="string" length="4000" nullable="true">scope</field>
             <field type="text" nullable="true">scope_restrictions</field>
+            <field type="text" nullable="true">allowed_resources</field>
+            <field type="string" length="32" default="client_secret_basic">token_endpoint_auth_method</field>
             <field type="string" length="50">user_id</field>
             <field type="integer">c_date</field>
 
@@ -24,6 +26,7 @@
             <field type="string" length="50" nullable="true">user_id</field>
             <field type="datetime">expires</field>
             <field type="string" length="2000" nullable="true">scope</field>
+            <field type="string" length="2000" nullable="true">resource</field>
 
             <index>client_id</index>
             <index>expires</index>
@@ -35,6 +38,7 @@
             <field type="string" length="50" nullable="true">user_id</field>
             <field type="datetime">expires</field>
             <field type="string" length="2000" nullable="true">scope</field>
+            <field type="string" length="2000" nullable="true">resource</field>
 
             <index>client_id</index>
             <index>expires</index>
@@ -50,6 +54,7 @@
             <field type="string" length="1000" nullable="true">id_token</field>
             <field type="string" length="1000" nullable="true">code_challenge</field>
             <field type="string" length="20" nullable="true">code_challenge_method</field>
+            <field type="string" length="2000" nullable="true">resource</field>
 
             <index>client_id</index>
             <index>expires</index>

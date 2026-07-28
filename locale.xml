@@ -248,6 +248,38 @@
             <de><![CDATA[OAuth Client konnte nicht gespeichert werden.]]></de>
             <en><![CDATA[OAuth Client could not be saved.]]></en>
         </locale>
+        <locale name="oauth.authorize.login.title">
+            <de><![CDATA[Anmeldung erforderlich]]></de>
+            <en><![CDATA[Sign-in required]]></en>
+        </locale>
+        <locale name="oauth.authorize.login.description">
+            <de><![CDATA[Melde dich an und setze anschließend diese Autorisierung fort.]]></de>
+            <en><![CDATA[Sign in and then continue this authorization request.]]></en>
+        </locale>
+        <locale name="oauth.authorize.login.action">
+            <de><![CDATA[Anmelden]]></de>
+            <en><![CDATA[Sign in]]></en>
+        </locale>
+        <locale name="oauth.authorize.consent.title">
+            <de><![CDATA[Zugriff erlauben]]></de>
+            <en><![CDATA[Authorize access]]></en>
+        </locale>
+        <locale name="oauth.authorize.consent.description">
+            <de><![CDATA[Die Anwendung „[client]“ möchte in deinem Namen auf dieses Projekt zugreifen.]]></de>
+            <en><![CDATA[The application “[client]” wants to access this project on your behalf.]]></en>
+        </locale>
+        <locale name="oauth.authorize.consent.scopes">
+            <de><![CDATA[Angeforderte Berechtigungen]]></de>
+            <en><![CDATA[Requested permissions]]></en>
+        </locale>
+        <locale name="oauth.authorize.consent.approve">
+            <de><![CDATA[Zugriff erlauben]]></de>
+            <en><![CDATA[Allow access]]></en>
+        </locale>
+        <locale name="oauth.authorize.consent.deny">
+            <de><![CDATA[Ablehnen]]></de>
+            <en><![CDATA[Deny]]></en>
+        </locale>
     </groups>
 
 
@@ -447,6 +479,14 @@
         <locale name="control.user.tokens.window.delete.text" html="1">
             <de><![CDATA[Möchten Sie das API-Token <b>[title]</b> wirklich löschen?]]></de>
             <en><![CDATA[Do you really want to delete the API token <b>[title]</b>?]]></en>
+        </locale>
+        <locale name="settings.authorization_login_url.text">
+            <de><![CDATA[Login-URL für OAuth-Autorisierung]]></de>
+            <en><![CDATA[Login URL for OAuth authorization]]></en>
+        </locale>
+        <locale name="settings.authorization_login_url.description">
+            <de><![CDATA[Öffentliche QUIQQER-Login-URL. Sie erhält die ursprüngliche Autorisierungs-URL im Parameter quiqqer_oauth_return.]]></de>
+            <en><![CDATA[Public QUIQQER login URL. It receives the original authorization URL in the quiqqer_oauth_return parameter.]]></en>
         </locale>
     </groups>
 </locales>
