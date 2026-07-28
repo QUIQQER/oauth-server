@@ -17,6 +17,21 @@ use QUITest\QUI\OAuth\Support\OAuthDatabaseTestCase;
 class AuthorizationFlowTest extends OAuthDatabaseTestCase
 {
     private const REDIRECT_URI = 'https://chat.openai.com/aip/oauth/callback';
+    private const TEST_BASE_HOST = 'https://oauth.example.test';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $RestServer = new RestServer([
+            'basePath' => '/api',
+            'baseHost' => self::TEST_BASE_HOST
+        ]);
+        (new RestProvider())->register($RestServer);
+
+        $ServerProperty = new \ReflectionProperty(RestServer::class, 'currentInstance');
+        $ServerProperty->setValue(null, $RestServer);
+    }
 
     public function testAuthorizationCodePkceRefreshResourceAndRevocationFlow(): void
     {
@@ -171,8 +186,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
 
     public function testConsentPageEscapesClientDataAndRejectsReplayedConsent(): void
     {
-        $RestServer = new RestServer(['basePath' => '/api']);
-        (new RestProvider())->register($RestServer);
+        $RestServer = RestServer::getCurrentInstance();
         $resource = Metadata::resource($RestServer);
         $clientId = $this->createAuthorizationClient(
             $resource,
