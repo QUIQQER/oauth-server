@@ -109,6 +109,64 @@ class Handler
     }
 
     /**
+     * Register a static Authorization Code client for ChatGPT or another agent.
+     *
+     * The OAuth client itself is owned administratively by $User. Access and
+     * refresh tokens issued through this client represent the user who approves
+     * the authorization request, not this administrative owner.
+     *
+     * @param QUIUserInterface $User
+     * @param array<string, array<string, mixed>> $scopeSettings
+     * @param array<int, string> $redirectUris
+     * @param array<int, string> $resources
+     * @throws QUI\Exception
+     * @throws QUI\OAuth\Exception
+     */
+    public static function createAuthorizationClient(
+        QUIUserInterface $User,
+        array $scopeSettings,
+        string $name,
+        array $redirectUris,
+        array $resources,
+        bool $publicClient = false
+    ): string {
+        $redirectUris = QUI\OAuth\ClientConfiguration::validateRedirectUris($redirectUris);
+        $resources = QUI\OAuth\ClientConfiguration::validateResources($resources);
+
+        if ($redirectUris === [] || $resources === []) {
+            throw new \InvalidArgumentException(
+                'Authorization clients require at least one redirect URI and one resource.'
+            );
+        }
+
+        $clientId = self::createOAuthClient($User, $scopeSettings, $name);
+
+        try {
+            QUI::getDataBaseConnection()->update(
+                QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')),
+                [
+                    'client_secret' => $publicClient ? null : self::generatePassword(),
+                    'redirect_uri' => implode(' ', $redirectUris),
+                    'grant_types' => 'authorization_code refresh_token',
+                    'allowed_resources' => json_encode(
+                        $resources,
+                        JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+                    ),
+                    'token_endpoint_auth_method' => $publicClient
+                        ? 'none'
+                        : 'client_secret_basic'
+                ],
+                ['client_id' => $clientId]
+            );
+        } catch (\Throwable $Exception) {
+            self::removeOAuthClient($clientId);
+            throw $Exception;
+        }
+
+        return $clientId;
+    }
+
+    /**
      * Generate a random password
      *
      * @param int $len (optional) - Password length [default: 40]
