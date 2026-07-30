@@ -5,6 +5,8 @@ namespace QUI\OAuth;
 use OAuth2\Controller\AuthorizeController;
 use OAuth2\RequestInterface;
 use OAuth2\ResponseInterface;
+use QUI\OAuth\Clients\Handler;
+use QUI\REST\Server as RestServer;
 
 final class AuthorizationController extends AuthorizeController
 {
@@ -43,11 +45,48 @@ final class AuthorizationController extends AuthorizeController
             );
         }
 
-        $client = $this->clientStorage->getClientDetails($this->getClientId());
-        $allowedResources = is_array($client)
-            ? ClientConfiguration::decodeResources($client['allowed_resources'] ?? null)
-            : [];
+        $clientId = $this->getClientId();
+        $client = $this->clientStorage->getClientDetails($clientId);
+        $allowedResources = ClientConfiguration::decodeResources(
+            $client['allowed_resources'] ?? null
+        );
         $requestedResource = $request->query('resource', $request->request('resource'));
+        $isDynamicRegistration = ClientConfiguration::isDynamicRegistration(
+            $client['allowed_resources'] ?? null
+        );
+
+        if ($isDynamicRegistration && $allowedResources === []) {
+            if (!is_string($requestedResource) || $requestedResource === '') {
+                return $this->setRedirectError(
+                    $response,
+                    'invalid_target',
+                    'The resource parameter is required for dynamically registered clients.'
+                );
+            }
+
+            try {
+                $bound = Handler::bindDynamicAuthorizationClientResource(
+                    $clientId,
+                    $requestedResource,
+                    Metadata::resource(RestServer::getCurrentInstance())
+                );
+            } catch (\InvalidArgumentException) {
+                $bound = false;
+            } catch (\Throwable $Exception) {
+                \QUI\System\Log::writeException($Exception);
+                $bound = false;
+            }
+
+            if (!$bound) {
+                return $this->setRedirectError(
+                    $response,
+                    'invalid_target',
+                    'The requested resource cannot be registered for this client.'
+                );
+            }
+
+            $allowedResources = [$requestedResource];
+        }
 
         if ($requestedResource === null || $requestedResource === '') {
             if (count($allowedResources) !== 1) {

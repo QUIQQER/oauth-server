@@ -29,10 +29,22 @@ as OAuth scopes
 
 Authorization clients
 ---------------------
-Authorization clients are registered statically by an administrator. The package intentionally does not expose an
-unauthenticated Dynamic Client Registration endpoint. Register ChatGPT and agent clients through
-`QUI\OAuth\Clients\Handler::createAuthorizationClient()`, supplying the exact redirect URIs, allowed REST resource
+Authorization clients can be registered statically by an administrator through
+`QUI\OAuth\Clients\Handler::createAuthorizationClient()`, supplying the exact redirect URIs, allowed resource
 identifiers, allowed scopes and whether the client is public.
+
+For MCP clients such as Codex, RFC 7591 Dynamic Client Registration is controlled through
+`general.dynamic_client_registration`. When enabled, the Authorization Server metadata advertises
+`/api/oauth/register`. The endpoint accepts public Authorization Code clients only:
+
+* mandatory PKCE S256;
+* `token_endpoint_auth_method` must be `none`;
+* only `authorization_code` and `refresh_token` grants;
+* exact, validated redirect URIs;
+* the first authorization request permanently binds the client to one resource on the QUIQQER origin.
+
+Dynamic registration is enabled by default. Deployments should additionally apply normal edge rate limiting to
+`/api/oauth/register`.
 
 The Authorization Server issuer and default protected resource identifier are the absolute QUIQQER REST base URL.
 Discovery is exposed at the origin root, independently of the configured REST base path:
