@@ -10,6 +10,7 @@ use QUI\OAuth\Exception as OAuthException;
 use QUI\OAuth\FrontendController;
 use QUI\OAuth\FrontendException;
 use QUI\OAuth\FrontendUsers\Profile\Tokens;
+use QUI\OAuth\Metadata;
 use QUI\OAuth\Permission;
 use QUI\OAuth\RestProvider;
 use QUI\OAuth\Setup;
@@ -360,7 +361,7 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
     {
         $Server = new QUI\REST\Server([
             'basePath' => '/api/',
-            'baseHost' => 'https://project.example/'
+            'baseHost' => '/'
         ]);
         $Request = \Symfony\Component\HttpFoundation\Request::create(
             'https://project.example/.well-known/oauth-authorization-server'
@@ -379,6 +380,22 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         self::assertSame(
             'https://project.example/api/oauth/authorize',
             $metadata['authorization_endpoint']
+        );
+
+        $previousRequest = QUI::$Request;
+
+        try {
+            QUI::$Request = \Symfony\Component\HttpFoundation\Request::create(
+                'https://project.example/mcp'
+            );
+            $metadataFromCurrentRequest = Metadata::authorizationServer($Server);
+        } finally {
+            QUI::$Request = $previousRequest;
+        }
+
+        self::assertSame(
+            'https://project.example/api/oauth/authorize',
+            $metadataFromCurrentRequest['authorization_endpoint']
         );
 
         self::assertNull(EventHandler::getDiscoveryResponse(

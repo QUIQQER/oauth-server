@@ -133,9 +133,10 @@ class EventHandler
         }
 
         $Server ??= RestServer::getCurrentInstance();
+        $requestOrigin = $Request->getSchemeAndHttpHost();
         $metadata = $path === '/.well-known/oauth-authorization-server'
-            ? Metadata::authorizationServer($Server)
-            : Metadata::protectedResource($Server);
+            ? Metadata::authorizationServer($Server, $requestOrigin)
+            : Metadata::protectedResource($Server, $requestOrigin);
 
         return new JsonResponse(
             $metadata,
