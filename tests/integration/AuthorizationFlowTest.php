@@ -6,6 +6,8 @@ use GuzzleHttp\Psr7\ServerRequest;
 use OAuth2;
 use QUI;
 use QUI\OAuth\Clients\Handler;
+use QUI\OAuth\Consent\Context;
+use QUI\OAuth\Consent\Presentation;
 use QUI\OAuth\Metadata;
 use QUI\OAuth\Middleware\ResourceController;
 use QUI\OAuth\RestProvider;
@@ -383,6 +385,83 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         );
         self::assertSame('access_denied', $redirectQuery['error'] ?? null);
         self::assertSame('denied-consent-state', $redirectQuery['state'] ?? null);
+    }
+
+    public function testConsentPresentationCanBeExtendedByModules(): void
+    {
+        $RestServer = RestServer::getCurrentInstance();
+        $resource = Metadata::resource($RestServer);
+        $clientId = $this->createAuthorizationClient($resource);
+        $query = [
+            'response_type' => 'code',
+            'client_id' => $clientId,
+            'redirect_uri' => self::REDIRECT_URI,
+            'scope' => '/quiqqer_oauth_test',
+            'state' => 'custom-consent-state',
+            'code_challenge' => self::challenge(str_repeat('e', 64)),
+            'code_challenge_method' => 'S256',
+            'resource' => $resource
+        ];
+        $capturedContext = null;
+        $listener = static function (
+            Context $Context,
+            Presentation $Presentation
+        ) use (&$capturedContext): void {
+            $capturedContext = $Context;
+            $Presentation
+                ->setTitle('Customized MCP consent')
+                ->setDescription('User-specific MCP functions')
+                ->addSection('Available MCP functions', [
+                    [
+                        'type' => 'Resource',
+                        'name' => 'project_<information>'
+                    ],
+                    [
+                        'type' => 'Tool',
+                        'name' => 'project_update'
+                    ]
+                ]);
+        };
+
+        Handler::setSessionUser(QUI::getUsers()->getSystemUser());
+        QUI::getEvents()->addEvent(
+            'onQuiqqerOAuthConsentPresentation',
+            $listener
+        );
+
+        try {
+            $Response = $RestServer->getSlim()->handle(
+                (new ServerRequest(
+                    'GET',
+                    '/api/oauth/authorize'
+                ))->withQueryParams($query)
+            );
+        } finally {
+            QUI::getEvents()->removeEvent(
+                'onQuiqqerOAuthConsentPresentation',
+                $listener
+            );
+        }
+
+        $body = (string)$Response->getBody();
+        self::assertSame(200, $Response->getStatusCode());
+        self::assertInstanceOf(Context::class, $capturedContext);
+        self::assertSame(
+            QUI::getUsers()->getSystemUser()->getUUID(),
+            $capturedContext->getUser()->getUUID()
+        );
+        self::assertSame($clientId, $capturedContext->getClientId());
+        self::assertSame($resource, $capturedContext->getResource());
+        self::assertSame(
+            ['/quiqqer_oauth_test'],
+            $capturedContext->getRequestedScopes()
+        );
+        self::assertStringContainsString('Customized MCP consent', $body);
+        self::assertStringContainsString('User-specific MCP functions', $body);
+        self::assertStringContainsString('Available MCP functions', $body);
+        self::assertStringContainsString('Resource', $body);
+        self::assertStringContainsString('project_&lt;information&gt;', $body);
+        self::assertStringContainsString('project_update', $body);
     }
 
     private function createAuthorizationClient(
