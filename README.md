@@ -56,9 +56,9 @@ The metadata returned there points to the OAuth endpoints below the REST base pa
 `/api/oauth/authorize`, `/api/oauth/token` and `/api/oauth/revoke`.
 
 If an OAuth authorization request is opened without an authenticated QUIQQER session, the authorization endpoint
-shows a login link. Configure the project's login URL through `general.authorization_login_url`. The URL receives the
-original authorization request in the `quiqqer_oauth_return` query parameter; the login integration must return the
-user to that URL after successful authentication.
+renders the configured QUIQQER login control and continues with the consent screen after a successful login.
+`general.authorization_login_url` remains available as a no-JavaScript fallback. The fallback URL receives the
+original authorization request in the `quiqqer_oauth_return` query parameter.
 
 Installation
 ------------

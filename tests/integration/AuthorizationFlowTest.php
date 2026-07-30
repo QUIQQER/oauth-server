@@ -184,6 +184,66 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         );
     }
 
+    public function testUnauthenticatedAuthorizationRendersLoginControl(): void
+    {
+        $RestServer = RestServer::getCurrentInstance();
+        $resource = Metadata::resource($RestServer);
+        $clientId = $this->createAuthorizationClient($resource);
+        $query = [
+            'response_type' => 'code',
+            'client_id' => $clientId,
+            'redirect_uri' => self::REDIRECT_URI,
+            'scope' => '/quiqqer_oauth_test',
+            'state' => 'login-control-state',
+            'code_challenge' => self::challenge(str_repeat('l', 64)),
+            'code_challenge_method' => 'S256',
+            'resource' => $resource
+        ];
+
+        Handler::setSessionUser(QUI::getUsers()->getNobody());
+        $Response = $RestServer->getSlim()->handle(
+            (new ServerRequest(
+                'GET',
+                self::TEST_BASE_HOST . '/api/oauth/authorize?'
+                . http_build_query($query)
+            ))->withQueryParams($query)
+        );
+        $body = (string)$Response->getBody();
+        $contentSecurityPolicy = $Response->getHeaderLine(
+            'Content-Security-Policy'
+        );
+
+        self::assertSame(200, $Response->getStatusCode());
+        self::assertStringContainsString(
+            'id="quiqqer-oauth-login-control"',
+            $body
+        );
+        self::assertStringContainsString(
+            'quiqqer/oauth-server/bin/js/authorization-login.js',
+            $body
+        );
+        self::assertStringContainsString(
+            'data-return-uri="https://oauth.example.test/api/oauth/authorize?',
+            $body
+        );
+        self::assertStringContainsString(
+            'state=login-control-state',
+            $body
+        );
+        self::assertStringContainsString(
+            'quiqqer_oauth_return=',
+            $body
+        );
+        self::assertStringContainsString(
+            "script-src 'self'",
+            $contentSecurityPolicy
+        );
+        self::assertStringContainsString(
+            "connect-src 'self'",
+            $contentSecurityPolicy
+        );
+    }
+
     public function testConsentPageEscapesClientDataAndRejectsReplayedConsent(): void
     {
         $RestServer = RestServer::getCurrentInstance();
@@ -227,6 +287,10 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         }
 
         self::assertStringContainsString("style-src 'self'", $getResponse->getHeaderLine('Content-Security-Policy'));
+        self::assertStringContainsString(
+            "form-action 'self' https://chat.openai.com",
+            $getResponse->getHeaderLine('Content-Security-Policy')
+        );
         self::assertStringNotContainsString(
             "'unsafe-inline'",
             $getResponse->getHeaderLine('Content-Security-Policy')
@@ -250,11 +314,81 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
             (new ServerRequest('POST', '/api/oauth/authorize'))->withParsedBody($post)
         );
         self::assertSame(400, $replayResponse->getStatusCode());
+        self::assertSame(
+            'text/html; charset=utf-8',
+            $replayResponse->getHeaderLine('Content-Type')
+        );
+        self::assertStringContainsString(
+            'id="oauth-expired-title"',
+            (string)$replayResponse->getBody()
+        );
+        self::assertStringContainsString(
+            '/api/oauth/authorize?',
+            (string)$replayResponse->getBody()
+        );
+        self::assertStringNotContainsString(
+            '"error":"invalid_request"',
+            (string)$replayResponse->getBody()
+        );
+    }
+
+    public function testConsentDenialRedirectsBackToClient(): void
+    {
+        $RestServer = RestServer::getCurrentInstance();
+        $resource = Metadata::resource($RestServer);
+        $redirectUri = 'http://127.0.0.1:43123/callback/codex';
+        $clientId = $this->createAuthorizationClient(
+            $resource,
+            null,
+            $redirectUri
+        );
+        $query = [
+            'response_type' => 'code',
+            'client_id' => $clientId,
+            'redirect_uri' => $redirectUri,
+            'scope' => '/quiqqer_oauth_test',
+            'state' => 'denied-consent-state',
+            'code_challenge' => self::challenge(str_repeat('d', 64)),
+            'code_challenge_method' => 'S256',
+            'resource' => $resource
+        ];
+
+        Handler::setSessionUser(QUI::getUsers()->getSystemUser());
+        $getResponse = $RestServer->getSlim()->handle(
+            (new ServerRequest('GET', '/api/oauth/authorize'))->withQueryParams($query)
+        );
+        $body = (string)$getResponse->getBody();
+        self::assertStringContainsString(
+            "form-action 'self' http://127.0.0.1:43123",
+            $getResponse->getHeaderLine('Content-Security-Policy')
+        );
+        preg_match('/name="_oauth_consent_token" value="([a-f0-9]{64})"/', $body, $matches);
+        self::assertArrayHasKey(1, $matches);
+
+        $postResponse = $RestServer->getSlim()->handle(
+            (new ServerRequest('POST', '/api/oauth/authorize'))->withParsedBody($query + [
+                '_oauth_consent_token' => $matches[1],
+                'decision' => 'deny'
+            ])
+        );
+
+        self::assertSame(302, $postResponse->getStatusCode());
+        self::assertStringStartsWith(
+            $redirectUri,
+            $postResponse->getHeaderLine('Location')
+        );
+        parse_str(
+            (string)parse_url($postResponse->getHeaderLine('Location'), PHP_URL_QUERY),
+            $redirectQuery
+        );
+        self::assertSame('access_denied', $redirectQuery['error'] ?? null);
+        self::assertSame('denied-consent-state', $redirectQuery['state'] ?? null);
     }
 
     private function createAuthorizationClient(
         string $resource,
-        ?string $name = null
+        ?string $name = null,
+        string $redirectUri = self::REDIRECT_URI
     ): string {
         return Handler::createAuthorizationClient(
             QUI::getUsers()->getSystemUser(),
@@ -267,7 +401,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
                 ]
             ],
             $name ?? self::TEST_PREFIX . bin2hex(random_bytes(6)),
-            [self::REDIRECT_URI],
+            [$redirectUri],
             [$resource]
         );
     }

@@ -280,6 +280,18 @@
             <de><![CDATA[Ablehnen]]></de>
             <en><![CDATA[Deny]]></en>
         </locale>
+        <locale name="oauth.authorize.expired.title">
+            <de><![CDATA[Autorisierung abgelaufen]]></de>
+            <en><![CDATA[Authorization expired]]></en>
+        </locale>
+        <locale name="oauth.authorize.expired.description">
+            <de><![CDATA[Diese Anfrage wurde bereits verarbeitet oder ist abgelaufen. Lade die Autorisierung neu, um fortzufahren.]]></de>
+            <en><![CDATA[This request has already been processed or has expired. Reload the authorization to continue.]]></en>
+        </locale>
+        <locale name="oauth.authorize.expired.action">
+            <de><![CDATA[Autorisierung neu laden]]></de>
+            <en><![CDATA[Reload authorization]]></en>
+        </locale>
     </groups>
 
 
