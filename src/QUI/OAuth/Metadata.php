@@ -39,7 +39,6 @@ final class Metadata
                 'none'
             ],
             'code_challenge_methods_supported' => ['S256'],
-            'scopes_supported' => self::scopes($Server),
             'resource_parameter_supported' => true
         ];
 
