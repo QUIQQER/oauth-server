@@ -75,13 +75,18 @@ final class AuthorizationEndpoint
             . self::escape($title)
             . '</h1><p class="quiqqer-oauth-authorization-description">'
             . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.login.description'))
-            . '</p><div class="quiqqer-oauth-authorization-actions">'
-            . '<a class="quiqqer-oauth-authorization-button quiqqer-oauth-authorization-button--primary" href="'
+            . '</p><div class="quiqqer-oauth-authorization-login" '
+            . 'id="quiqqer-oauth-login-control" aria-live="polite"></div>'
+            . '<noscript><div class="quiqqer-oauth-authorization-actions">'
+            . '<a class="quiqqer-oauth-authorization-button '
+            . 'quiqqer-oauth-authorization-button--primary" href="'
             . self::escape($loginUri) . '">'
             . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.login.action'))
-            . '</a></div></section></article></main></body></html>';
+            . '</a></div></noscript></section></article></main>'
+            . $this->renderLoginScripts($returnUri)
+            . '</body></html>';
 
-        return $this->htmlResponse(401, $body);
+        return $this->htmlResponse(401, $body, true);
     }
 
     private function renderConsent(
@@ -161,10 +166,21 @@ final class AuthorizationEndpoint
         return $this->htmlResponse(200, $body);
     }
 
-    private function htmlResponse(int $status, string $body): Response
-    {
+    private function htmlResponse(
+        int $status,
+        string $body,
+        bool $loginControl = false
+    ): Response {
         $Response = new Response($status);
         $Response->getBody()->write($body);
+        $contentSecurityPolicy = "default-src 'none'; base-uri 'none'; "
+            . "form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; "
+            . "style-src 'self'";
+
+        if ($loginControl) {
+            $contentSecurityPolicy .= " 'unsafe-inline'; script-src 'self'; "
+                . "connect-src 'self'; font-src 'self' data:";
+        }
 
         return $Response
             ->withHeader('Content-Type', 'text/html; charset=utf-8')
@@ -172,9 +188,44 @@ final class AuthorizationEndpoint
             ->withHeader('Pragma', 'no-cache')
             ->withHeader(
                 'Content-Security-Policy',
-                "default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; "
-                . "img-src 'self' data:; style-src 'self'"
+                $contentSecurityPolicy
             );
+    }
+
+    private function renderLoginScripts(string $returnUri): string
+    {
+        $scriptAttributes = [
+            'data-return-uri' => $returnUri,
+            'data-language' => QUI::getLocale()->getCurrent(),
+            'data-url-dir' => URL_DIR,
+            'data-url-bin-dir' => URL_BIN_DIR,
+            'data-url-opt-dir' => URL_OPT_DIR,
+            'data-url-sys-dir' => URL_SYS_DIR,
+            'data-url-var-dir' => URL_VAR_DIR
+        ];
+        $attributes = '';
+
+        foreach ($scriptAttributes as $name => $value) {
+            $attributes .= ' ' . $name . '="' . self::escape($value) . '"';
+        }
+
+        return '<script src="'
+            . self::escape(
+                URL_OPT_DIR
+                . 'bin/quiqqer-asset/requirejs/requirejs/require.js'
+            )
+            . '"></script><script src="'
+            . self::escape(URL_OPT_DIR . 'bin/qui/qui/lib/mootools-core.js')
+            . '"></script><script src="'
+            . self::escape(URL_OPT_DIR . 'bin/qui/qui/lib/mootools-more.js')
+            . '"></script><script src="'
+            . self::escape(URL_OPT_DIR . 'bin/qui/qui/lib/moofx.js')
+            . '"></script><script src="'
+            . self::escape(
+                URL_OPT_DIR
+                . 'quiqqer/oauth-server/bin/js/authorization-login.js'
+            )
+            . '"' . $attributes . '></script>';
     }
 
     private function renderDocumentStart(string $title): string

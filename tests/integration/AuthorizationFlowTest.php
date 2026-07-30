@@ -184,6 +184,66 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         );
     }
 
+    public function testUnauthenticatedAuthorizationRendersLoginControl(): void
+    {
+        $RestServer = RestServer::getCurrentInstance();
+        $resource = Metadata::resource($RestServer);
+        $clientId = $this->createAuthorizationClient($resource);
+        $query = [
+            'response_type' => 'code',
+            'client_id' => $clientId,
+            'redirect_uri' => self::REDIRECT_URI,
+            'scope' => '/quiqqer_oauth_test',
+            'state' => 'login-control-state',
+            'code_challenge' => self::challenge(str_repeat('l', 64)),
+            'code_challenge_method' => 'S256',
+            'resource' => $resource
+        ];
+
+        Handler::setSessionUser(QUI::getUsers()->getNobody());
+        $Response = $RestServer->getSlim()->handle(
+            (new ServerRequest(
+                'GET',
+                self::TEST_BASE_HOST . '/api/oauth/authorize?'
+                . http_build_query($query)
+            ))->withQueryParams($query)
+        );
+        $body = (string)$Response->getBody();
+        $contentSecurityPolicy = $Response->getHeaderLine(
+            'Content-Security-Policy'
+        );
+
+        self::assertSame(401, $Response->getStatusCode());
+        self::assertStringContainsString(
+            'id="quiqqer-oauth-login-control"',
+            $body
+        );
+        self::assertStringContainsString(
+            'quiqqer/oauth-server/bin/js/authorization-login.js',
+            $body
+        );
+        self::assertStringContainsString(
+            'data-return-uri="https://oauth.example.test/api/oauth/authorize?',
+            $body
+        );
+        self::assertStringContainsString(
+            'state=login-control-state',
+            $body
+        );
+        self::assertStringContainsString(
+            'quiqqer_oauth_return=',
+            $body
+        );
+        self::assertStringContainsString(
+            "script-src 'self'",
+            $contentSecurityPolicy
+        );
+        self::assertStringContainsString(
+            "connect-src 'self'",
+            $contentSecurityPolicy
+        );
+    }
+
     public function testConsentPageEscapesClientDataAndRejectsReplayedConsent(): void
     {
         $RestServer = RestServer::getCurrentInstance();
