@@ -459,9 +459,72 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         self::assertStringContainsString('Customized MCP consent', $body);
         self::assertStringContainsString('User-specific MCP functions', $body);
         self::assertStringContainsString('Available MCP functions', $body);
-        self::assertStringContainsString('Resource', $body);
+        self::assertStringContainsString(
+            'quiqqer-oauth-authorization-permissionType">Resource</span> <code>',
+            $body
+        );
         self::assertStringContainsString('project_&lt;information&gt;', $body);
         self::assertStringContainsString('project_update', $body);
+    }
+
+    public function testConsentUsesProjectLanguageAndRestoresPreviousLanguage(): void
+    {
+        $Project = QUI::getRewrite()->getProject();
+
+        if (!$Project) {
+            self::markTestSkipped('The integration test has no rewrite project.');
+        }
+
+        $projectLanguage = $Project->getLang();
+        $Locale = QUI::getLocale();
+        $previousLanguage = $Locale->getCurrent();
+        $sessionLanguage = $projectLanguage === 'de' ? 'en' : 'de';
+        $capturedLanguage = null;
+        $listener = static function () use (&$capturedLanguage): void {
+            $capturedLanguage = QUI::getLocale()->getCurrent();
+        };
+        $RestServer = RestServer::getCurrentInstance();
+        $resource = Metadata::resource($RestServer);
+        $clientId = $this->createAuthorizationClient($resource);
+        $query = [
+            'response_type' => 'code',
+            'client_id' => $clientId,
+            'redirect_uri' => self::REDIRECT_URI,
+            'scope' => '/quiqqer_oauth_test',
+            'state' => 'project-language-state',
+            'code_challenge' => self::challenge(str_repeat('f', 64)),
+            'code_challenge_method' => 'S256',
+            'resource' => $resource
+        ];
+
+        Handler::setSessionUser(QUI::getUsers()->getSystemUser());
+        $Locale->setCurrent($sessionLanguage);
+        QUI::getEvents()->addEvent(
+            'onQuiqqerOAuthConsentPresentation',
+            $listener
+        );
+
+        try {
+            $Response = $RestServer->getSlim()->handle(
+                (new ServerRequest(
+                    'GET',
+                    '/api/oauth/authorize'
+                ))->withQueryParams($query)
+            );
+
+            self::assertSame($projectLanguage, $capturedLanguage);
+            self::assertSame($sessionLanguage, $Locale->getCurrent());
+            self::assertStringContainsString(
+                '<html lang="' . $projectLanguage . '">',
+                (string)$Response->getBody()
+            );
+        } finally {
+            QUI::getEvents()->removeEvent(
+                'onQuiqqerOAuthConsentPresentation',
+                $listener
+            );
+            $Locale->setCurrent($previousLanguage);
+        }
     }
 
     private function createAuthorizationClient(
