@@ -381,6 +381,13 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
             'https://project.example/api/oauth/authorize',
             $metadata['authorization_endpoint']
         );
+        self::assertArrayNotHasKey('scopes_supported', $metadata);
+
+        $protectedResource = Metadata::protectedResource(
+            $Server,
+            'https://project.example'
+        );
+        self::assertArrayHasKey('scopes_supported', $protectedResource);
 
         $previousRequest = QUI::$Request;
 

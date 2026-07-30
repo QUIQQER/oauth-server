@@ -31,13 +31,7 @@ final class AuthorizationEndpoint
 
         if (strtoupper($Request->getMethod()) === 'POST') {
             if (!$this->consumeConsentToken($OAuthRequest, (string)$User->getUUID())) {
-                $OAuthResponse->setError(
-                    400,
-                    'invalid_request',
-                    'The consent request is missing, expired, or has already been used.'
-                );
-
-                return RestProvider::fromOAuthResponse($OAuthResponse);
+                return $this->renderExpiredConsent($Request, $OAuthRequest);
             }
 
             $decision = $OAuthRequest->request('decision');
@@ -86,7 +80,7 @@ final class AuthorizationEndpoint
             . $this->renderLoginScripts($returnUri)
             . '</body></html>';
 
-        return $this->htmlResponse(401, $body, true);
+        return $this->htmlResponse(200, $body, true);
     }
 
     private function renderConsent(
@@ -104,9 +98,17 @@ final class AuthorizationEndpoint
         $Locale = QUI::getLocale();
         $project = $this->getProjectIdentity($Request);
         $scopeItems = '';
+        $permissions = '';
 
         foreach ($scopes as $item) {
             $scopeItems .= '<li><code>' . self::escape($item) . '</code></li>';
+        }
+
+        if ($scopeItems !== '') {
+            $permissions = '<section class="quiqqer-oauth-authorization-permissions" '
+                . 'aria-labelledby="oauth-consent-scopes"><h2 id="oauth-consent-scopes">'
+                . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.scopes'))
+                . '</h2><ul>' . $scopeItems . '</ul></section>';
         }
 
         $hiddenFields = '';
@@ -146,10 +148,7 @@ final class AuthorizationEndpoint
             . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.description', [
                 'client' => $clientName
             ]))
-            . '</p><section class="quiqqer-oauth-authorization-permissions" '
-            . 'aria-labelledby="oauth-consent-scopes"><h2 id="oauth-consent-scopes">'
-            . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.scopes'))
-            . '</h2><ul>' . $scopeItems . '</ul></section>'
+            . '</p>' . $permissions
             . '<form class="quiqqer-oauth-authorization-actions" method="post" action="'
             . self::escape($Request->getUri()->getPath()) . '">'
             . $hiddenFields
@@ -163,18 +162,71 @@ final class AuthorizationEndpoint
             . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.approve'))
             . '</button></form></section></article></main></body></html>';
 
-        return $this->htmlResponse(200, $body);
+        return $this->htmlResponse(
+            200,
+            $body,
+            false,
+            (string)$OAuthRequest->query(
+                'redirect_uri',
+                $OAuthRequest->request('redirect_uri')
+            )
+        );
+    }
+
+    private function renderExpiredConsent(
+        ServerRequestInterface $Request,
+        OAuth2\Request $OAuthRequest
+    ): Response {
+        $Locale = QUI::getLocale();
+        $project = $this->getProjectIdentity($Request);
+        $title = $Locale->get(
+            'quiqqer/oauth-server',
+            'oauth.authorize.expired.title'
+        );
+        $retryUri = $this->getAuthorizationRetryUri($Request, $OAuthRequest);
+        $body = $this->renderDocumentStart($title . ' – ' . $project['name'])
+            . '<body class="quiqqer-oauth-authorization">'
+            . '<main class="quiqqer-oauth-authorization-main">'
+            . '<article class="quiqqer-oauth-authorization-card" aria-labelledby="oauth-expired-title">'
+            . $this->renderProjectIdentity($project)
+            . '<section class="quiqqer-oauth-authorization-content">'
+            . '<h1 id="oauth-expired-title">' . self::escape($title) . '</h1>'
+            . '<p class="quiqqer-oauth-authorization-description">'
+            . self::escape($Locale->get(
+                'quiqqer/oauth-server',
+                'oauth.authorize.expired.description'
+            ))
+            . '</p><div class="quiqqer-oauth-authorization-actions">'
+            . '<a class="quiqqer-oauth-authorization-button '
+            . 'quiqqer-oauth-authorization-button--primary" href="'
+            . self::escape($retryUri) . '">'
+            . self::escape($Locale->get(
+                'quiqqer/oauth-server',
+                'oauth.authorize.expired.action'
+            ))
+            . '</a></div></section></article></main></body></html>';
+
+        return $this->htmlResponse(400, $body);
     }
 
     private function htmlResponse(
         int $status,
         string $body,
-        bool $loginControl = false
+        bool $loginControl = false,
+        ?string $redirectUri = null
     ): Response {
         $Response = new Response($status);
         $Response->getBody()->write($body);
+        $formAction = ["'self'"];
+        $redirectOrigin = self::getHttpOrigin($redirectUri);
+
+        if ($redirectOrigin !== null) {
+            $formAction[] = $redirectOrigin;
+        }
+
         $contentSecurityPolicy = "default-src 'none'; base-uri 'none'; "
-            . "form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; "
+            . 'form-action ' . implode(' ', $formAction)
+            . "; frame-ancestors 'none'; img-src 'self' data:; "
             . "style-src 'self'";
 
         if ($loginControl) {
@@ -190,6 +242,71 @@ final class AuthorizationEndpoint
                 'Content-Security-Policy',
                 $contentSecurityPolicy
             );
+    }
+
+    private function getAuthorizationRetryUri(
+        ServerRequestInterface $Request,
+        OAuth2\Request $OAuthRequest
+    ): string {
+        $query = [];
+
+        foreach (
+            [
+                'response_type',
+                'client_id',
+                'redirect_uri',
+                'scope',
+                'state',
+                'code_challenge',
+                'code_challenge_method',
+                'resource'
+            ] as $name
+        ) {
+            $value = $OAuthRequest->query($name, $OAuthRequest->request($name));
+
+            if (is_string($value) && $value !== '') {
+                $query[$name] = $value;
+            }
+        }
+
+        return $Request->getUri()->getPath() . '?' . http_build_query($query);
+    }
+
+    private static function getHttpOrigin(?string $uri): ?string
+    {
+        if ($uri === null || $uri === '') {
+            return null;
+        }
+
+        $parts = parse_url($uri);
+
+        if (!is_array($parts)) {
+            return null;
+        }
+
+        $scheme = strtolower((string)($parts['scheme'] ?? ''));
+        $host = (string)($parts['host'] ?? '');
+
+        if (
+            !in_array($scheme, ['http', 'https'], true)
+            || $host === ''
+            || isset($parts['user'])
+            || isset($parts['pass'])
+        ) {
+            return null;
+        }
+
+        if (str_contains($host, ':') && $host[0] !== '[') {
+            $host = '[' . $host . ']';
+        }
+
+        $origin = $scheme . '://' . $host;
+
+        if (isset($parts['port'])) {
+            $origin .= ':' . $parts['port'];
+        }
+
+        return $origin;
     }
 
     private function renderLoginScripts(string $returnUri): string

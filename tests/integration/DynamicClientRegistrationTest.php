@@ -9,6 +9,7 @@ use QUI\OAuth\ClientConfiguration;
 use QUI\OAuth\Clients\Handler;
 use QUI\OAuth\DynamicClientRegistrationEndpoint;
 use QUI\OAuth\Metadata;
+use QUI\OAuth\RestProvider;
 use QUI\OAuth\Server;
 use QUI\OAuth\StorageFactory;
 use QUI\REST\Server as RestServer;
@@ -30,6 +31,7 @@ final class DynamicClientRegistrationTest extends OAuthDatabaseTestCase
             'basePath' => '/api',
             'baseHost' => self::BASE_HOST
         ]);
+        (new RestProvider())->register($RestServer);
 
         $ServerProperty = new \ReflectionProperty(
             RestServer::class,
