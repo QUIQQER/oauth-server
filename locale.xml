@@ -488,5 +488,13 @@
             <de><![CDATA[Öffentliche QUIQQER-Login-URL. Sie erhält die ursprüngliche Autorisierungs-URL im Parameter quiqqer_oauth_return.]]></de>
             <en><![CDATA[Public QUIQQER login URL. It receives the original authorization URL in the quiqqer_oauth_return parameter.]]></en>
         </locale>
+        <locale name="settings.dynamic_client_registration.text">
+            <de><![CDATA[Dynamische Client-Registrierung]]></de>
+            <en><![CDATA[Dynamic client registration]]></en>
+        </locale>
+        <locale name="settings.dynamic_client_registration.description">
+            <de><![CDATA[Erlaubt MCP-Clients wie Codex, sich als öffentliche PKCE-Clients ohne Client-Secret selbst zu registrieren. Dynamische Clients werden beim ersten Login fest an eine Ressource derselben Domain gebunden.]]></de>
+            <en><![CDATA[Allows MCP clients such as Codex to register themselves as public PKCE clients without a client secret. Dynamic clients are permanently bound to a same-origin resource during their first login.]]></en>
+        </locale>
     </groups>
 </locales>
