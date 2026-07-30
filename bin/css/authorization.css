@@ -139,6 +139,67 @@
     margin: 0;
 }
 
+.quiqqer-oauth-authorization-login {
+    margin-top: 2rem;
+    min-height: 12rem;
+}
+
+.quiqqer-oauth-authorization-login .quiqqer-login {
+    min-height: 12rem;
+}
+
+.quiqqer-oauth-authorization-login label {
+    color: var(--_text-muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.quiqqer-oauth-authorization-login input {
+    background: var(--_card-background);
+    border: 1px solid var(--_card-border);
+    border-radius: var(--_control-radius);
+    color: var(--_text);
+    font: inherit;
+    min-height: 3rem;
+    padding: 0.75rem 0.875rem;
+}
+
+.quiqqer-oauth-authorization-login input:focus {
+    border-color: var(--_primary);
+    outline: 3px solid var(--_focus);
+    outline-offset: 1px;
+}
+
+.quiqqer-oauth-authorization-login .btn {
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: var(--_control-radius);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-weight: 700;
+    justify-content: center;
+    min-height: 3rem;
+    padding: 0.75rem 1.25rem;
+}
+
+.quiqqer-oauth-authorization-login .btn-primary,
+.quiqqer-oauth-authorization-login button[type="submit"] {
+    background: var(--_primary);
+    color: var(--_primary-contrast);
+}
+
+.quiqqer-oauth-authorization-login .btn-primary:hover,
+.quiqqer-oauth-authorization-login button[type="submit"]:hover {
+    background: var(--_primary-hover);
+}
+
+.quiqqer-oauth-authorization-login .quiqqer-auth-login__password-reset .btn {
+    background: transparent;
+    color: var(--_text-muted);
+    min-height: auto;
+}
+
 .quiqqer-oauth-authorization-permissions {
     background: var(--_permission-background);
     border: 1px solid var(--_card-border);
