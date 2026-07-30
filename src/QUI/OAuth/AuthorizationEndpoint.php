@@ -17,41 +17,57 @@ final class AuthorizationEndpoint
 
     public function handle(ServerRequestInterface $Request): Response
     {
-        $OAuthRequest = RequestFactory::fromPsr($Request);
-        $OAuthResponse = new OAuth2\Response();
-        $OAuthServer = Server::getInstance()->getOAuth2Server();
+        $Locale = QUI::getLocale();
+        $previousLanguage = $Locale->getCurrent();
+        $projectLanguage = $this->getProjectLanguage();
+        $restoreLanguage = $projectLanguage !== null
+            && $projectLanguage !== $previousLanguage;
 
-        if (!$OAuthServer->validateAuthorizeRequest($OAuthRequest, $OAuthResponse)) {
-            return RestProvider::fromOAuthResponse($OAuthResponse);
+        if ($restoreLanguage) {
+            $Locale->setCurrent($projectLanguage);
         }
 
-        $User = Handler::getSessionUser();
+        try {
+            $OAuthRequest = RequestFactory::fromPsr($Request);
+            $OAuthResponse = new OAuth2\Response();
+            $OAuthServer = Server::getInstance()->getOAuth2Server();
 
-        if (!QUI::getUsers()->isAuth($User)) {
-            return $this->renderLoginRequired($Request);
-        }
-
-        if (strtoupper($Request->getMethod()) === 'POST') {
-            if (!$this->consumeConsentToken($OAuthRequest, (string)$User->getUUID())) {
-                return $this->renderExpiredConsent($Request, $OAuthRequest);
+            if (!$OAuthServer->validateAuthorizeRequest($OAuthRequest, $OAuthResponse)) {
+                return RestProvider::fromOAuthResponse($OAuthResponse);
             }
 
-            $decision = $OAuthRequest->request('decision');
-            $OAuthServer->handleAuthorizeRequest(
+            $User = Handler::getSessionUser();
+
+            if (!QUI::getUsers()->isAuth($User)) {
+                return $this->renderLoginRequired($Request);
+            }
+
+            if (strtoupper($Request->getMethod()) === 'POST') {
+                if (!$this->consumeConsentToken($OAuthRequest, (string)$User->getUUID())) {
+                    return $this->renderExpiredConsent($Request, $OAuthRequest);
+                }
+
+                $decision = $OAuthRequest->request('decision');
+                $OAuthServer->handleAuthorizeRequest(
+                    $OAuthRequest,
+                    $OAuthResponse,
+                    $decision === 'approve',
+                    (string)$User->getUUID()
+                );
+
+                return RestProvider::fromOAuthResponse($OAuthResponse);
+            }
+
+            return $this->renderConsent(
+                $Request,
                 $OAuthRequest,
-                $OAuthResponse,
-                $decision === 'approve',
-                (string)$User->getUUID()
+                $this->createConsentToken($OAuthRequest, (string)$User->getUUID())
             );
-
-            return RestProvider::fromOAuthResponse($OAuthResponse);
+        } finally {
+            if ($restoreLanguage) {
+                $Locale->setCurrent($previousLanguage);
+            }
         }
-
-        return $this->renderConsent(
-            $Request,
-            $OAuthRequest,
-            $this->createConsentToken($OAuthRequest, (string)$User->getUUID())
-        );
     }
 
     private function renderLoginRequired(ServerRequestInterface $Request): Response
@@ -211,7 +227,7 @@ final class AuthorizationEndpoint
                 if ($item['type'] !== '') {
                     $type = '<span class="quiqqer-oauth-authorization-permissionType">'
                         . self::escape($item['type'])
-                        . '</span>';
+                        . '</span> ';
                 }
 
                 $items .= '<li><span class="quiqqer-oauth-authorization-permission">'
@@ -460,6 +476,23 @@ final class AuthorizationEndpoint
             'name' => $projectName,
             'logo' => $logo
         ];
+    }
+
+    private function getProjectLanguage(): ?string
+    {
+        try {
+            $Project = QUI::getRewrite()->getProject();
+
+            if (!$Project) {
+                return null;
+            }
+
+            $language = trim($Project->getLang());
+
+            return $language !== '' ? $language : null;
+        } catch (QUI\Exception) {
+            return null;
+        }
     }
 
     /**
