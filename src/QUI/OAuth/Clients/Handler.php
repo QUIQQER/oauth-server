@@ -148,9 +148,8 @@ class Handler
                     'client_secret' => $publicClient ? null : self::generatePassword(),
                     'redirect_uri' => implode(' ', $redirectUris),
                     'grant_types' => 'authorization_code refresh_token',
-                    'allowed_resources' => json_encode(
-                        $resources,
-                        JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+                    'allowed_resources' => QUI\OAuth\ClientConfiguration::encodeResources(
+                        $resources
                     ),
                     'token_endpoint_auth_method' => $publicClient
                         ? 'none'
@@ -164,6 +163,129 @@ class Handler
         }
 
         return $clientId;
+    }
+
+    /**
+     * Register a public Authorization Code client through RFC 7591.
+     *
+     * Its resource is bound atomically on the first authorization request.
+     *
+     * @param array<string, array<string, mixed>> $scopeSettings
+     * @param array<int, string> $redirectUris
+     * @param list<string> $grantTypes
+     * @throws QUI\Exception
+     * @throws QUI\OAuth\Exception
+     */
+    public static function createDynamicAuthorizationClient(
+        QUIUserInterface $User,
+        array $scopeSettings,
+        string $name,
+        array $redirectUris,
+        array $grantTypes
+    ): string {
+        $redirectUris = QUI\OAuth\ClientConfiguration::validateRedirectUris(
+            $redirectUris
+        );
+
+        if (
+            $redirectUris === []
+            || !in_array('authorization_code', $grantTypes, true)
+            || array_diff(
+                $grantTypes,
+                ['authorization_code', 'refresh_token']
+            ) !== []
+        ) {
+            throw new \InvalidArgumentException(
+                'Dynamic clients require a redirect URI and a supported grant type.'
+            );
+        }
+
+        $clientId = self::createOAuthClient(
+            $User,
+            $scopeSettings,
+            $name
+        );
+
+        try {
+            QUI::getDataBaseConnection()->update(
+                QUI\Utils\Doctrine::quoteIdentifier(
+                    QUI\OAuth\Setup::getTable('oauth_clients')
+                ),
+                [
+                    'client_secret' => null,
+                    'redirect_uri' => implode(' ', $redirectUris),
+                    'grant_types' => implode(' ', $grantTypes),
+                    'allowed_resources' => QUI\OAuth\ClientConfiguration::encodeResources(
+                        [],
+                        true
+                    ),
+                    'token_endpoint_auth_method' => 'none'
+                ],
+                ['client_id' => $clientId]
+            );
+        } catch (\Throwable $Exception) {
+            self::removeOAuthClient($clientId);
+            throw $Exception;
+        }
+
+        return $clientId;
+    }
+
+    public static function bindDynamicAuthorizationClientResource(
+        string $clientId,
+        string $resource,
+        string $issuer
+    ): bool {
+        $client = self::getOAuthClient($clientId);
+        $storedConfiguration = $client['allowed_resources'] ?? null;
+
+        if (
+            !QUI\OAuth\ClientConfiguration::isDynamicRegistration(
+                $storedConfiguration
+            )
+        ) {
+            return false;
+        }
+
+        $resources = QUI\OAuth\ClientConfiguration::decodeResources(
+            $storedConfiguration
+        );
+
+        if ($resources !== []) {
+            return count($resources) === 1
+                && hash_equals($resources[0], $resource);
+        }
+
+        $resource = QUI\OAuth\ClientConfiguration::validateDynamicResource(
+            $resource,
+            $issuer
+        );
+        $newConfiguration = QUI\OAuth\ClientConfiguration::encodeResources(
+            [$resource],
+            true
+        );
+        $affectedRows = QUI::getDataBaseConnection()->update(
+            QUI\Utils\Doctrine::quoteIdentifier(
+                QUI\OAuth\Setup::getTable('oauth_clients')
+            ),
+            ['allowed_resources' => $newConfiguration],
+            [
+                'client_id' => $clientId,
+                'allowed_resources' => $storedConfiguration
+            ]
+        );
+
+        if ($affectedRows === 1) {
+            return true;
+        }
+
+        $client = self::getOAuthClient($clientId);
+        $resources = QUI\OAuth\ClientConfiguration::decodeResources(
+            $client['allowed_resources'] ?? null
+        );
+
+        return count($resources) === 1
+            && hash_equals($resources[0], $resource);
     }
 
     /**

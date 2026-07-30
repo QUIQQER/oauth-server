@@ -210,6 +210,7 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         self::assertContains('/oauth/token', $routePatterns);
         self::assertContains('/oauth/authorize', $routePatterns);
         self::assertContains('/oauth/revoke', $routePatterns);
+        self::assertContains('/oauth/register', $routePatterns);
         self::assertNotContains('/.well-known/oauth-authorization-server', $routePatterns);
         self::assertNotContains('/.well-known/oauth-protected-resource', $routePatterns);
         self::assertContains('/quiqqer_oauth_test', $routePatterns);

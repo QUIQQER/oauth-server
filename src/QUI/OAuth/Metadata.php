@@ -13,7 +13,7 @@ final class Metadata
     {
         $baseUrl = self::baseUrl($Server);
 
-        return [
+        $metadata = [
             'issuer' => rtrim($baseUrl, '/'),
             'authorization_endpoint' => $baseUrl . 'oauth/authorize',
             'token_endpoint' => $baseUrl . 'oauth/token',
@@ -39,6 +39,12 @@ final class Metadata
             'scopes_supported' => self::scopes($Server),
             'resource_parameter_supported' => true
         ];
+
+        if (DynamicClientRegistrationEndpoint::isEnabled()) {
+            $metadata['registration_endpoint'] = $baseUrl . 'oauth/register';
+        }
+
+        return $metadata;
     }
 
     /**

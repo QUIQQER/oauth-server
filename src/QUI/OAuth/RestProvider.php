@@ -25,10 +25,17 @@ class RestProvider implements QUI\REST\ProviderInterface
         $Slim = $Server->getSlim();
         $AuthorizationEndpoint = new AuthorizationEndpoint();
         $TokenEndpoint = new TokenEndpoint();
+        $RegistrationEndpoint = new DynamicClientRegistrationEndpoint();
 
         $Slim->group(
             '/oauth',
-            function (RouteCollectorProxy $RouteCollector) use ($AuthorizationEndpoint, $TokenEndpoint) {
+            function (
+                RouteCollectorProxy $RouteCollector
+            ) use (
+                $AuthorizationEndpoint,
+                $TokenEndpoint,
+                $RegistrationEndpoint
+            ) {
                 $RouteCollector->map(
                     ['GET', 'POST'],
                     '/authorize',
@@ -60,6 +67,17 @@ class RestProvider implements QUI\REST\ProviderInterface
                         array $args
                     ) use ($TokenEndpoint) {
                         return $TokenEndpoint->revoke($Request);
+                    }
+                );
+
+                $RouteCollector->post(
+                    '/register',
+                    static function (
+                        RequestInterface $Request,
+                        ResponseInterface $Response,
+                        array $args
+                    ) use ($RegistrationEndpoint) {
+                        return $RegistrationEndpoint->handle($Request);
                     }
                 );
             }
