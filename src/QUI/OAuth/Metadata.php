@@ -2,6 +2,7 @@
 
 namespace QUI\OAuth;
 
+use QUI;
 use QUI\REST\Server as RestServer;
 
 final class Metadata
@@ -9,9 +10,11 @@ final class Metadata
     /**
      * @return array<string, mixed>
      */
-    public static function authorizationServer(RestServer $Server): array
-    {
-        $baseUrl = self::baseUrl($Server);
+    public static function authorizationServer(
+        RestServer $Server,
+        ?string $requestOrigin = null
+    ): array {
+        $baseUrl = self::baseUrl($Server, $requestOrigin);
 
         $metadata = [
             'issuer' => rtrim($baseUrl, '/'),
@@ -50,9 +53,11 @@ final class Metadata
     /**
      * @return array<string, mixed>
      */
-    public static function protectedResource(RestServer $Server): array
-    {
-        $resource = self::resource($Server);
+    public static function protectedResource(
+        RestServer $Server,
+        ?string $requestOrigin = null
+    ): array {
+        $resource = self::resource($Server, $requestOrigin);
 
         return [
             'resource' => $resource,
@@ -63,14 +68,62 @@ final class Metadata
         ];
     }
 
-    public static function resource(RestServer $Server): string
-    {
-        return rtrim(self::baseUrl($Server), '/');
+    public static function resource(
+        RestServer $Server,
+        ?string $requestOrigin = null
+    ): string {
+        return rtrim(self::baseUrl($Server, $requestOrigin), '/');
     }
 
-    private static function baseUrl(RestServer $Server): string
+    private static function baseUrl(
+        RestServer $Server,
+        ?string $requestOrigin = null
+    ): string {
+        $configuredBaseUrl = rtrim(
+            $Server->getBasePathWithHost(),
+            '/'
+        );
+
+        if (self::isAbsoluteHttpUrl($configuredBaseUrl)) {
+            return $configuredBaseUrl . '/';
+        }
+
+        if ($requestOrigin === null) {
+            try {
+                $requestOrigin = QUI::getRequest()->getSchemeAndHttpHost();
+            } catch (\Throwable) {
+                $requestOrigin = null;
+            }
+        }
+
+        if (
+            !is_string($requestOrigin)
+            || !self::isAbsoluteHttpUrl($requestOrigin)
+        ) {
+            throw new \RuntimeException(
+                'OAuth metadata requires an absolute HTTP(S) origin.'
+            );
+        }
+
+        return rtrim($requestOrigin, '/') . $Server->getBasePath();
+    }
+
+    private static function isAbsoluteHttpUrl(string $url): bool
     {
-        return rtrim($Server->getBasePathWithHost(), '/') . '/';
+        $parts = parse_url($url);
+
+        if (!is_array($parts)) {
+            return false;
+        }
+
+        $scheme = strtolower((string)($parts['scheme'] ?? ''));
+
+        return in_array($scheme, ['http', 'https'], true)
+            && !empty($parts['host'])
+            && !isset($parts['user'])
+            && !isset($parts['pass'])
+            && !isset($parts['query'])
+            && !isset($parts['fragment']);
     }
 
     /**
