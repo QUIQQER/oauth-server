@@ -6,6 +6,8 @@ use OAuth2;
 use Psr\Http\Message\ServerRequestInterface;
 use QUI;
 use QUI\OAuth\Clients\Handler;
+use QUI\OAuth\Consent\Context;
+use QUI\OAuth\Consent\Presentation;
 use QUI\REST\Response;
 
 final class AuthorizationEndpoint
@@ -97,18 +99,40 @@ final class AuthorizationEndpoint
         $scopes = array_values(array_filter(explode(' ', $scope)));
         $Locale = QUI::getLocale();
         $project = $this->getProjectIdentity($Request);
-        $scopeItems = '';
-        $permissions = '';
+        $title = $Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.title');
+        $Presentation = new Presentation(
+            $title,
+            $Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.description', [
+                'client' => $clientName
+            ])
+        );
 
-        foreach ($scopes as $item) {
-            $scopeItems .= '<li><code>' . self::escape($item) . '</code></li>';
-        }
+        $Presentation->addSection(
+            $Locale->get(
+                'quiqqer/oauth-server',
+                'oauth.authorize.consent.scopes'
+            ),
+            $scopes
+        );
 
-        if ($scopeItems !== '') {
-            $permissions = '<section class="quiqqer-oauth-authorization-permissions" '
-                . 'aria-labelledby="oauth-consent-scopes"><h2 id="oauth-consent-scopes">'
-                . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.scopes'))
-                . '</h2><ul>' . $scopeItems . '</ul></section>';
+        $Context = new Context(
+            Handler::getSessionUser(),
+            $clientId,
+            $clientName,
+            (string)$OAuthRequest->query(
+                'resource',
+                $OAuthRequest->request('resource')
+            ),
+            $scopes
+        );
+
+        try {
+            QUI::getEvents()->fireEvent(
+                'quiqqerOAuthConsentPresentation',
+                [$Context, $Presentation]
+            );
+        } catch (\Throwable $Exception) {
+            QUI\System\Log::writeException($Exception);
         }
 
         $hiddenFields = '';
@@ -135,20 +159,19 @@ final class AuthorizationEndpoint
                 . '" value="' . self::escape($value) . '">';
         }
 
-        $title = $Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.title');
-        $body = $this->renderDocumentStart($title . ' – ' . $project['name'])
+        $body = $this->renderDocumentStart(
+            $Presentation->getTitle() . ' – ' . $project['name']
+        )
             . '<body class="quiqqer-oauth-authorization">'
             . '<main class="quiqqer-oauth-authorization-main">'
             . '<article class="quiqqer-oauth-authorization-card" aria-labelledby="oauth-consent-title">'
             . $this->renderProjectIdentity($project)
             . '<section class="quiqqer-oauth-authorization-content">'
             . '<h1 id="oauth-consent-title">'
-            . self::escape($title)
+            . self::escape($Presentation->getTitle())
             . '</h1><p class="quiqqer-oauth-authorization-description">'
-            . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.description', [
-                'client' => $clientName
-            ]))
-            . '</p>' . $permissions
+            . self::escape($Presentation->getDescription())
+            . '</p>' . $this->renderConsentSections($Presentation)
             . '<form class="quiqqer-oauth-authorization-actions" method="post" action="'
             . self::escape($Request->getUri()->getPath()) . '">'
             . $hiddenFields
@@ -171,6 +194,40 @@ final class AuthorizationEndpoint
                 $OAuthRequest->request('redirect_uri')
             )
         );
+    }
+
+    private function renderConsentSections(
+        Presentation $Presentation
+    ): string {
+        $result = '';
+
+        foreach ($Presentation->getSections() as $index => $section) {
+            $headingId = 'oauth-consent-section-' . $index;
+            $items = '';
+
+            foreach ($section['items'] as $item) {
+                $type = '';
+
+                if ($item['type'] !== '') {
+                    $type = '<span class="quiqqer-oauth-authorization-permissionType">'
+                        . self::escape($item['type'])
+                        . '</span>';
+                }
+
+                $items .= '<li><span class="quiqqer-oauth-authorization-permission">'
+                    . $type
+                    . '<code>' . self::escape($item['name']) . '</code>'
+                    . '</span></li>';
+            }
+
+            $result .= '<section class="quiqqer-oauth-authorization-permissions" '
+                . 'aria-labelledby="' . $headingId . '">'
+                . '<h2 id="' . $headingId . '">'
+                . self::escape($section['title'])
+                . '</h2><ul>' . $items . '</ul></section>';
+        }
+
+        return $result;
     }
 
     private function renderExpiredConsent(

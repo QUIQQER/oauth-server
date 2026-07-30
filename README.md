@@ -60,6 +60,33 @@ renders the configured QUIQQER login control and continues with the consent scre
 `general.authorization_login_url` remains available as a no-JavaScript fallback. The fallback URL receives the
 original authorization request in the `quiqqer_oauth_return` query parameter.
 
+Consent presentation extensions
+-------------------------------
+Installed modules can add resource-specific, informational sections to the consent screen through the
+`onQuiqqerOAuthConsentPresentation` event. The event receives a read-only
+`QUI\OAuth\Consent\Context` and a mutable `QUI\OAuth\Consent\Presentation`:
+
+```php
+public static function onQuiqqerOAuthConsentPresentation(
+    \QUI\OAuth\Consent\Context $Context,
+    \QUI\OAuth\Consent\Presentation $Presentation
+): void {
+    if ($Context->getResource() !== 'https://example.test/my-resource') {
+        return;
+    }
+
+    $Presentation->addSection('Available functions', [
+        ['type' => 'Resource', 'name' => 'project_information'],
+        ['type' => 'Tool', 'name' => 'project_update']
+    ]);
+}
+```
+
+Listeners may customize the title and description, add informational sections or replace the default scope section
+with a resource-specific representation by calling `clearSections()`. The context exposes the authenticated user,
+client, resource and requested scopes. Protocol-critical authorization parameters and the scopes actually granted
+cannot be changed through this API. Listener failures are logged and do not interrupt the OAuth flow.
+
 Installation
 ------------
 The Package Name is: quiqqer/oauth-server
