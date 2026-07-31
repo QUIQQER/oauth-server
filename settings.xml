@@ -23,9 +23,6 @@
                 <conf name="protected_scopes">
                     <type><![CDATA[string]]></type>
                 </conf>
-                <conf name="authorization_login_url">
-                    <type><![CDATA[string]]></type>
-                </conf>
                 <conf name="dynamic_client_registration">
                     <type><![CDATA[boolean]]></type>
                     <defaultvalue>1</defaultvalue>
@@ -91,15 +88,6 @@
                             </text>
                             <description>
                                 <locale group="quiqqer/oauth-server" var="settings.protected_scopes.description"/>
-                            </description>
-                        </input>
-
-                        <input conf="general.authorization_login_url" type="text">
-                            <text>
-                                <locale group="quiqqer/oauth-server" var="settings.authorization_login_url.text"/>
-                            </text>
-                            <description>
-                                <locale group="quiqqer/oauth-server" var="settings.authorization_login_url.description"/>
                             </description>
                         </input>
 

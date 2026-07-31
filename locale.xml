@@ -34,14 +34,6 @@
             <de><![CDATA[Zeitraum in Sekunden, in dem ein gerade ersetzter Refresh-Token dieselbe Token-Antwort erneut liefern darf. Eine spätere Wiederverwendung sperrt die gesamte Token-Familie. 0 deaktiviert die Grace-Period.]]></de>
             <en><![CDATA[Period in seconds during which a recently replaced refresh token may return the same token response again. Later reuse revokes the complete token family. 0 disables the grace period.]]></en>
         </locale>
-        <locale name="settings.authorization_login_url.text">
-            <de><![CDATA[Login-URL für OAuth-Autorisierung]]></de>
-            <en><![CDATA[Login URL for OAuth authorization]]></en>
-        </locale>
-        <locale name="settings.authorization_login_url.description">
-            <de><![CDATA[Öffentliche QUIQQER-Login-URL. Sie erhält die ursprüngliche Autorisierungs-URL im Parameter quiqqer_oauth_return.]]></de>
-            <en><![CDATA[Public QUIQQER login URL. It receives the original authorization URL in the quiqqer_oauth_return parameter.]]></en>
-        </locale>
         <locale name="settings.dynamic_client_registration.text">
             <de><![CDATA[Dynamische Client-Registrierung]]></de>
             <en><![CDATA[Dynamic client registration]]></en>
@@ -292,10 +284,6 @@
         <locale name="oauth.authorize.login.description">
             <de><![CDATA[Melde dich an und setze anschließend diese Autorisierung fort.]]></de>
             <en><![CDATA[Sign in and then continue this authorization request.]]></en>
-        </locale>
-        <locale name="oauth.authorize.login.action">
-            <de><![CDATA[Anmelden]]></de>
-            <en><![CDATA[Sign in]]></en>
         </locale>
         <locale name="oauth.authorize.consent.title">
             <de><![CDATA[Zugriff erlauben]]></de>

@@ -434,10 +434,6 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
             $body
         );
         self::assertStringContainsString(
-            'quiqqer_oauth_return=',
-            $body
-        );
-        self::assertStringContainsString(
             "script-src 'self'",
             $contentSecurityPolicy
         );
