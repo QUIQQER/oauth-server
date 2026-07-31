@@ -429,6 +429,26 @@
             <de><![CDATA[OAuth2-Authentifizierung]]></de>
             <en><![CDATA[OAuth2 authentication]]></en>
         </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerProtectedShort">
+            <de><![CDATA[Auth]]></de>
+            <en><![CDATA[Auth]]></en>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterLabel">
+            <de><![CDATA[Einstiegspunkte filtern]]></de>
+            <en><![CDATA[Filter entry points]]></en>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterPlaceholder">
+            <de><![CDATA[Einstiegspunkt suchen …]]></de>
+            <en><![CDATA[Search entry point …]]></en>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterResult">
+            <de><![CDATA[[visible] von [total] Einstiegspunkten sichtbar]]></de>
+            <en><![CDATA[Showing [visible] of [total] entry points]]></en>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.listLabel">
+            <de><![CDATA[OAuth2-Schutz der REST-Einstiegspunkte]]></de>
+            <en><![CDATA[OAuth2 protection of REST entry points]]></en>
+        </locale>
 
         <!-- Controls: backend/controls/UserClient -->
         <locale name="controls.backend.UserClient.createClient.popup.close.text">
