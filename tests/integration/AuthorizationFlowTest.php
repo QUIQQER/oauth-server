@@ -85,6 +85,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         self::assertSame((string)QUI::getUsers()->getSystemUser()->getUUID(), $codeData['user_id']);
 
         $TokenEndpoint = new QUI\OAuth\TokenEndpoint();
+        $issuedAt = time();
         $tokenResponse = $TokenEndpoint->handle($this->tokenRequest(
             $clientId,
             (string)$client['client_secret'],
@@ -109,6 +110,21 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         self::assertSame($resource, $accessData['resource']);
         self::assertSame($resource, $refreshData['resource']);
         self::assertSame((string)QUI::getUsers()->getSystemUser()->getUUID(), $accessData['user_id']);
+        $configuredRefreshLifetime = QUI::getPackage(
+            'quiqqer/oauth-server'
+        )->getConfig()?->getValue('general', 'refresh_token_lifetime');
+        $expectedRefreshLifetime = is_numeric($configuredRefreshLifetime)
+            && (int)$configuredRefreshLifetime > 0
+                ? (int)$configuredRefreshLifetime
+                : 1209600;
+        self::assertGreaterThanOrEqual(
+            $issuedAt + $expectedRefreshLifetime,
+            $refreshData['expires']
+        );
+        self::assertLessThanOrEqual(
+            time() + $expectedRefreshLifetime,
+            $refreshData['expires']
+        );
 
         Handler::setSessionUser(QUI::getUsers()->getNobody());
         $Controller = $OAuthServer->getResourceController();
@@ -136,10 +152,50 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         self::assertSame(200, $refreshResponse->getStatusCode());
         self::assertIsArray($refreshedTokens);
         self::assertNotSame($tokens['refresh_token'], $refreshedTokens['refresh_token']);
-        self::assertFalse($Storage->getRefreshToken((string)$tokens['refresh_token']));
+        $rotatedToken = $Storage->getRefreshToken(
+            (string)$tokens['refresh_token']
+        );
+        $replacementToken = $Storage->getRefreshToken(
+            (string)$refreshedTokens['refresh_token']
+        );
+        self::assertIsArray($rotatedToken);
+        self::assertIsArray($replacementToken);
+        self::assertSame(
+            $refreshedTokens['refresh_token'],
+            $rotatedToken['replaced_by']
+        );
+        self::assertSame(
+            $rotatedToken['token_family_id'],
+            $replacementToken['token_family_id']
+        );
         self::assertSame(
             $resource,
             $Storage->getAccessToken((string)$refreshedTokens['access_token'])['resource']
+        );
+
+        $retryResponse = (new QUI\OAuth\TokenEndpoint())->handle(
+            $this->tokenRequest(
+                $clientId,
+                (string)$client['client_secret'],
+                [
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $tokens['refresh_token']
+                ]
+            )
+        );
+        $retryTokens = json_decode(
+            (string)$retryResponse->getBody(),
+            true
+        );
+        self::assertSame(200, $retryResponse->getStatusCode());
+        self::assertIsArray($retryTokens);
+        self::assertSame(
+            $refreshedTokens['access_token'],
+            $retryTokens['access_token']
+        );
+        self::assertSame(
+            $refreshedTokens['refresh_token'],
+            $retryTokens['refresh_token']
         );
 
         $revokeResponse = $TokenEndpoint->revoke($this->tokenRequest(
@@ -152,6 +208,151 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         ));
         self::assertSame(200, $revokeResponse->getStatusCode());
         self::assertFalse($Storage->getAccessToken((string)$refreshedTokens['access_token']));
+    }
+
+    public function testRefreshTokenReplayAfterGraceRevokesFamily(): void
+    {
+        $resource = Metadata::resource(RestServer::getCurrentInstance());
+        $clientId = $this->createAuthorizationClient($resource);
+        $client = Handler::getOAuthClient($clientId);
+        $refreshToken = bin2hex(random_bytes(20));
+        $Storage = QUI\OAuth\StorageFactory::create();
+        $Storage->setRefreshToken(
+            $refreshToken,
+            $clientId,
+            (string)QUI::getUsers()->getSystemUser()->getUUID(),
+            time() + 3600,
+            '/quiqqer_oauth_test'
+        );
+        $Storage->setRefreshTokenResource($refreshToken, $resource);
+        $TokenEndpoint = new QUI\OAuth\TokenEndpoint();
+
+        $refreshResponse = $TokenEndpoint->handle($this->tokenRequest(
+            $clientId,
+            (string)$client['client_secret'],
+            [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken
+            ]
+        ));
+        $replacement = json_decode(
+            (string)$refreshResponse->getBody(),
+            true
+        );
+        self::assertSame(200, $refreshResponse->getStatusCode());
+        self::assertIsArray($replacement);
+
+        self::getConnection()->update(
+            QUI\Utils\Doctrine::quoteIdentifier(
+                Setup::getTable('oauth_refresh_tokens')
+            ),
+            ['replaced_at' => '2000-01-01 00:00:00'],
+            ['refresh_token' => $refreshToken]
+        );
+
+        $replayResponse = (new QUI\OAuth\TokenEndpoint())->handle(
+            $this->tokenRequest(
+                $clientId,
+                (string)$client['client_secret'],
+                [
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $refreshToken
+                ]
+            )
+        );
+        $replayError = json_decode(
+            (string)$replayResponse->getBody(),
+            true
+        );
+        self::assertSame(400, $replayResponse->getStatusCode());
+        self::assertIsArray($replayError);
+        self::assertSame('invalid_grant', $replayError['error']);
+        self::assertStringContainsString(
+            'reuse detected',
+            $replayError['error_description']
+        );
+
+        $usedToken = $Storage->getRefreshToken($refreshToken);
+        $replacementToken = $Storage->getRefreshToken(
+            (string)$replacement['refresh_token']
+        );
+        self::assertIsArray($usedToken);
+        self::assertIsArray($replacementToken);
+        self::assertNotEmpty($usedToken['revoked_at']);
+        self::assertNotEmpty($replacementToken['revoked_at']);
+        self::assertFalse($Storage->getAccessToken(
+            (string)$replacement['access_token']
+        ));
+
+        $revokedFamilyResponse = $TokenEndpoint->handle(
+            $this->tokenRequest(
+                $clientId,
+                (string)$client['client_secret'],
+                [
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $replacement['refresh_token']
+                ]
+            )
+        );
+        self::assertSame(400, $revokedFamilyResponse->getStatusCode());
+    }
+
+    public function testRefreshTokenRevocationRevokesCompleteFamily(): void
+    {
+        $resource = Metadata::resource(RestServer::getCurrentInstance());
+        $clientId = $this->createAuthorizationClient($resource);
+        $client = Handler::getOAuthClient($clientId);
+        $refreshToken = bin2hex(random_bytes(20));
+        $Storage = QUI\OAuth\StorageFactory::create();
+        $Storage->setRefreshToken(
+            $refreshToken,
+            $clientId,
+            (string)QUI::getUsers()->getSystemUser()->getUUID(),
+            time() + 3600,
+            '/quiqqer_oauth_test'
+        );
+        $Storage->setRefreshTokenResource($refreshToken, $resource);
+        $TokenEndpoint = new QUI\OAuth\TokenEndpoint();
+
+        $refreshResponse = $TokenEndpoint->handle($this->tokenRequest(
+            $clientId,
+            (string)$client['client_secret'],
+            [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken
+            ]
+        ));
+        $replacement = json_decode(
+            (string)$refreshResponse->getBody(),
+            true
+        );
+        self::assertSame(200, $refreshResponse->getStatusCode());
+        self::assertIsArray($replacement);
+        self::assertIsArray($Storage->getAccessToken(
+            (string)$replacement['access_token']
+        ));
+
+        $revokeResponse = $TokenEndpoint->revoke($this->tokenRequest(
+            $clientId,
+            (string)$client['client_secret'],
+            [
+                'token' => $replacement['refresh_token'],
+                'token_type_hint' => 'refresh_token'
+            ]
+        ));
+        self::assertSame(200, $revokeResponse->getStatusCode());
+
+        $usedToken = $Storage->getRefreshToken($refreshToken);
+        $replacementToken = $Storage->getRefreshToken(
+            (string)$replacement['refresh_token']
+        );
+        self::assertIsArray($usedToken);
+        self::assertIsArray($replacementToken);
+        self::assertNotEmpty($usedToken['revoked_at']);
+        self::assertNotEmpty($replacementToken['revoked_at']);
+        self::assertFalse($Storage->getAccessToken(
+            (string)$replacement['access_token']
+        ));
     }
 
     public function testAuthorizationRejectsMissingPkceAndUnregisteredResource(): void
@@ -230,10 +431,6 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         );
         self::assertStringContainsString(
             'state=login-control-state',
-            $body
-        );
-        self::assertStringContainsString(
-            'quiqqer_oauth_return=',
             $body
         );
         self::assertStringContainsString(

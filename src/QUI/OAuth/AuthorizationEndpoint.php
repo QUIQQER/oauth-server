@@ -75,7 +75,6 @@ final class AuthorizationEndpoint
         $Locale = QUI::getLocale();
         $project = $this->getProjectIdentity($Request);
         $returnUri = (string)$Request->getUri();
-        $loginUri = $this->getLoginUri($Request, $returnUri);
         $title = $Locale->get('quiqqer/oauth-server', 'oauth.authorize.login.title');
         $body = $this->renderDocumentStart($title . ' – ' . $project['name'])
             . '<body class="quiqqer-oauth-authorization">'
@@ -89,12 +88,7 @@ final class AuthorizationEndpoint
             . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.login.description'))
             . '</p><div class="quiqqer-oauth-authorization-login" '
             . 'id="quiqqer-oauth-login-control" aria-live="polite"></div>'
-            . '<noscript><div class="quiqqer-oauth-authorization-actions">'
-            . '<a class="quiqqer-oauth-authorization-button '
-            . 'quiqqer-oauth-authorization-button--primary" href="'
-            . self::escape($loginUri) . '">'
-            . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.login.action'))
-            . '</a></div></noscript></section></article></main>'
+            . '</section></article></main>'
             . $this->renderLoginScripts($returnUri)
             . '</body></html>';
 
@@ -581,28 +575,6 @@ final class AuthorizationEndpoint
         }
 
         return hash('sha256', json_encode($parameters, JSON_THROW_ON_ERROR));
-    }
-
-    private function getLoginUri(ServerRequestInterface $Request, string $returnUri): string
-    {
-        try {
-            $configured = QUI::getPackage('quiqqer/oauth-server')
-                ->getConfig()
-                ?->getValue('general', 'authorization_login_url');
-        } catch (QUI\Exception) {
-            $configured = null;
-        }
-
-        if (!is_string($configured) || trim($configured) === '') {
-            $uri = $Request->getUri();
-            $configured = $uri->getScheme() . '://' . $uri->getAuthority() . '/';
-        }
-
-        $separator = str_contains($configured, '?') ? '&' : '?';
-
-        return $configured . $separator . http_build_query([
-            'quiqqer_oauth_return' => $returnUri
-        ]);
     }
 
     private static function escape(string $value): string

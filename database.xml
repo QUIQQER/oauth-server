@@ -39,9 +39,17 @@
             <field type="datetime">expires</field>
             <field type="string" length="2000" nullable="true">scope</field>
             <field type="string" length="2000" nullable="true">resource</field>
+            <field type="string" length="32" nullable="true">token_family_id</field>
+            <field type="string" length="40" nullable="true">replaced_by</field>
+            <field type="string" length="40" nullable="true">replacement_access_token</field>
+            <field type="datetime" nullable="true">replacement_access_expires</field>
+            <field type="datetime" nullable="true">replaced_at</field>
+            <field type="datetime" nullable="true">revoked_at</field>
 
             <index>client_id</index>
             <index>expires</index>
+            <index>token_family_id</index>
+            <index>replaced_by</index>
         </table>
 
         <table name="oauth_authorization_codes">
