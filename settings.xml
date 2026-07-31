@@ -12,6 +12,14 @@
                     <type><![CDATA[int]]></type>
                     <defaultvalue>3600</defaultvalue>
                 </conf>
+                <conf name="refresh_token_lifetime">
+                    <type><![CDATA[int]]></type>
+                    <defaultvalue>1209600</defaultvalue>
+                </conf>
+                <conf name="refresh_token_rotation_grace_period">
+                    <type><![CDATA[int]]></type>
+                    <defaultvalue>120</defaultvalue>
+                </conf>
                 <conf name="protected_scopes">
                     <type><![CDATA[string]]></type>
                 </conf>
@@ -50,10 +58,31 @@
                             </description>
                         </input>
 
-                        <input conf="general.access_lifetime" type="number">
+                        <input conf="general.access_lifetime" type="number" min="1">
                             <text>
                                 <locale group="quiqqer/oauth-server" var="settings.access_lifetime.text"/>
                             </text>
+                            <description>
+                                <locale group="quiqqer/oauth-server" var="settings.access_lifetime.description"/>
+                            </description>
+                        </input>
+
+                        <input conf="general.refresh_token_lifetime" type="number" min="1">
+                            <text>
+                                <locale group="quiqqer/oauth-server" var="settings.refresh_token_lifetime.text"/>
+                            </text>
+                            <description>
+                                <locale group="quiqqer/oauth-server" var="settings.refresh_token_lifetime.description"/>
+                            </description>
+                        </input>
+
+                        <input conf="general.refresh_token_rotation_grace_period" type="number" min="0">
+                            <text>
+                                <locale group="quiqqer/oauth-server" var="settings.refresh_token_rotation_grace_period.text"/>
+                            </text>
+                            <description>
+                                <locale group="quiqqer/oauth-server" var="settings.refresh_token_rotation_grace_period.description"/>
+                            </description>
                         </input>
 
                         <input conf="general.protected_scopes" type="string" data-qui="package/quiqqer/oauth-server/bin/backend/controls/settings/ProtectedScopes">

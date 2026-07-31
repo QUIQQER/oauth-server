@@ -10,6 +10,47 @@
             <en><![CDATA[Manage and restrict access to REST API endpoints via OAuth authentication.]]></en>
         </locale>
 
+        <locale name="settings.access_lifetime.text">
+            <de><![CDATA[Token Lebenszeit (in Sekunden)]]></de>
+            <en><![CDATA[Token Lifetime (in seconds)]]></en>
+        </locale>
+        <locale name="settings.access_lifetime.description">
+            <de><![CDATA[Gültigkeitsdauer eines Access-Tokens in Sekunden.]]></de>
+            <en><![CDATA[Lifetime of an access token in seconds.]]></en>
+        </locale>
+        <locale name="settings.refresh_token_lifetime.text">
+            <de><![CDATA[Refresh-Token-Gültigkeitsdauer]]></de>
+            <en><![CDATA[Refresh token lifetime]]></en>
+        </locale>
+        <locale name="settings.refresh_token_lifetime.description">
+            <de><![CDATA[Gültigkeitsdauer eines Refresh-Tokens in Sekunden. Bei einer Rotation beginnt die Frist für den neuen Token erneut.]]></de>
+            <en><![CDATA[Lifetime of a refresh token in seconds. Rotation starts a new lifetime for the replacement token.]]></en>
+        </locale>
+        <locale name="settings.refresh_token_rotation_grace_period.text">
+            <de><![CDATA[Grace-Period für Refresh-Token-Rotation]]></de>
+            <en><![CDATA[Refresh token rotation grace period]]></en>
+        </locale>
+        <locale name="settings.refresh_token_rotation_grace_period.description">
+            <de><![CDATA[Zeitraum in Sekunden, in dem ein gerade ersetzter Refresh-Token dieselbe Token-Antwort erneut liefern darf. Eine spätere Wiederverwendung sperrt die gesamte Token-Familie. 0 deaktiviert die Grace-Period.]]></de>
+            <en><![CDATA[Period in seconds during which a recently replaced refresh token may return the same token response again. Later reuse revokes the complete token family. 0 disables the grace period.]]></en>
+        </locale>
+        <locale name="settings.authorization_login_url.text">
+            <de><![CDATA[Login-URL für OAuth-Autorisierung]]></de>
+            <en><![CDATA[Login URL for OAuth authorization]]></en>
+        </locale>
+        <locale name="settings.authorization_login_url.description">
+            <de><![CDATA[Öffentliche QUIQQER-Login-URL. Sie erhält die ursprüngliche Autorisierungs-URL im Parameter quiqqer_oauth_return.]]></de>
+            <en><![CDATA[Public QUIQQER login URL. It receives the original authorization URL in the quiqqer_oauth_return parameter.]]></en>
+        </locale>
+        <locale name="settings.dynamic_client_registration.text">
+            <de><![CDATA[Dynamische Client-Registrierung]]></de>
+            <en><![CDATA[Dynamic client registration]]></en>
+        </locale>
+        <locale name="settings.dynamic_client_registration.description">
+            <de><![CDATA[Erlaubt MCP-Clients wie Codex, sich als öffentliche PKCE-Clients ohne Client-Secret selbst zu registrieren. Dynamische Clients werden beim ersten Login fest an eine Ressource derselben Domain gebunden.]]></de>
+            <en><![CDATA[Allows MCP clients such as Codex to register themselves as public PKCE clients without a client secret. Dynamic clients are permanently bound to a same-origin resource during their first login.]]></en>
+        </locale>
+
         <locale name="client_id">
             <de><![CDATA[Client-ID]]></de>
             <en><![CDATA[Client-ID]]></en>
@@ -149,10 +190,6 @@
         <locale name="settings.title">
             <de><![CDATA[OAuth2 Einstellungen]]></de>
             <en><![CDATA[OAuth2 Settings]]></en>
-        </locale>
-        <locale name="settings.access_lifetime.text">
-            <de><![CDATA[Token Lebenszeit (in Sekunden)]]></de>
-            <en><![CDATA[Token Lifetime (in seconds)]]></en>
         </locale>
         <locale name="settings.protected_scopes.text">
             <de><![CDATA[Überwachte Einstiegspunkte]]></de>
@@ -491,22 +528,6 @@
         <locale name="control.user.tokens.window.delete.text" html="1">
             <de><![CDATA[Möchten Sie das API-Token <b>[title]</b> wirklich löschen?]]></de>
             <en><![CDATA[Do you really want to delete the API token <b>[title]</b>?]]></en>
-        </locale>
-        <locale name="settings.authorization_login_url.text">
-            <de><![CDATA[Login-URL für OAuth-Autorisierung]]></de>
-            <en><![CDATA[Login URL for OAuth authorization]]></en>
-        </locale>
-        <locale name="settings.authorization_login_url.description">
-            <de><![CDATA[Öffentliche QUIQQER-Login-URL. Sie erhält die ursprüngliche Autorisierungs-URL im Parameter quiqqer_oauth_return.]]></de>
-            <en><![CDATA[Public QUIQQER login URL. It receives the original authorization URL in the quiqqer_oauth_return parameter.]]></en>
-        </locale>
-        <locale name="settings.dynamic_client_registration.text">
-            <de><![CDATA[Dynamische Client-Registrierung]]></de>
-            <en><![CDATA[Dynamic client registration]]></en>
-        </locale>
-        <locale name="settings.dynamic_client_registration.description">
-            <de><![CDATA[Erlaubt MCP-Clients wie Codex, sich als öffentliche PKCE-Clients ohne Client-Secret selbst zu registrieren. Dynamische Clients werden beim ersten Login fest an eine Ressource derselben Domain gebunden.]]></de>
-            <en><![CDATA[Allows MCP clients such as Codex to register themselves as public PKCE clients without a client secret. Dynamic clients are permanently bound to a same-origin resource during their first login.]]></en>
         </locale>
     </groups>
 </locales>
