@@ -60,19 +60,45 @@ final class TokenEndpoint
         $token = $OAuthRequest->request('token');
         $hint = $OAuthRequest->request('token_type_hint');
         $tokenData = null;
+        $tokenType = null;
 
         if (is_string($token) && $token !== '') {
             if ($hint === 'refresh_token') {
                 $tokenData = $Storage->getRefreshToken($token);
+                $tokenType = $tokenData === false ? null : 'refresh_token';
             } elseif ($hint === 'access_token') {
                 $tokenData = $Storage->getAccessToken($token);
+                $tokenType = $tokenData === false ? null : 'access_token';
             } else {
                 $tokenData = $Storage->getAccessToken($token);
-                $tokenData = $tokenData === false ? $Storage->getRefreshToken($token) : $tokenData;
+                $tokenType = $tokenData === false
+                    ? 'refresh_token'
+                    : 'access_token';
+                $tokenData = $tokenData === false
+                    ? $Storage->getRefreshToken($token)
+                    : $tokenData;
+
+                if ($tokenData === false) {
+                    $tokenType = null;
+                }
             }
         }
 
         if (is_array($tokenData) && !hash_equals((string)$tokenData['client_id'], $clientId)) {
+            $OAuthResponse->setStatusCode(200);
+
+            return RestProvider::fromOAuthResponse($OAuthResponse);
+        }
+
+        if (
+            $tokenType === 'refresh_token'
+            && is_string($token)
+            && is_array($tokenData)
+        ) {
+            $Storage->revokeRefreshTokenFamily(
+                (string)($tokenData['token_family_id'] ?? ''),
+                $token
+            );
             $OAuthResponse->setStatusCode(200);
 
             return RestProvider::fromOAuthResponse($OAuthResponse);

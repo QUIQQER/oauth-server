@@ -33,6 +33,7 @@ define('package/quiqqer/oauth-server/bin/backend/controls/settings/ProtectedScop
         Type   : 'package/quiqqer/oauth-server/bin/backend/controls/settings/ProtectedScopes',
 
         Binds: [
+            '$filterScopes',
             '$onInject',
             '$onImport',
             'getSettings'
@@ -41,10 +42,13 @@ define('package/quiqqer/oauth-server/bin/backend/controls/settings/ProtectedScop
         initialize: function (options) {
             this.parent(options);
 
-            this.$Input    = null;
-            this.$Content  = null;
-            this.$Settings = {};
-            this.Loader    = new QUILoader();
+            this.$Input        = null;
+            this.$Content      = null;
+            this.$Filter       = null;
+            this.$FilterStatus = null;
+            this.$Rows         = [];
+            this.$Settings     = {};
+            this.Loader        = new QUILoader();
 
             this.addEvents({
                 onImport: this.$onImport
@@ -58,13 +62,18 @@ define('package/quiqqer/oauth-server/bin/backend/controls/settings/ProtectedScop
         $onImport: function () {
             this.$Input      = this.getElm();
             this.$Input.type = 'hidden';
+            this.$Input.removeClass('field-container-field');
 
             if (this.$Input.value !== '') {
                 this.$Settings = JSON.decode(this.$Input.value);
             }
 
             this.$Content = new Element('div', {
-                'class': 'quiqqer-oauth-server-protectedscopes'
+                'class': [
+                    'quiqqer-oauth-server-protectedscopes',
+                    'field-container-field',
+                    'field-container-field-no-padding'
+                ].join(' ')
             }).inject(this.$Input, 'after');
 
             this.$build();
@@ -81,8 +90,23 @@ define('package/quiqqer/oauth-server/bin/backend/controls/settings/ProtectedScop
 
             this.$Content.set('html', Mustache.render(template, {
                 headerScope    : QUILocale.get(lg, lgPrefix + 'headerScope'),
-                headerProtected: QUILocale.get(lg, lgPrefix + 'headerProtected')
+                headerProtected: QUILocale.get(lg, lgPrefix + 'headerProtected'),
+                headerProtectedShort: QUILocale.get(lg, lgPrefix + 'headerProtectedShort'),
+                filterLabel    : QUILocale.get(lg, lgPrefix + 'filterLabel'),
+                filterPlaceholder: QUILocale.get(lg, lgPrefix + 'filterPlaceholder'),
+                listLabel      : QUILocale.get(lg, lgPrefix + 'listLabel')
             }));
+
+            this.$Filter = this.$Content.getElement(
+                '.quiqqer-oauth-server-protectedscopes-filter input'
+            );
+            this.$FilterStatus = this.$Content.getElement(
+                '.quiqqer-oauth-server-protectedscopes-filter-status'
+            );
+            this.$Filter.addEvents({
+                input : this.$filterScopes,
+                search: this.$filterScopes
+            });
 
             this.Loader.show();
 
@@ -128,9 +152,53 @@ define('package/quiqqer/oauth-server/bin/backend/controls/settings/ProtectedScop
                     );
                 }
 
+                self.$Rows = TableBody.getElements(
+                    '.quiqqer-oauth-server-protectedscopes-scope'
+                );
+                self.$filterScopes();
                 self.Loader.hide();
                 self.fireEvent('loaded', [self]);
             });
+        },
+
+        /**
+         * Filter the visible scope rows without changing their settings.
+         */
+        $filterScopes: function () {
+            var query = '';
+            var visible = 0;
+
+            if (this.$Filter) {
+                query = this.$Filter.value.trim().toLowerCase();
+            }
+
+            for (var i = 0, len = this.$Rows.length; i < len; i++) {
+                var Row = this.$Rows[i];
+                var scope = String(Row.get('data-scope')).toLowerCase();
+                var matches = query === '' || scope.indexOf(query) !== -1;
+
+                Row.setStyle('display', matches ? 'table-row' : 'none');
+
+                if (matches) {
+                    visible++;
+                }
+            }
+
+            if (!this.$FilterStatus) {
+                return;
+            }
+
+            this.$FilterStatus.set(
+                'text',
+                QUILocale.get(
+                    lg,
+                    'controls.backend.settings.ProtectedScopes.template.filterResult',
+                    {
+                        visible: visible,
+                        total  : this.$Rows.length
+                    }
+                )
+            );
         }
     });
 });

@@ -1,13 +1,38 @@
-<table class="quiqqer-oauth-server-protectedscopes-table">
-    <thead>
-    <tr>
-        <th class="quiqqer-oauth-server-protectedscopes-table-header-scope">
-            {{headerScope}}
-        </th>
-        <th>
-            {{headerProtected}}
-        </th>
-    </tr>
-    </thead>
-    <tbody></tbody>
-</table>
+<div class="quiqqer-oauth-server-protectedscopes-filter">
+    <span aria-hidden="true" class="fa fa-filter"></span>
+    <input
+        aria-label="{{filterLabel}}"
+        autocomplete="off"
+        placeholder="{{filterPlaceholder}}"
+        type="search"
+    />
+    <span
+        aria-live="polite"
+        class="quiqqer-oauth-server-protectedscopes-filter-status"
+    ></span>
+</div>
+
+<div
+    aria-label="{{listLabel}}"
+    class="quiqqer-oauth-server-protectedscopes-table-container"
+    role="region"
+    tabindex="0"
+>
+    <table class="quiqqer-oauth-server-protectedscopes-table">
+        <thead>
+        <tr>
+            <th
+                aria-label="{{headerProtected}}"
+                class="quiqqer-oauth-server-protectedscopes-table-header-protected"
+                title="{{headerProtected}}"
+            >
+                {{headerProtectedShort}}
+            </th>
+            <th class="quiqqer-oauth-server-protectedscopes-table-header-scope">
+                <span>{{headerScope}}</span>
+            </th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>

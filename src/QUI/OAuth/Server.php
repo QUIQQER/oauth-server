@@ -30,16 +30,41 @@ class Server extends QUI\Utils\Singleton
             'general',
             'access_lifetime'
         );
+        $configuredRefreshTokenLifetime = $Config?->getValue(
+            'general',
+            'refresh_token_lifetime'
+        );
+        $configuredRotationGracePeriod = $Config?->getValue(
+            'general',
+            'refresh_token_rotation_grace_period'
+        );
 
         // config
         $accessLifeTime = 3600;
+        $refreshTokenLifetime = 1209600;
+        $rotationGracePeriod = 120;
 
         if (is_numeric($configuredLifetime) && (int)$configuredLifetime > 0) {
             $accessLifeTime = (int)$configuredLifetime;
         }
 
+        if (
+            is_numeric($configuredRefreshTokenLifetime)
+            && (int)$configuredRefreshTokenLifetime > 0
+        ) {
+            $refreshTokenLifetime = (int)$configuredRefreshTokenLifetime;
+        }
+
+        if (
+            is_numeric($configuredRotationGracePeriod)
+            && (int)$configuredRotationGracePeriod >= 0
+        ) {
+            $rotationGracePeriod = (int)$configuredRotationGracePeriod;
+        }
+
         $config = [
             'access_lifetime' => $accessLifeTime,
+            'refresh_token_lifetime' => $refreshTokenLifetime,
             'use_jwt_access_tokens' => false,
             'store_encrypted_token_string' => true,
             'use_openid_connect' => false,
@@ -52,9 +77,7 @@ class Server extends QUI\Utils\Singleton
             'allow_implicit' => false,
             'enforce_pkce' => true,
             'allow_credentials_in_request_body' => true,
-            'allow_public_clients' => true,
-            'always_issue_new_refresh_token' => true,
-            'unset_refresh_token_after_use' => true
+            'allow_public_clients' => true
         ];
 
         $Storage = StorageFactory::create();
@@ -65,7 +88,12 @@ class Server extends QUI\Utils\Singleton
         // Add client credentials grant type
         $this->OAuth2Server->addGrantType(new OAuth2\GrantType\ClientCredentials($Storage, $config));
         $this->OAuth2Server->addGrantType(new OAuth2\GrantType\AuthorizationCode($Storage));
-        $this->OAuth2Server->addGrantType(new OAuth2\GrantType\RefreshToken($Storage, $config));
+        $this->OAuth2Server->addGrantType(
+            new RotatingRefreshTokenGrant(
+                $Storage,
+                $rotationGracePeriod
+            )
+        );
 
         $AuthorizationCodeResponseType = new AuthorizationCodeResponseType(
             $Storage,
