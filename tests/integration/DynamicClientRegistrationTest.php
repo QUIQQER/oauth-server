@@ -22,6 +22,7 @@ final class DynamicClientRegistrationTest extends OAuthDatabaseTestCase
     private const SCOPE = 'service.execute';
 
     private mixed $previousDynamicRegistration;
+    private mixed $previousReusableDynamicRefreshTokens;
 
     protected function setUp(): void
     {
@@ -44,18 +45,31 @@ final class DynamicClientRegistrationTest extends OAuthDatabaseTestCase
             'general',
             'dynamic_client_registration'
         );
+        $this->previousReusableDynamicRefreshTokens = $Config->getValue(
+            'general',
+            'reuse_refresh_tokens_for_dynamic_clients'
+        );
         $Config->setValue('general', 'dynamic_client_registration', 1);
+        $Config->setValue(
+            'general',
+            'reuse_refresh_tokens_for_dynamic_clients',
+            1
+        );
     }
 
     protected function tearDown(): void
     {
-        QUI::getPackage('quiqqer/oauth-server')
-            ->getConfig()
-            ->setValue(
-                'general',
-                'dynamic_client_registration',
-                $this->previousDynamicRegistration
-            );
+        $Config = QUI::getPackage('quiqqer/oauth-server')->getConfig();
+        $Config->setValue(
+            'general',
+            'dynamic_client_registration',
+            $this->previousDynamicRegistration
+        );
+        $Config->setValue(
+            'general',
+            'reuse_refresh_tokens_for_dynamic_clients',
+            $this->previousReusableDynamicRefreshTokens
+        );
 
         parent::tearDown();
     }
@@ -158,10 +172,63 @@ final class DynamicClientRegistrationTest extends OAuthDatabaseTestCase
         self::assertSame(200, $refreshResponse->getStatusCode());
         self::assertIsArray($refreshed);
         self::assertNotEmpty($refreshed['access_token']);
-        self::assertNotSame(
-            $tokens['refresh_token'],
-            $refreshed['refresh_token']
+        self::assertArrayNotHasKey('refresh_token', $refreshed);
+
+        $secondRefreshResponse = RestServer::getCurrentInstance()
+            ->getSlim()
+            ->handle($this->tokenRequest([
+                'grant_type' => 'refresh_token',
+                'client_id' => $clientId,
+                'refresh_token' => (string)$tokens['refresh_token'],
+                'resource' => $resource
+            ]));
+        $secondRefresh = json_decode(
+            (string)$secondRefreshResponse->getBody(),
+            true
         );
+        self::assertSame(200, $secondRefreshResponse->getStatusCode());
+        self::assertIsArray($secondRefresh);
+        self::assertNotEmpty($secondRefresh['access_token']);
+        self::assertNotSame(
+            $refreshed['access_token'],
+            $secondRefresh['access_token']
+        );
+        self::assertArrayNotHasKey('refresh_token', $secondRefresh);
+
+        $storedRefreshToken = $Storage->getRefreshToken(
+            (string)$tokens['refresh_token']
+        );
+        self::assertIsArray($storedRefreshToken);
+        self::assertEmpty($storedRefreshToken['replaced_by']);
+
+        $revokeResponse = RestServer::getCurrentInstance()
+            ->getSlim()
+            ->handle((new ServerRequest(
+                'POST',
+                '/api/oauth/revoke',
+                ['Content-Type' => 'application/x-www-form-urlencoded']
+            ))->withParsedBody([
+                'client_id' => $clientId,
+                'token' => (string)$tokens['refresh_token'],
+                'token_type_hint' => 'refresh_token'
+            ]));
+        self::assertSame(200, $revokeResponse->getStatusCode());
+
+        $revokedRefreshResponse = RestServer::getCurrentInstance()
+            ->getSlim()
+            ->handle($this->tokenRequest([
+                'grant_type' => 'refresh_token',
+                'client_id' => $clientId,
+                'refresh_token' => (string)$tokens['refresh_token'],
+                'resource' => $resource
+            ]));
+        $revokedRefresh = json_decode(
+            (string)$revokedRefreshResponse->getBody(),
+            true
+        );
+        self::assertSame(400, $revokedRefreshResponse->getStatusCode());
+        self::assertIsArray($revokedRefresh);
+        self::assertSame('invalid_grant', $revokedRefresh['error'] ?? null);
     }
 
     public function testDynamicClientIsBoundToOneSameOriginResource(): void

@@ -13,7 +13,9 @@ use QUI;
  *
  * A replaced token returns the original replacement response during the
  * configured grace period. Reuse after that period revokes the complete token
- * family, including access tokens issued by its refresh operations.
+ * family, including access tokens issued by its refresh operations. Public
+ * clients created through dynamic registration may instead keep a stable
+ * refresh token so multiple long-running client processes can share it.
  */
 final class RotatingRefreshTokenGrant implements GrantTypeInterface
 {
@@ -24,7 +26,8 @@ final class RotatingRefreshTokenGrant implements GrantTypeInterface
 
     public function __construct(
         private readonly Storage $Storage,
-        private readonly int $gracePeriod
+        private readonly int $gracePeriod,
+        private readonly bool $reuseDynamicClientRefreshTokens
     ) {
     }
 
@@ -81,7 +84,10 @@ final class RotatingRefreshTokenGrant implements GrantTypeInterface
             return null;
         }
 
-        if (!empty($token['replaced_by'])) {
+        if (
+            !empty($token['replaced_by'])
+            && !$this->usesReusableRefreshToken($token)
+        ) {
             if (!$this->hasCompleteReplacement($token)) {
                 $response->setError(
                     400,
@@ -162,6 +168,15 @@ final class RotatingRefreshTokenGrant implements GrantTypeInterface
                 if (!is_array($current) || !empty($current['revoked_at'])) {
                     throw new \RuntimeException(
                         'The refresh token family was revoked during rotation.'
+                    );
+                }
+
+                if ($this->usesReusableRefreshToken($current)) {
+                    return $accessToken->createAccessToken(
+                        $client_id,
+                        $user_id,
+                        $scope,
+                        false
                     );
                 }
 
@@ -277,5 +292,32 @@ final class RotatingRefreshTokenGrant implements GrantTypeInterface
             'scope' => $token['scope'] ?? null,
             'refresh_token' => (string)$token['replaced_by']
         ];
+    }
+
+    /**
+     * Dynamically registered public clients cannot coordinate a rotating
+     * refresh token reliably across independent long-running processes. Keep
+     * their refresh token stable when the compatibility option is enabled.
+     *
+     * @param array<string, mixed> $token
+     */
+    private function usesReusableRefreshToken(array $token): bool
+    {
+        if (!$this->reuseDynamicClientRefreshTokens) {
+            return false;
+        }
+
+        $clientId = $token['client_id'] ?? null;
+
+        if (!is_string($clientId) || $clientId === '') {
+            return false;
+        }
+
+        $client = $this->Storage->getClientDetails($clientId);
+
+        return is_array($client)
+            && ClientConfiguration::isDynamicRegistration(
+                $client['allowed_resources'] ?? null
+            );
     }
 }

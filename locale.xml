@@ -34,6 +34,14 @@
             <de><![CDATA[Zeitraum in Sekunden, in dem ein gerade ersetzter Refresh-Token dieselbe Token-Antwort erneut liefern darf. Eine spätere Wiederverwendung sperrt die gesamte Token-Familie. 0 deaktiviert die Grace-Period.]]></de>
             <en><![CDATA[Period in seconds during which a recently replaced refresh token may return the same token response again. Later reuse revokes the complete token family. 0 disables the grace period.]]></en>
         </locale>
+        <locale name="settings.reuse_refresh_tokens_for_dynamic_clients.text">
+            <de><![CDATA[Refresh-Tokens für dynamische Clients wiederverwenden]]></de>
+            <en><![CDATA[Reuse refresh tokens for dynamic clients]]></en>
+        </locale>
+        <locale name="settings.reuse_refresh_tokens_for_dynamic_clients.description">
+            <de><![CDATA[Behält Refresh-Tokens dynamisch registrierter öffentlicher Clients bei, damit mehrere laufende MCP-Client-Instanzen dieselben Zugangsdaten verwenden können. Access-Tokens werden weiterhin erneuert und ein expliziter Widerruf sperrt die vollständige Token-Familie. Deaktivieren aktiviert die strikte Refresh-Token-Rotation.]]></de>
+            <en><![CDATA[Keeps refresh tokens stable for dynamically registered public clients so multiple running MCP client instances can share the same credentials. Access tokens are still renewed, and explicit revocation invalidates the complete token family. Disable to enforce strict refresh token rotation.]]></en>
+        </locale>
         <locale name="settings.dynamic_client_registration.text">
             <de><![CDATA[Dynamische Client-Registrierung]]></de>
             <en><![CDATA[Dynamic client registration]]></en>
