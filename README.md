@@ -46,6 +46,12 @@ For MCP clients such as Codex, RFC 7591 Dynamic Client Registration is controlle
 Dynamic registration is enabled by default. Deployments should additionally apply normal edge rate limiting to
 `/api/oauth/register`.
 
+Refresh tokens issued to dynamically registered clients are reusable by default. This allows independent,
+long-running MCP client processes such as multiple Codex instances to share one credential without invalidating its
+token family. Refresh responses issue a new access token and omit a replacement refresh token. Explicit revocation
+and expiry remain effective. Set `general.reuse_refresh_tokens_for_dynamic_clients` to `0` to enforce strict
+refresh token rotation for these clients as well. Static authorization clients always use strict rotation.
+
 The Authorization Server issuer and default protected resource identifier are the absolute QUIQQER REST base URL.
 Discovery is exposed at the origin root, independently of the configured REST base path:
 
