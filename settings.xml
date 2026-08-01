@@ -20,6 +20,10 @@
                     <type><![CDATA[int]]></type>
                     <defaultvalue>120</defaultvalue>
                 </conf>
+                <conf name="reuse_refresh_tokens_for_dynamic_clients">
+                    <type><![CDATA[boolean]]></type>
+                    <defaultvalue>1</defaultvalue>
+                </conf>
                 <conf name="protected_scopes">
                     <type><![CDATA[string]]></type>
                 </conf>
@@ -79,6 +83,15 @@
                             </text>
                             <description>
                                 <locale group="quiqqer/oauth-server" var="settings.refresh_token_rotation_grace_period.description"/>
+                            </description>
+                        </input>
+
+                        <input conf="general.reuse_refresh_tokens_for_dynamic_clients" type="checkbox">
+                            <text>
+                                <locale group="quiqqer/oauth-server" var="settings.reuse_refresh_tokens_for_dynamic_clients.text"/>
+                            </text>
+                            <description>
+                                <locale group="quiqqer/oauth-server" var="settings.reuse_refresh_tokens_for_dynamic_clients.description"/>
                             </description>
                         </input>
 

@@ -38,11 +38,16 @@ class Server extends QUI\Utils\Singleton
             'general',
             'refresh_token_rotation_grace_period'
         );
+        $configuredReusableDynamicRefreshTokens = $Config?->getValue(
+            'general',
+            'reuse_refresh_tokens_for_dynamic_clients'
+        );
 
         // config
         $accessLifeTime = 3600;
         $refreshTokenLifetime = 1209600;
         $rotationGracePeriod = 120;
+        $reuseDynamicRefreshTokens = true;
 
         if (is_numeric($configuredLifetime) && (int)$configuredLifetime > 0) {
             $accessLifeTime = (int)$configuredLifetime;
@@ -60,6 +65,10 @@ class Server extends QUI\Utils\Singleton
             && (int)$configuredRotationGracePeriod >= 0
         ) {
             $rotationGracePeriod = (int)$configuredRotationGracePeriod;
+        }
+
+        if (is_numeric($configuredReusableDynamicRefreshTokens)) {
+            $reuseDynamicRefreshTokens = (bool)(int)$configuredReusableDynamicRefreshTokens;
         }
 
         $config = [
@@ -91,7 +100,8 @@ class Server extends QUI\Utils\Singleton
         $this->OAuth2Server->addGrantType(
             new RotatingRefreshTokenGrant(
                 $Storage,
-                $rotationGracePeriod
+                $rotationGracePeriod,
+                $reuseDynamicRefreshTokens
             )
         );
 
