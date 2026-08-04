@@ -473,6 +473,10 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         self::assertStringNotContainsString('<script>alert(1)</script>', $body);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $body);
         self::assertStringContainsString('quiqqer-oauth-authorization-card', $body);
+        self::assertStringContainsString('quiqqer-oauth-authorization--consent', $body);
+        self::assertStringContainsString('quiqqer-oauth-authorization-card--consent', $body);
+        self::assertStringContainsString('quiqqer-oauth-authorization-content--consent', $body);
+        self::assertStringContainsString('quiqqer-oauth-authorization-permissionList', $body);
         self::assertStringContainsString('quiqqer/oauth-server/bin/css/authorization.css', $body);
 
         $Project = QUI::getRewrite()->getProject();
