@@ -54,6 +54,7 @@ final class AuthorizationController extends AuthorizeController
         $isDynamicRegistration = ClientConfiguration::isDynamicRegistration(
             $client['allowed_resources'] ?? null
         );
+        $issuer = Metadata::resource(RestServer::getCurrentInstance());
 
         if ($isDynamicRegistration && $allowedResources === []) {
             if (!is_string($requestedResource) || $requestedResource === '') {
@@ -68,7 +69,7 @@ final class AuthorizationController extends AuthorizeController
                 $bound = Handler::bindDynamicAuthorizationClientResource(
                     $clientId,
                     $requestedResource,
-                    Metadata::resource(RestServer::getCurrentInstance())
+                    $issuer
                 );
             } catch (\InvalidArgumentException) {
                 $bound = false;
@@ -109,6 +110,21 @@ final class AuthorizationController extends AuthorizeController
                 'invalid_target',
                 'The requested resource is not registered for this client.'
             );
+        }
+
+        if ($isDynamicRegistration) {
+            try {
+                DynamicResourceTrustPolicy::validate(
+                    $requestedResource,
+                    $issuer
+                );
+            } catch (\InvalidArgumentException) {
+                return $this->setRedirectError(
+                    $response,
+                    'invalid_target',
+                    'The requested resource is no longer trusted for dynamic clients.'
+                );
+            }
         }
 
         $this->codeChallenge = $codeChallenge;

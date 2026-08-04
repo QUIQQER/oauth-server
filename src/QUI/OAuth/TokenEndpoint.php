@@ -5,6 +5,7 @@ namespace QUI\OAuth;
 use OAuth2;
 use Psr\Http\Message\ServerRequestInterface;
 use QUI\REST\Response;
+use QUI\REST\Server as RestServer;
 
 final class TokenEndpoint
 {
@@ -118,6 +119,7 @@ final class TokenEndpoint
         $requestedResource = $Request->request('resource');
         $resource = null;
         $clientId = '';
+        $client = null;
 
         if ($grantType === 'authorization_code') {
             $code = $Request->request('code');
@@ -160,6 +162,26 @@ final class TokenEndpoint
             && (!is_string($resource) || !hash_equals($resource, $requestedResource))
         ) {
             throw new \InvalidArgumentException('The requested resource does not match the authorization grant.');
+        }
+
+        if (
+            $clientId !== ''
+            && is_string($resource)
+            && $resource !== ''
+        ) {
+            $client ??= $Storage->getClientDetails($clientId);
+
+            if (
+                is_array($client)
+                && ClientConfiguration::isDynamicRegistration(
+                    $client['allowed_resources'] ?? null
+                )
+            ) {
+                DynamicResourceTrustPolicy::validate(
+                    $resource,
+                    Metadata::resource(RestServer::getCurrentInstance())
+                );
+            }
         }
 
         return is_string($resource) && $resource !== '' ? $resource : null;

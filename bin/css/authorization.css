@@ -58,6 +58,7 @@
     --_card-radius: var(--quiqqer-oauth-server-authorization-card-radius, 1.5rem);
     --_control-radius: var(--quiqqer-oauth-server-authorization-control-radius, 0.75rem);
     --_card-width: var(--quiqqer-oauth-server-authorization-card-width, 38rem);
+    --_page-spacing: clamp(1rem, 4vw, 3rem);
     --_content-spacing: var(--quiqqer-oauth-server-authorization-content-spacing, clamp(1.5rem, 5vw, 2.75rem));
 
     background: linear-gradient(145deg, var(--_page-background), var(--_page-background-accent));
@@ -83,8 +84,20 @@
 .quiqqer-oauth-authorization-main {
     display: grid;
     min-height: 100vh;
-    padding: clamp(1rem, 4vw, 3rem);
+    padding: var(--_page-spacing);
     place-items: center;
+}
+
+.quiqqer-oauth-authorization--consent {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+.quiqqer-oauth-authorization--consent .quiqqer-oauth-authorization-main {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
 }
 
 .quiqqer-oauth-authorization-card {
@@ -95,6 +108,17 @@
     max-width: var(--_card-width);
     overflow: hidden;
     width: 100%;
+}
+
+.quiqqer-oauth-authorization-card--consent {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - var(--_page-spacing) - var(--_page-spacing));
+    max-height: calc(100dvh - var(--_page-spacing) - var(--_page-spacing));
+}
+
+.quiqqer-oauth-authorization-card--consent .quiqqer-oauth-authorization-brand {
+    flex: 0 0 auto;
 }
 
 .quiqqer-oauth-authorization-brand {
@@ -123,6 +147,14 @@
 
 .quiqqer-oauth-authorization-content {
     padding: var(--_content-spacing);
+}
+
+.quiqqer-oauth-authorization-content--consent {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .quiqqer-oauth-authorization h1 {
@@ -208,6 +240,23 @@
     padding: 1.25rem;
 }
 
+.quiqqer-oauth-authorization-permissionList {
+    margin-top: 2rem;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.35rem;
+    scrollbar-gutter: stable;
+}
+
+.quiqqer-oauth-authorization-permissionList .quiqqer-oauth-authorization-permissions {
+    margin-top: 1rem;
+}
+
+.quiqqer-oauth-authorization-permissionList .quiqqer-oauth-authorization-permissions:first-child {
+    margin-top: 0;
+}
+
 .quiqqer-oauth-authorization-permissions h2 {
     color: var(--_text-muted);
     font-size: 0.75rem;
@@ -266,6 +315,11 @@
     margin-top: 2rem;
 }
 
+.quiqqer-oauth-authorization-content--consent .quiqqer-oauth-authorization-actions {
+    flex: 0 0 auto;
+    margin-top: 1.5rem;
+}
+
 .quiqqer-oauth-authorization-button {
     align-items: center;
     border: 1px solid transparent;
@@ -319,6 +373,40 @@
 
     .quiqqer-oauth-authorization-button {
         width: 100%;
+    }
+}
+
+@media (max-height: 44rem) {
+    .quiqqer-oauth-authorization--consent {
+        --_content-spacing: 1.25rem;
+        --_page-spacing: 0.75rem;
+    }
+
+    .quiqqer-oauth-authorization-card--consent .quiqqer-oauth-authorization-brand {
+        min-height: 4.5rem;
+        padding-block: 0.75rem;
+    }
+
+    .quiqqer-oauth-authorization-card--consent .quiqqer-oauth-authorization-logo {
+        max-height: 3rem;
+    }
+
+    .quiqqer-oauth-authorization-content--consent h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .quiqqer-oauth-authorization-content--consent .quiqqer-oauth-authorization-description {
+        font-size: 0.95rem;
+        line-height: 1.45;
+    }
+
+    .quiqqer-oauth-authorization-permissionList {
+        margin-top: 1rem;
+    }
+
+    .quiqqer-oauth-authorization-content--consent .quiqqer-oauth-authorization-actions {
+        margin-top: 1rem;
     }
 }
 
