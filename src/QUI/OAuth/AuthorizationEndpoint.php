@@ -172,16 +172,20 @@ final class AuthorizationEndpoint
         $body = $this->renderDocumentStart(
             $Presentation->getTitle() . ' – ' . $project['name']
         )
-            . '<body class="quiqqer-oauth-authorization">'
+            . '<body class="quiqqer-oauth-authorization quiqqer-oauth-authorization--consent">'
             . '<main class="quiqqer-oauth-authorization-main">'
-            . '<article class="quiqqer-oauth-authorization-card" aria-labelledby="oauth-consent-title">'
+            . '<article class="quiqqer-oauth-authorization-card '
+            . 'quiqqer-oauth-authorization-card--consent" aria-labelledby="oauth-consent-title">'
             . $this->renderProjectIdentity($project)
-            . '<section class="quiqqer-oauth-authorization-content">'
+            . '<section class="quiqqer-oauth-authorization-content '
+            . 'quiqqer-oauth-authorization-content--consent">'
             . '<h1 id="oauth-consent-title">'
             . self::escape($Presentation->getTitle())
             . '</h1><p class="quiqqer-oauth-authorization-description">'
             . self::escape($Presentation->getDescription())
-            . '</p>' . $this->renderConsentSections($Presentation)
+            . '</p><div class="quiqqer-oauth-authorization-permissionList">'
+            . $this->renderConsentSections($Presentation)
+            . '</div>'
             . '<form class="quiqqer-oauth-authorization-actions" method="post" action="'
             . self::escape($Request->getUri()->getPath()) . '">'
             . $hiddenFields
