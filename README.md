@@ -41,10 +41,16 @@ For MCP clients such as Codex, RFC 7591 Dynamic Client Registration is controlle
 * `token_endpoint_auth_method` must be `none`;
 * only `authorization_code` and `refresh_token` grants;
 * exact, validated redirect URIs;
-* the first authorization request permanently binds the client to one resource on the QUIQQER origin.
+* the first authorization request permanently binds the client to one resource on the QUIQQER origin or on an
+  explicitly configured QUIQQER VHost domain.
 
 Dynamic registration is enabled by default. Deployments should additionally apply normal edge rate limiting to
 `/api/oauth/register`.
+
+Cross-origin protected resources are trusted only when their HTTPS origin matches an explicitly configured
+QUIQQER VHost domain. Wildcard VHosts are not expanded for OAuth trust. The policy is re-evaluated during
+subsequent authorization and token requests, so removing a VHost prevents new tokens and refreshes for dynamically
+registered clients bound to it. Existing access tokens remain valid until they expire or are revoked.
 
 Refresh tokens issued to dynamically registered clients are reusable by default. This allows independent,
 long-running MCP client processes such as multiple Codex instances to share one credential without invalidating its

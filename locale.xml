@@ -47,8 +47,8 @@
             <en><![CDATA[Dynamic client registration]]></en>
         </locale>
         <locale name="settings.dynamic_client_registration.description">
-            <de><![CDATA[Erlaubt MCP-Clients wie Codex, sich als öffentliche PKCE-Clients ohne Client-Secret selbst zu registrieren. Dynamische Clients werden beim ersten Login fest an eine Ressource derselben Domain gebunden.]]></de>
-            <en><![CDATA[Allows MCP clients such as Codex to register themselves as public PKCE clients without a client secret. Dynamic clients are permanently bound to a same-origin resource during their first login.]]></en>
+            <de><![CDATA[Erlaubt MCP-Clients wie Codex, sich als öffentliche PKCE-Clients ohne Client-Secret selbst zu registrieren. Dynamische Clients werden beim ersten Login fest an eine Ressource derselben Origin oder einer konfigurierten VHost-Domain gebunden.]]></de>
+            <en><![CDATA[Allows MCP clients such as Codex to register themselves as public PKCE clients without a client secret. Dynamic clients are permanently bound to a resource on the same origin or a configured VHost domain during their first login.]]></en>
         </locale>
 
         <locale name="client_id">

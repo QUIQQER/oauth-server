@@ -8,6 +8,7 @@ use QUI;
 use QUI\OAuth\ClientConfiguration;
 use QUI\OAuth\Clients\Handler;
 use QUI\OAuth\DynamicClientRegistrationEndpoint;
+use QUI\OAuth\DynamicResourceTrustPolicy;
 use QUI\OAuth\Metadata;
 use QUI\OAuth\RestProvider;
 use QUI\OAuth\Server;
@@ -23,6 +24,7 @@ final class DynamicClientRegistrationTest extends OAuthDatabaseTestCase
 
     private mixed $previousDynamicRegistration;
     private mixed $previousReusableDynamicRefreshTokens;
+    private ?array $previousVhosts;
 
     protected function setUp(): void
     {
@@ -49,6 +51,7 @@ final class DynamicClientRegistrationTest extends OAuthDatabaseTestCase
             'general',
             'reuse_refresh_tokens_for_dynamic_clients'
         );
+        $this->previousVhosts = QUI::$vhosts;
         $Config->setValue('general', 'dynamic_client_registration', 1);
         $Config->setValue(
             'general',
@@ -70,6 +73,7 @@ final class DynamicClientRegistrationTest extends OAuthDatabaseTestCase
             'reuse_refresh_tokens_for_dynamic_clients',
             $this->previousReusableDynamicRefreshTokens
         );
+        QUI::$vhosts = $this->previousVhosts;
 
         parent::tearDown();
     }
@@ -278,6 +282,100 @@ final class DynamicClientRegistrationTest extends OAuthDatabaseTestCase
         self::assertSame(
             'invalid_target',
             self::redirectError($otherResource)
+        );
+    }
+
+    public function testConfiguredVhostResourceIsReevaluatedForTokens(): void
+    {
+        $resource = 'https://mcp.example.test/mcp';
+        QUI::$vhosts = [
+            'mcp.example.test' => [
+                'project' => 'example',
+                'lang' => 'en'
+            ]
+        ];
+        $registered = json_decode(
+            (string)$this->registerClient()->getBody(),
+            true
+        );
+        self::assertIsArray($registered);
+        $clientId = (string)$registered['client_id'];
+        $verifier = str_repeat('h', 64);
+        $OAuthServer = Server::getInstance()->getOAuth2Server();
+        $authorizationResponse = new OAuth2\Response();
+
+        $OAuthServer->handleAuthorizeRequest(
+            $this->authorizationRequest(
+                $clientId,
+                $resource,
+                self::challenge($verifier)
+            ),
+            $authorizationResponse,
+            true,
+            (string)QUI::getUsers()->getSystemUser()->getUUID()
+        );
+
+        self::assertSame(302, $authorizationResponse->getStatusCode());
+        self::assertSame([$resource], ClientConfiguration::decodeResources(
+            Handler::getOAuthClient($clientId)['allowed_resources'] ?? null
+        ));
+        $location = (string)$authorizationResponse->getHttpHeader('Location');
+        parse_str((string)parse_url($location, PHP_URL_QUERY), $query);
+        self::assertNotEmpty($query['code']);
+
+        QUI::$vhosts = [];
+        $authorizationAfterRemoval = new OAuth2\Response();
+        self::assertFalse($OAuthServer->validateAuthorizeRequest(
+            $this->authorizationRequest(
+                $clientId,
+                $resource,
+                self::challenge(str_repeat('i', 64))
+            ),
+            $authorizationAfterRemoval
+        ));
+        self::assertSame(
+            'invalid_target',
+            self::redirectError($authorizationAfterRemoval)
+        );
+
+        $tokenResponse = RestServer::getCurrentInstance()->getSlim()->handle(
+            $this->tokenRequest([
+                'grant_type' => 'authorization_code',
+                'client_id' => $clientId,
+                'code' => (string)$query['code'],
+                'redirect_uri' => self::REDIRECT_URI,
+                'code_verifier' => $verifier,
+                'resource' => $resource
+            ])
+        );
+        $payload = json_decode((string)$tokenResponse->getBody(), true);
+        self::assertSame(400, $tokenResponse->getStatusCode());
+        self::assertIsArray($payload);
+        self::assertSame('invalid_target', $payload['error'] ?? null);
+    }
+
+    public function testTrustedVhostOriginsIncludeAliasesButNotWildcards(): void
+    {
+        QUI::$vhosts = [
+            'primary.example.test' => [
+                'project' => 'example',
+                'lang' => 'en',
+                'httpshost' => 'secure.example.test',
+                'de' => 'de.example.test'
+            ],
+            '*.wildcard.example.test' => [
+                'project' => 'wildcard',
+                'lang' => 'en'
+            ]
+        ];
+
+        self::assertSame(
+            [
+                'https://de.example.test',
+                'https://primary.example.test',
+                'https://secure.example.test'
+            ],
+            DynamicResourceTrustPolicy::getTrustedVhostOrigins()
         );
     }
 
