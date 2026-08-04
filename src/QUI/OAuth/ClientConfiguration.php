@@ -91,16 +91,7 @@ final class ClientConfiguration
         string $resource,
         string $issuer
     ): string {
-        $resource = self::validateResources([$resource])[0];
-        $issuer = self::validateResources([$issuer])[0];
-
-        if (!self::hasSameOrigin($resource, $issuer)) {
-            throw new \InvalidArgumentException(
-                'Dynamically registered clients may only use resources on the authorization server origin.'
-            );
-        }
-
-        return $resource;
+        return DynamicResourceTrustPolicy::validate($resource, $issuer);
     }
 
     /**
@@ -145,7 +136,7 @@ final class ClientConfiguration
         return array_values(array_unique($validated));
     }
 
-    private static function hasSameOrigin(string $first, string $second): bool
+    public static function hasSameOrigin(string $first, string $second): bool
     {
         $firstParts = parse_url($first);
         $secondParts = parse_url($second);
