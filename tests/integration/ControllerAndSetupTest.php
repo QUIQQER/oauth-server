@@ -2,6 +2,11 @@
 
 namespace QUITest\QUI\OAuth\Integration;
 
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
+use Doctrine\DBAL\Schema\DefaultExpression\CurrentTimestamp;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\DateTimeType;
+use Doctrine\DBAL\Types\Types;
 use GuzzleHttp\Psr7\ServerRequest;
 use QUI;
 use QUI\OAuth\BackendController;
@@ -192,6 +197,123 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
 
         $this->expectException(QUI\Exception::class);
         Setup::getTable('untrusted_table_name');
+    }
+
+    public function testSetupMigratesExpirationColumnPortably(): void
+    {
+        $Connection = self::getConnection();
+        $SchemaManager = QUI::getSchemaManager();
+        $tableName = QUI::getDBTableName('oauth_expiration_portability_test');
+        $quotedTable = QUI\Utils\Doctrine::quoteIdentifier($tableName);
+
+        if ($SchemaManager->tablesExist([$tableName])) {
+            $SchemaManager->dropTable($tableName);
+        }
+
+        try {
+            $Table = new Table($tableName);
+            $Table->addColumn('id', Types::INTEGER);
+            $Table->addColumn('expires', Types::DATETIME_MUTABLE, [
+                'notnull' => false,
+                'default' => new CurrentTimestamp()
+            ]);
+            $Table->addColumn('resource', Types::STRING, [
+                'length' => 255,
+                'notnull' => false
+            ]);
+            $Table->setPrimaryKey(['id']);
+            $SchemaManager->createTable($Table);
+
+            $expiration = '2037-01-02 03:04:05';
+            $Connection->insert($quotedTable, [
+                'id' => 1,
+                'expires' => $expiration,
+                'resource' => null
+            ]);
+
+            $Migration = new \ReflectionMethod(Setup::class, 'migrateExpirationColumn');
+            $Migration->invoke(null, $tableName);
+            $Migration->invoke(null, $tableName);
+
+            $Column = $SchemaManager->introspectTable($tableName)->getColumn('expires');
+            self::assertInstanceOf(DateTimeType::class, $Column->getType());
+            self::assertTrue($Column->getNotnull());
+            self::assertNull($Column->getDefault());
+
+            $Connection->update($quotedTable, ['resource' => 'https://example.com'], ['id' => 1]);
+            self::assertSame(
+                $expiration,
+                $Connection->fetchOne('SELECT expires FROM ' . $quotedTable . ' WHERE id = 1')
+            );
+        } finally {
+            if ($SchemaManager->tablesExist([$tableName])) {
+                $SchemaManager->dropTable($tableName);
+            }
+        }
+    }
+
+    public function testSetupRemovesLegacyMySqlOnUpdateClause(): void
+    {
+        $Connection = self::getConnection();
+
+        if (!$Connection->getDatabasePlatform() instanceof AbstractMySQLPlatform) {
+            self::markTestSkipped('The legacy implicit ON UPDATE behavior is specific to MySQL and MariaDB.');
+        }
+
+        $SchemaManager = QUI::getSchemaManager();
+        $tableName = QUI::getDBTableName('oauth_expiration_migration_test');
+        $quotedTable = QUI\Utils\Doctrine::quoteIdentifier($tableName);
+
+        if ($SchemaManager->tablesExist([$tableName])) {
+            $SchemaManager->dropTable($tableName);
+        }
+
+        try {
+            $Connection->executeStatement(
+                'CREATE TABLE ' . $quotedTable . ' ('
+                . 'id INT NOT NULL PRIMARY KEY, '
+                . 'expires TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, '
+                . 'resource VARCHAR(255) NULL'
+                . ')'
+            );
+
+            $expiration = '2037-01-02 03:04:05';
+            $Connection->insert($quotedTable, [
+                'id' => 1,
+                'expires' => $expiration,
+                'resource' => null
+            ]);
+
+            $Migration = new \ReflectionMethod(Setup::class, 'migrateExpirationColumn');
+            $Migration->invoke(null, $tableName);
+            $Migration->invoke(null, $tableName);
+
+            $column = $Connection->fetchAssociative(
+                'SELECT DATA_TYPE, EXTRA '
+                . 'FROM information_schema.COLUMNS '
+                . 'WHERE TABLE_SCHEMA = DATABASE() '
+                . 'AND TABLE_NAME = :tableName '
+                . 'AND COLUMN_NAME = :columnName',
+                [
+                    'tableName' => $tableName,
+                    'columnName' => 'expires'
+                ]
+            );
+
+            self::assertIsArray($column);
+            self::assertSame('datetime', strtolower((string)$column['DATA_TYPE']));
+            self::assertStringNotContainsString('on update', strtolower((string)$column['EXTRA']));
+
+            $Connection->update($quotedTable, ['resource' => 'https://example.com'], ['id' => 1]);
+            self::assertSame(
+                $expiration,
+                $Connection->fetchOne('SELECT expires FROM ' . $quotedTable . ' WHERE id = 1')
+            );
+        } finally {
+            if ($SchemaManager->tablesExist([$tableName])) {
+                $SchemaManager->dropTable($tableName);
+            }
+        }
     }
 
     public function testRestProviderAndOpenApiExtensionPoints(): void
