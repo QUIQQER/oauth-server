@@ -794,8 +794,28 @@ class Handler
     public static function getMaxNumberOfPermanentAccessTokens(QUIUserInterface $user): ?int
     {
         try {
+            $permission = Permission::MAX_NUMBER_OF_PERMANENT_ACCESS_TOKENS->value;
+            $isUnlimited = static function (mixed $value): bool {
+                return $value === -1 || $value === '-1';
+            };
+
+            // `maxInteger` treats -1 as smaller than every finite limit. For this
+            // permission, however, -1 means unlimited and must take precedence.
+            foreach ($user->getGroups() as $Group) {
+                if ($isUnlimited($Group->hasPermission($permission))) {
+                    return null;
+                }
+            }
+
+            if (
+                method_exists($user, 'hasPermission')
+                && $isUnlimited($user->hasPermission($permission))
+            ) {
+                return null;
+            }
+
             $permissionValue = $user->getPermission(
-                Permission::MAX_NUMBER_OF_PERMANENT_ACCESS_TOKENS->value,
+                $permission,
                 'maxInteger'
             );
         } catch (\Exception $exception) {
