@@ -8,6 +8,7 @@ use QUI\Cache\Exception as CacheException;
 use QUI\Cache\LongTermCache;
 use QUI\OAuth\Clients\Handler;
 use QUI\OAuth\Exception as OAuthException;
+use QUI\OAuth\Permission;
 use QUI\OAuth\Setup;
 use QUITest\QUI\OAuth\Support\OAuthDatabaseTestCase;
 
@@ -119,6 +120,29 @@ class ClientLifecycleTest extends OAuthDatabaseTestCase
         }
 
         self::createClient();
+    }
+
+    public function testUnlimitedPermanentAccessTokenLimitOverridesEveryoneLimit(): void
+    {
+        $Users = QUI::getUsers();
+        $SystemUser = $Users->getSystemUser();
+        $username = self::TEST_PREFIX . 'unlimited-' . bin2hex(random_bytes(6));
+        $User = $Users->createChildWithAttributes([
+            'username' => $username,
+            'email' => $username . '@example.invalid'
+        ], $SystemUser);
+
+        try {
+            QUI::getPermissionManager()->setPermissions($User, [
+                Permission::MAX_NUMBER_OF_PERMANENT_ACCESS_TOKENS->value => -1
+            ], $SystemUser);
+
+            $User = $Users->get($User->getUUID());
+
+            self::assertNull(Handler::getMaxNumberOfPermanentAccessTokens($User));
+        } finally {
+            $Users->deleteUser($User->getUUID());
+        }
     }
 
     public function testNobodyCannotOwnAnOauthClient(): void
