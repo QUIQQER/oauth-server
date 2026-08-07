@@ -479,7 +479,7 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         self::assertArrayNotHasKey('\QUI\OAuth\EventHandler::onRestInit', $eventNames);
     }
 
-    public function testDiscoveryIsHandledAtOriginRootOutsideSlim(): void
+    public function testDiscoveryIsHandledAtWellKnownPathsOutsideSlim(): void
     {
         $Server = new QUI\REST\Server([
             'basePath' => '/api/',
@@ -504,6 +504,20 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
             $metadata['authorization_endpoint']
         );
         self::assertArrayNotHasKey('scopes_supported', $metadata);
+
+        $CanonicalResponse = EventHandler::getDiscoveryResponse(
+            \Symfony\Component\HttpFoundation\Request::create(
+                'https://project.example/.well-known/oauth-authorization-server/api'
+            ),
+            '.well-known/oauth-authorization-server/api',
+            $Server
+        );
+
+        self::assertInstanceOf(\Symfony\Component\HttpFoundation\JsonResponse::class, $CanonicalResponse);
+        self::assertSame(200, $CanonicalResponse->getStatusCode());
+        $canonicalMetadata = json_decode((string)$CanonicalResponse->getContent(), true);
+        self::assertIsArray($canonicalMetadata);
+        self::assertSame('https://project.example/api', $canonicalMetadata['issuer']);
 
         $protectedResource = Metadata::protectedResource(
             $Server,
@@ -530,6 +544,11 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
         self::assertNull(EventHandler::getDiscoveryResponse(
             $Request,
             'api/.well-known/oauth-authorization-server',
+            $Server
+        ));
+        self::assertNull(EventHandler::getDiscoveryResponse(
+            $Request,
+            '.well-known/oauth-authorization-server/other',
             $Server
         ));
 

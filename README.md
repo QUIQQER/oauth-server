@@ -59,13 +59,16 @@ and expiry remain effective. Set `general.reuse_refresh_tokens_for_dynamic_clien
 refresh token rotation for these clients as well. Static authorization clients always use strict rotation.
 
 The Authorization Server issuer and default protected resource identifier are the absolute QUIQQER REST base URL.
-Discovery is exposed at the origin root, independently of the configured REST base path:
+Protected Resource Metadata and a backwards-compatible Authorization Server Metadata alias are exposed at the origin
+root:
 
 * `/.well-known/oauth-authorization-server`
 * `/.well-known/oauth-protected-resource`
 
-The metadata returned there points to the OAuth endpoints below the REST base path, for example
-`/api/oauth/authorize`, `/api/oauth/token` and `/api/oauth/revoke`.
+The canonical Authorization Server Metadata URL follows RFC 8414 and includes the issuer path after the well-known
+prefix. For an issuer ending in `/api`, it is `/.well-known/oauth-authorization-server/api`. The metadata points to
+the OAuth endpoints below the REST base path, for example `/api/oauth/authorize`, `/api/oauth/token` and
+`/api/oauth/revoke`.
 
 If an OAuth authorization request is opened without an authenticated QUIQQER session, the authorization endpoint
 renders the configured QUIQQER login control and continues with the consent screen after a successful login.

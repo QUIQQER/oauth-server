@@ -105,7 +105,7 @@ class EventHandler
     }
 
     /**
-     * Handle OAuth discovery on the origin root, outside the REST base path.
+     * Handle OAuth discovery outside the REST application routes.
      */
     public static function getDiscoveryResponse(
         Request $Request,
@@ -113,10 +113,26 @@ class EventHandler
         ?RestServer $Server = null
     ): ?Response {
         $path = '/' . trim($url, '/');
+        $authorizationServerPath = '/.well-known/oauth-authorization-server';
+        $protectedResourcePath = '/.well-known/oauth-protected-resource';
+        $isAuthorizationServerRequest = $path === $authorizationServerPath
+            || str_starts_with($path, $authorizationServerPath . '/');
 
         if (
-            $path !== '/.well-known/oauth-authorization-server'
-            && $path !== '/.well-known/oauth-protected-resource'
+            !$isAuthorizationServerRequest
+            && $path !== $protectedResourcePath
+        ) {
+            return null;
+        }
+
+        $Server ??= RestServer::getCurrentInstance();
+        $canonicalAuthorizationServerPath = $authorizationServerPath
+            . rtrim($Server->getBasePath(), '/');
+
+        if (
+            $path !== $authorizationServerPath
+            && $path !== $canonicalAuthorizationServerPath
+            && $path !== $protectedResourcePath
         ) {
             return null;
         }
@@ -132,9 +148,8 @@ class EventHandler
             );
         }
 
-        $Server ??= RestServer::getCurrentInstance();
         $requestOrigin = $Request->getSchemeAndHttpHost();
-        $metadata = $path === '/.well-known/oauth-authorization-server'
+        $metadata = $path !== $protectedResourcePath
             ? Metadata::authorizationServer($Server, $requestOrigin)
             : Metadata::protectedResource($Server, $requestOrigin);
 
