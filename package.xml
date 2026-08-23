@@ -8,6 +8,22 @@
             <locale group="quiqqer/oauth-server" var="package.description"/>
         </description>
 
+        <capabilities schemaVersion="1">
+            <capability id="authentication.oauth2-authorization-server">
+                <title>OAuth 2.0 authorization server</title>
+                <description>
+                    Provides an OAuth 2.0 authorization server (RFC 6749) with Authorization Code and Client Credentials grants, refresh-token rotation, PKCE S256 (RFC 7636), token revocation (RFC 7009), resource indicators (RFC 8707), dynamic client registration (RFC 7591), and authorization-server metadata (RFC 8414).
+                </description>
+            </capability>
+
+            <capability id="api.oauth2-protected-resource">
+                <title>OAuth 2.0 protected resource</title>
+                <description>
+                    Protects QUIQQER REST API endpoints as an OAuth 2.0 resource server with bearer-token validation (RFC 6750), per-client scopes and request limits, resource-bound tokens, and protected-resource metadata (RFC 9728).
+                </description>
+            </capability>
+        </capabilities>
+
         <image src="URL_OPT_DIR/quiqqer/oauth-server/bin/images/Logo.jpg"/>
 
         <preview>
