@@ -5,3 +5,19 @@ include:
       php-83: true
       php-84: true
       php-85: true
+
+phpunit-php8.2:
+  variables:
+    XDEBUG_MODE: coverage
+
+phpunit-php8.3:
+  variables:
+    XDEBUG_MODE: coverage
+
+phpunit-php8.4:
+  variables:
+    XDEBUG_MODE: coverage
+
+phpunit-php8.5:
+  variables:
+    XDEBUG_MODE: coverage

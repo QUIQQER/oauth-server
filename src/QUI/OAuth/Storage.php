@@ -2,6 +2,7 @@
 
 namespace QUI\OAuth;
 
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use QUI;
 use OAuth2;
 
@@ -158,27 +159,43 @@ class Storage extends OAuth2\Storage\Pdo
     }
 
     /**
-     * Select a refresh token under a row lock inside the caller's transaction.
+     * Select a refresh token under a write lock inside the caller's transaction.
      *
      * @return array<string, mixed>|false
      */
     public function getRefreshTokenForUpdate(string $refreshToken): array|false
     {
-        $QueryBuilder = QUI::getDataBaseConnection()->createQueryBuilder();
-        $token = $QueryBuilder
-            ->select('*')
-            ->from(QUI\Utils\Doctrine::quoteIdentifier(
-                Setup::getTable('oauth_refresh_tokens')
-            ))
-            ->where($QueryBuilder->expr()->eq(
-                'refresh_token',
-                ':refreshToken'
-            ))
+        $Connection = QUI::getDataBaseConnection();
+        $table = QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_refresh_tokens'));
+        $isSqlite = $Connection->getDatabasePlatform() instanceof SQLitePlatform;
+
+        if ($isSqlite) {
+            if (!$Connection->isTransactionActive()) {
+                throw new \LogicException('Locking a refresh token requires an active transaction.');
+            }
+
+            // SQLite has no row locks. Acquire its writer lock before reading,
+            // without changing the token, and retain it until commit or rollback.
+            $LockQuery = $Connection->createQueryBuilder();
+            $LockQuery->update($table)
+                ->set('refresh_token', 'refresh_token')
+                ->where($LockQuery->expr()->eq('refresh_token', ':refreshToken'))
+                ->setParameter('refreshToken', $refreshToken)
+                ->executeStatement();
+        }
+
+        $QueryBuilder = $Connection->createQueryBuilder();
+        $QueryBuilder->select('*')
+            ->from($table)
+            ->where($QueryBuilder->expr()->eq('refresh_token', ':refreshToken'))
             ->setParameter('refreshToken', $refreshToken)
-            ->setMaxResults(1)
-            ->forUpdate()
-            ->executeQuery()
-            ->fetchAssociative();
+            ->setMaxResults(1);
+
+        if (!$isSqlite) {
+            $QueryBuilder->forUpdate();
+        }
+
+        $token = $QueryBuilder->executeQuery()->fetchAssociative();
 
         if (
             !is_array($token)
