@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<locales>
+    <groups name="quiqqer/oauth-server" datatype="js,php">
+        <locale name="package.title">
+<fr><![CDATA[QUIQQER - Serveur OAuth]]></fr>
+        </locale>
+        <locale name="package.description">
+<fr><![CDATA[Gère et limite l’accès aux points d’accès de l’API REST grâce à l’authentification OAuth.]]></fr>
+        </locale>
+
+        <locale name="settings.access_lifetime.text">
+<fr><![CDATA[Durée de validité du jeton (en secondes)]]></fr>
+        </locale>
+        <locale name="settings.access_lifetime.description">
+<fr><![CDATA[Durée de validité d’un jeton d’accès, en secondes.]]></fr>
+        </locale>
+        <locale name="settings.refresh_token_lifetime.text">
+<fr><![CDATA[Durée de validité du jeton de renouvellement]]></fr>
+        </locale>
+        <locale name="settings.refresh_token_lifetime.description">
+<fr><![CDATA[Durée de validité d’un jeton de renouvellement, en secondes. Lors d’une rotation, cette durée recommence pour le nouveau jeton.]]></fr>
+        </locale>
+        <locale name="settings.refresh_token_rotation_grace_period.text">
+<fr><![CDATA[Délai de tolérance pour la rotation des jetons de renouvellement]]></fr>
+        </locale>
+        <locale name="settings.refresh_token_rotation_grace_period.description">
+<fr><![CDATA[Période, en secondes, pendant laquelle un jeton de renouvellement récemment remplacé peut renvoyer la même réponse de jeton. Une réutilisation ultérieure révoque toute la famille de jetons. La valeur 0 désactive ce délai de tolérance.]]></fr>
+        </locale>
+        <locale name="settings.reuse_refresh_tokens_for_dynamic_clients.text">
+<fr><![CDATA[Réutiliser les jetons de renouvellement des clients dynamiques]]></fr>
+        </locale>
+        <locale name="settings.reuse_refresh_tokens_for_dynamic_clients.description">
+<fr><![CDATA[Conserve les jetons de renouvellement des clients publics enregistrés dynamiquement afin que plusieurs instances de clients MCP en cours d’exécution puissent partager les mêmes identifiants. Les jetons d’accès continuent d’être renouvelés et une révocation explicite invalide toute la famille de jetons. Désactive cette option pour imposer une rotation stricte des jetons de renouvellement.]]></fr>
+        </locale>
+        <locale name="settings.dynamic_client_registration.text">
+<fr><![CDATA[Enregistrement dynamique des clients]]></fr>
+        </locale>
+        <locale name="settings.dynamic_client_registration.description">
+<fr><![CDATA[Permet aux clients MCP tels que Codex de s’enregistrer comme clients publics PKCE sans secret client. Lors de leur première connexion, les clients dynamiques sont liés de façon permanente à une ressource de la même origine ou d’un domaine VHost configuré.]]></fr>
+        </locale>
+
+        <locale name="client_id">
+<fr><![CDATA[Identifiant du client]]></fr>
+        </locale>
+        <locale name="client_secret">
+<fr><![CDATA[Secret client]]></fr>
+        </locale>
+
+<!-- Permissions -->
+        <locale name="permission.quiqqer.oauth-server._header">
+<fr><![CDATA[Serveur OAuth2]]></fr>
+        </locale>
+        <locale name="permission.quiqqer.oauth-server.manage_clients">
+<fr><![CDATA[Peut gérer les clients OAuth (CRUD)]]></fr>
+        </locale>
+        <locale name="permission.quiqqer.oauth-server.create_permanent_access_token_for_own_user">
+<fr><![CDATA[Peut créer un jeton d’accès permanent pour son propre compte utilisateur (client OAuth avec un secret client et le paramètre "client_secret_is_token").]]></fr>
+        </locale>
+        <locale name="permission.quiqqer.oauth-server.max_number_of_permanent_access_tokens">
+<fr><![CDATA[Nombre maximal de secrets clients valables comme jetons d’accès permanents. (-1 = aucune limite)]]></fr>
+        </locale>
+
+        <locale name="profile.tokens.title">
+<fr><![CDATA[Jetons d’API]]></fr>
+        </locale>
+        <locale name="user.tab.apiTokens">
+<fr><![CDATA[Jetons d’API]]></fr>
+        </locale>
+
+        <locale name="profile.tokens.info">
+<fr><![CDATA[Ces jetons fonctionnent comme des jetons d’accès personnels. Traite-les comme un mot de passe et utilise-les pour l’authentification Bearer, par exemple auprès du serveur MCP.]]></fr>
+        </locale>
+
+        <locale name="profile.tokens.label.title">
+<fr><![CDATA[Titre]]></fr>
+        </locale>
+
+        <locale name="profile.tokens.placeholder.title">
+<fr><![CDATA[p. ex. accès MCP]]></fr>
+        </locale>
+
+        <locale name="profile.tokens.btn.create">
+<fr><![CDATA[Créer un jeton]]></fr>
+        </locale>
+
+        <locale name="profile.tokens.btn.delete">
+<fr><![CDATA[Supprimer le jeton]]></fr>
+        </locale>
+        <locale name="profile.tokens.btn.show">
+<fr><![CDATA[Afficher le jeton]]></fr>
+        </locale>
+        <locale name="profile.tokens.btn.hide">
+<fr><![CDATA[Masquer le jeton]]></fr>
+        </locale>
+        <locale name="profile.tokens.delete.confirm.title">
+<fr><![CDATA[Supprimer le jeton ?]]></fr>
+        </locale>
+        <locale name="profile.tokens.delete.confirm.text">
+<fr><![CDATA[Veux-tu vraiment supprimer ce jeton d’API ? Il ne permettra plus aucun accès après sa suppression.]]></fr>
+        </locale>
+
+        <locale name="profile.tokens.list.title">
+<fr><![CDATA[Jetons existants]]></fr>
+        </locale>
+
+        <locale name="profile.tokens.list.empty">
+<fr><![CDATA[Aucun jeton pour le moment.]]></fr>
+        </locale>
+
+<!-- Crons -->
+        <locale name="cron.cleanupAccessTokens.title">
+<fr><![CDATA[Nettoyer les jetons d’accès OAuth]]></fr>
+        </locale>
+        <locale name="cron.cleanupAccessTokens.description">
+<fr><![CDATA[Supprime de la base de données tous les jetons d’accès OAuth expirés depuis au moins 24 h.]]></fr>
+        </locale>
+    </groups>
+
+    <groups name="quiqqer/oauth-server" datatype="php">
+
+        <locale name="exception.frontend.general_error">
+<fr><![CDATA[Une erreur s’est produite. Réessaie ou contacte l’assistance.]]></fr>
+        </locale>
+        <locale name="exception.frontend.no_permission">
+<fr><![CDATA[Tu n’as pas les autorisations nécessaires pour effectuer cette action.]]></fr>
+        </locale>
+        <locale name="exception.frontend.permanent_access_token_limit_reached">
+<fr><![CDATA[Tu as déjà créé le nombre maximal de jetons ([maxTokens]).]]></fr>
+        </locale>
+        <locale name="exception.backend.permanent_access_token_limit_reached">
+<fr><![CDATA[L’utilisateur a déjà créé le nombre maximal de jetons ([maxTokens]).]]></fr>
+        </locale>
+        <locale name="exception.backend.permanent_access_token_not_found">
+<fr><![CDATA[Le jeton d’API est introuvable.]]></fr>
+        </locale>
+
+<!-- Labels -->
+        <locale name="label.never">
+<fr><![CDATA[jamais]]></fr>
+        </locale>
+
+<!-- Settings -->
+        <locale name="settings.active.text">
+<fr><![CDATA[État d’OAuth2]]></fr>
+        </locale>
+        <locale name="settings.active.description">
+<fr><![CDATA[Le module OAuth2 est actif et vérifie toutes les requêtes de l’API REST selon les autorisations configurées pour chaque client OAuth2. Les points d’accès désactivés dans « Points d’accès surveillés » font exception.]]></fr>
+        </locale>
+        <locale name="settings.title">
+<fr><![CDATA[Paramètres d’OAuth2]]></fr>
+        </locale>
+        <locale name="settings.protected_scopes.text">
+<fr><![CDATA[Points d’accès surveillés]]></fr>
+        </locale>
+        <locale name="settings.protected_scopes.description" html="true">
+<fr><![CDATA[Tu peux indiquer ici, pour chaque point d’accès, si une authentification OAuth2 est requise. <b>Attention :</b> Si l’option est désactivée pour un point d’accès, celui-ci peut être accessible librement depuis n’importe où !]]></fr>
+        </locale>
+        <locale name="exception.Handler.resetClientLimits.scope_not_found">
+<fr><![CDATA[Aucune donnée de limite n’a été trouvée pour ce point d’accès.]]></fr>
+        </locale>
+
+<!-- Messages -->
+        <locale name="message.ajax.general_error">
+<fr><![CDATA[Une erreur inattendue s’est produite lors de l’opération. Contacte un administrateur ou consulte les journaux d’erreurs.]]></fr>
+        </locale>
+        <locale name="message.ajax.client.resetLimits.error" html="true">
+<fr><![CDATA[Impossible de réinitialiser le compteur de requêtes :<br/><br/>[error]]]></fr>
+        </locale>
+        <locale name="message.ajax.client.resetLimits.success" html="true">
+<fr><![CDATA[Le compteur de requêtes du client OAuth <b>[clientId]</b> pour le point d’accès <b>[scope]</b> a été réinitialisé.]]></fr>
+        </locale>
+        <locale name="message.ajax.client.remove.error" html="true">
+<fr><![CDATA[Impossible de supprimer le client OAuth :<br/><br/>[error]]]></fr>
+        </locale>
+        <locale name="message.ajax.client.remove.success" html="true">
+<fr><![CDATA[Le client OAuth <b>[clientId]</b> a été supprimé.]]></fr>
+        </locale>
+        <locale name="message.ajax.client.create.error" html="true">
+<fr><![CDATA[Impossible de créer le client OAuth :<br/><br/>[error]]]></fr>
+        </locale>
+        <locale name="message.ajax.client.create.success" html="true">
+<fr><![CDATA[Le client OAuth <b>[clientId]</b> a été créé.]]></fr>
+        </locale>
+        <locale name="message.ajax.client.update.error" html="true">
+<fr><![CDATA[Impossible de mettre à jour le client OAuth :<br/><br/>[error]]]></fr>
+        </locale>
+        <locale name="message.ajax.client.update.success" html="true">
+<fr><![CDATA[Le client OAuth <b>[clientId]</b> a été mis à jour.]]></fr>
+        </locale>
+        <locale name="message.ajax.token.create.error" html="true">
+<fr><![CDATA[Impossible de créer le jeton d’API :<br/><br/>[error]]]></fr>
+        </locale>
+        <locale name="message.ajax.token.create.success" html="true">
+<fr><![CDATA[Le jeton d’API <b>[title]</b> a été créé.]]></fr>
+        </locale>
+        <locale name="message.ajax.token.remove.error" html="true">
+<fr><![CDATA[Impossible de supprimer le jeton d’API :<br/><br/>[error]]]></fr>
+        </locale>
+        <locale name="message.ajax.token.remove.success" html="true">
+<fr><![CDATA[Le jeton d’API <b>[clientId]</b> a été supprimé.]]></fr>
+        </locale>
+
+    </groups>
+
+    <groups name="quiqqer/oauth-server" datatype="php">
+
+        <locale name="RestProvider.title">
+<fr><![CDATA[API d’authentification OAuth 2.0 de QUIQQER]]></fr>
+        </locale>
+
+        <locale name="exception.could.not.create.client">
+<fr><![CDATA[Impossible de créer le client OAuth. Réessaie ou contacte un administrateur.]]></fr>
+        </locale>
+        <locale name="exception.client.not.found">
+<fr><![CDATA[Le client OAuth est introuvable.]]></fr>
+        </locale>
+        <locale name="exception.client.could.not.save">
+<fr><![CDATA[Impossible d’enregistrer le client OAuth.]]></fr>
+        </locale>
+        <locale name="oauth.authorize.login.title">
+<fr><![CDATA[Connexion requise]]></fr>
+        </locale>
+        <locale name="oauth.authorize.login.description">
+<fr><![CDATA[Connecte-toi pour poursuivre cette demande d’autorisation.]]></fr>
+        </locale>
+        <locale name="oauth.authorize.consent.title">
+<fr><![CDATA[Autoriser l’accès]]></fr>
+        </locale>
+        <locale name="oauth.authorize.consent.description">
+<fr><![CDATA[L’application « [client] » souhaite accéder à ce projet en ton nom.]]></fr>
+        </locale>
+        <locale name="oauth.authorize.consent.scopes">
+<fr><![CDATA[Autorisations demandées]]></fr>
+        </locale>
+        <locale name="oauth.authorize.consent.approve">
+<fr><![CDATA[Autoriser l’accès]]></fr>
+        </locale>
+        <locale name="oauth.authorize.consent.deny">
+<fr><![CDATA[Refuser]]></fr>
+        </locale>
+        <locale name="oauth.authorize.expired.title">
+<fr><![CDATA[Autorisation expirée]]></fr>
+        </locale>
+        <locale name="oauth.authorize.expired.description">
+<fr><![CDATA[Cette demande a déjà été traitée ou a expiré. Recharge l’autorisation pour continuer.]]></fr>
+        </locale>
+        <locale name="oauth.authorize.expired.action">
+<fr><![CDATA[Recharger l’autorisation]]></fr>
+        </locale>
+    </groups>
+
+
+    <groups name="quiqqer/oauth-server" datatype="js">
+
+<!-- Controls: backend/controls/ScopeSettings -->
+        <locale name="controls.backend.ScopeSettings.template.headerCalls">
+<fr><![CDATA[Appels]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.headerScope">
+<fr><![CDATA[Portée (point d’accès)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelUnlimitedCalls">
+<fr><![CDATA[Illimité]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelActive">
+<fr><![CDATA[actif]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelMaxCalls">
+<fr><![CDATA[Nombre maximal d’appels]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelMaxCallsType">
+<fr><![CDATA[Intervalle]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionAbsolute">
+<fr><![CDATA[au total]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionMinute">
+<fr><![CDATA[par minute]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionHour">
+<fr><![CDATA[par heure]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionDay">
+<fr><![CDATA[par jour]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionMonth">
+<fr><![CDATA[par mois (30 jours)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionYear">
+<fr><![CDATA[par an (365 jours)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelTotalUsageCount">
+<fr><![CDATA[Requêtes (total)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelIntervalUsageCount">
+<fr><![CDATA[Requêtes (intervalle)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelReset">
+<fr><![CDATA[Réinitialiser le compteur de requêtes]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelFirstUsage">
+<fr><![CDATA[Première requête (intervalle)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelLastUsage">
+<fr><![CDATA[Dernière requête (intervalle)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.limitReached">
+<fr><![CDATA[(Limite de requêtes atteinte !)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelNotProtected">
+<fr><![CDATA[(Actuellement non surveillé !)]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.reset.title">
+<fr><![CDATA[Réinitialiser le compteur de requêtes]]></fr>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.reset.text" html="true">
+<fr><![CDATA[Veux-tu vraiment réinitialiser le compteur de requêtes du client OAuth <b>[clientId]</b> pour le point d’accès <b>[scope]</b> ?<br/><br/>Le client sera réinitialisé comme s’il n’avait encore effectué aucune requête API <b>pendant l’intervalle configuré</b> pour ce point d’accès.]]></fr>
+        </locale>
+
+<!-- Controls: backend/controls/settings/ProtectedScopes -->
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerScope">
+<fr><![CDATA[Portée (point d’accès)]]></fr>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerProtected">
+<fr><![CDATA[Authentification OAuth2]]></fr>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerProtectedShort">
+<fr><![CDATA[Auth.]]></fr>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterLabel">
+<fr><![CDATA[Filtrer les points d’accès]]></fr>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterPlaceholder">
+<fr><![CDATA[Rechercher un point d’accès…]]></fr>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterResult">
+<fr><![CDATA[[visible] points d’accès affichés sur [total]]]></fr>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.listLabel">
+<fr><![CDATA[Protection OAuth2 des points d’accès REST]]></fr>
+        </locale>
+
+<!-- Controls: backend/controls/UserClient -->
+        <locale name="controls.backend.UserClient.createClient.popup.close.text">
+<fr><![CDATA[Annuler]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.confirm.text">
+<fr><![CDATA[Créer le client]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.confirm">
+<fr><![CDATA[Clique ici pour créer un client OAuth2 avec les paramètres ci-dessus]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelName">
+<fr><![CDATA[Titre]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelScopeSettings">
+<fr><![CDATA[Paramètres d’accès]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelButtonGenerateSecret">
+<fr><![CDATA[Générer un nouveau secret]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelClientSecretIsToken">
+<fr><![CDATA[Secret client comme jeton]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.textClientSecretIsToken">
+<fr><![CDATA[Le secret client peut être utilisé comme jeton d’accès permanent]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.descriptionClientSecretIsToken">
+<fr><![CDATA[Avec cette option, le secret client sert de jeton d’accès permanent et n’a pas besoin d’être renouvelé. Cela convient aux services qui n’ont besoin d’accéder à l’API qu’au moyen d’un jeton fixe.]]></fr>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.title">
+<fr><![CDATA[Créer un client OAuth2]]></fr>
+        </locale>
+        <locale name="control.user.clients.button.add">
+<fr><![CDATA[Ajouter un client]]></fr>
+        </locale>
+        <locale name="control.user.clients.button.edit">
+<fr><![CDATA[Modifier le client]]></fr>
+        </locale>
+        <locale name="control.user.clients.button.delete">
+<fr><![CDATA[Supprimer le client]]></fr>
+        </locale>
+
+        <locale name="control.user.clients.window.edit.title">
+<fr><![CDATA[Client : [clientId]]]></fr>
+        </locale>
+
+        <locale name="control.user.clients.window.delete.title">
+<fr><![CDATA[Supprimer le client OAuth]]></fr>
+        </locale>
+        <locale name="control.user.clients.window.delete.text" html="1">
+<fr><![CDATA[Veux-tu vraiment supprimer définitivement le client OAuth suivant ?<br /><br /><b>[name]</b><br /><pre style="white-space: pre-wrap; word-wrap: break-word;">[clientId]</pre>]]></fr>
+        </locale>
+        <locale name="control.user.tokens.button.add">
+<fr><![CDATA[Créer un jeton]]></fr>
+        </locale>
+        <locale name="control.user.tokens.button.delete">
+<fr><![CDATA[Supprimer le jeton]]></fr>
+        </locale>
+        <locale name="control.user.tokens.window.create.title">
+<fr><![CDATA[Créer un jeton d’API]]></fr>
+        </locale>
+        <locale name="control.user.tokens.window.delete.title">
+<fr><![CDATA[Supprimer le jeton d’API]]></fr>
+        </locale>
+        <locale name="control.user.tokens.window.delete.text" html="1">
+<fr><![CDATA[Veux-tu vraiment supprimer le jeton d’API <b>[title]</b> ?]]></fr>
+        </locale>
+    </groups>
+</locales>
