@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<locales>
+    <groups name="quiqqer/oauth-server" datatype="js,php">
+        <locale name="package.title">
+<pl><![CDATA[QUIQQER - Serwer OAuth]]></pl>
+        </locale>
+        <locale name="package.description">
+<pl><![CDATA[Zarządzaj dostępem do punktów końcowych API REST i ograniczaj go za pomocą uwierzytelniania OAuth.]]></pl>
+        </locale>
+
+        <locale name="settings.access_lifetime.text">
+<pl><![CDATA[Okres ważności tokenu (w sekundach)]]></pl>
+        </locale>
+        <locale name="settings.access_lifetime.description">
+<pl><![CDATA[Okres ważności tokenu dostępu w sekundach.]]></pl>
+        </locale>
+        <locale name="settings.refresh_token_lifetime.text">
+<pl><![CDATA[Okres ważności tokenu odświeżania]]></pl>
+        </locale>
+        <locale name="settings.refresh_token_lifetime.description">
+<pl><![CDATA[Okres ważności tokenu odświeżania w sekundach. Rotacja rozpoczyna nowy okres ważności dla tokenu zastępczego.]]></pl>
+        </locale>
+        <locale name="settings.refresh_token_rotation_grace_period.text">
+<pl><![CDATA[Okres tolerancji przy rotacji tokenów odświeżania]]></pl>
+        </locale>
+        <locale name="settings.refresh_token_rotation_grace_period.description">
+<pl><![CDATA[Okres w sekundach, w którym niedawno zastąpiony token odświeżania może ponownie zwrócić tę samą odpowiedź z tokenem. Późniejsze ponowne użycie unieważnia całą rodzinę tokenów. Wartość 0 wyłącza okres tolerancji.]]></pl>
+        </locale>
+        <locale name="settings.reuse_refresh_tokens_for_dynamic_clients.text">
+<pl><![CDATA[Używaj ponownie tokenów odświeżania klientów dynamicznych]]></pl>
+        </locale>
+        <locale name="settings.reuse_refresh_tokens_for_dynamic_clients.description">
+<pl><![CDATA[Zachowuje tokeny odświeżania publicznych klientów zarejestrowanych dynamicznie, aby wiele działających instancji klientów MCP mogło współdzielić te same dane uwierzytelniające. Tokeny dostępu nadal są odnawiane, a jawne unieważnienie obejmuje całą rodzinę tokenów. Wyłącz tę opcję, aby wymusić ścisłą rotację tokenów odświeżania.]]></pl>
+        </locale>
+        <locale name="settings.dynamic_client_registration.text">
+<pl><![CDATA[Dynamiczna rejestracja klientów]]></pl>
+        </locale>
+        <locale name="settings.dynamic_client_registration.description">
+<pl><![CDATA[Umożliwia klientom MCP, takim jak Codex, samodzielną rejestrację jako publiczni klienci PKCE bez sekretu klienta. Przy pierwszym logowaniu klienci dynamiczni zostają trwale powiązani z zasobem o tym samym pochodzeniu lub w skonfigurowanej domenie VHost.]]></pl>
+        </locale>
+
+        <locale name="client_id">
+<pl><![CDATA[Identyfikator klienta]]></pl>
+        </locale>
+        <locale name="client_secret">
+<pl><![CDATA[Sekret klienta]]></pl>
+        </locale>
+
+<!-- Permissions -->
+        <locale name="permission.quiqqer.oauth-server._header">
+<pl><![CDATA[Serwer OAuth2]]></pl>
+        </locale>
+        <locale name="permission.quiqqer.oauth-server.manage_clients">
+<pl><![CDATA[Może zarządzać klientami OAuth (CRUD)]]></pl>
+        </locale>
+        <locale name="permission.quiqqer.oauth-server.create_permanent_access_token_for_own_user">
+<pl><![CDATA[Może utworzyć stały token dostępu dla własnego użytkownika (klient OAuth z sekretem klienta i ustawieniem "client_secret_is_token").]]></pl>
+        </locale>
+        <locale name="permission.quiqqer.oauth-server.max_number_of_permanent_access_tokens">
+<pl><![CDATA[Maksymalna liczba sekretów klienta ważnych jako stałe tokeny dostępu. (-1 = bez limitu)]]></pl>
+        </locale>
+
+        <locale name="profile.tokens.title">
+<pl><![CDATA[Tokeny API]]></pl>
+        </locale>
+        <locale name="user.tab.apiTokens">
+<pl><![CDATA[Tokeny API]]></pl>
+        </locale>
+
+        <locale name="profile.tokens.info">
+<pl><![CDATA[Te tokeny działają jak osobiste tokeny dostępu. Traktuj je jak hasło i używaj do uwierzytelniania Bearer, na przykład na serwerze MCP.]]></pl>
+        </locale>
+
+        <locale name="profile.tokens.label.title">
+<pl><![CDATA[Tytuł]]></pl>
+        </locale>
+
+        <locale name="profile.tokens.placeholder.title">
+<pl><![CDATA[np. dostęp MCP]]></pl>
+        </locale>
+
+        <locale name="profile.tokens.btn.create">
+<pl><![CDATA[Utwórz token]]></pl>
+        </locale>
+
+        <locale name="profile.tokens.btn.delete">
+<pl><![CDATA[Usuń token]]></pl>
+        </locale>
+        <locale name="profile.tokens.btn.show">
+<pl><![CDATA[Pokaż token]]></pl>
+        </locale>
+        <locale name="profile.tokens.btn.hide">
+<pl><![CDATA[Ukryj token]]></pl>
+        </locale>
+        <locale name="profile.tokens.delete.confirm.title">
+<pl><![CDATA[Usunąć token?]]></pl>
+        </locale>
+        <locale name="profile.tokens.delete.confirm.text">
+<pl><![CDATA[Czy na pewno chcesz usunąć ten token API? Dostęp za jego pomocą nie będzie już możliwy.]]></pl>
+        </locale>
+
+        <locale name="profile.tokens.list.title">
+<pl><![CDATA[Istniejące tokeny]]></pl>
+        </locale>
+
+        <locale name="profile.tokens.list.empty">
+<pl><![CDATA[Nie ma jeszcze żadnych tokenów.]]></pl>
+        </locale>
+
+<!-- Crons -->
+        <locale name="cron.cleanupAccessTokens.title">
+<pl><![CDATA[Wyczyść tokeny dostępu OAuth]]></pl>
+        </locale>
+        <locale name="cron.cleanupAccessTokens.description">
+<pl><![CDATA[Usuwa z bazy danych wszystkie tokeny dostępu OAuth, które wygasły co najmniej 24 h temu.]]></pl>
+        </locale>
+    </groups>
+
+    <groups name="quiqqer/oauth-server" datatype="php">
+
+        <locale name="exception.frontend.general_error">
+<pl><![CDATA[Coś poszło nie tak. Spróbuj ponownie lub skontaktuj się z pomocą techniczną.]]></pl>
+        </locale>
+        <locale name="exception.frontend.no_permission">
+<pl><![CDATA[Nie masz uprawnień wymaganych do wykonania tej czynności.]]></pl>
+        </locale>
+        <locale name="exception.frontend.permanent_access_token_limit_reached">
+<pl><![CDATA[Utworzono już maksymalną liczbę tokenów dla Twojego konta ([maxTokens]).]]></pl>
+        </locale>
+        <locale name="exception.backend.permanent_access_token_limit_reached">
+<pl><![CDATA[Użytkownik utworzył już maksymalną liczbę tokenów ([maxTokens]).]]></pl>
+        </locale>
+        <locale name="exception.backend.permanent_access_token_not_found">
+<pl><![CDATA[Nie znaleziono tokenu API.]]></pl>
+        </locale>
+
+<!-- Labels -->
+        <locale name="label.never">
+<pl><![CDATA[nigdy]]></pl>
+        </locale>
+
+<!-- Settings -->
+        <locale name="settings.active.text">
+<pl><![CDATA[Stan OAuth2]]></pl>
+        </locale>
+        <locale name="settings.active.description">
+<pl><![CDATA[Moduł OAuth2 jest aktywny i sprawdza wszystkie żądania API REST pod kątem uprawnień skonfigurowanych dla poszczególnych klientów OAuth2. Wyjątkiem są punkty końcowe wyłączone w ustawieniu „Monitorowane punkty końcowe”.]]></pl>
+        </locale>
+        <locale name="settings.title">
+<pl><![CDATA[Ustawienia OAuth2]]></pl>
+        </locale>
+        <locale name="settings.protected_scopes.text">
+<pl><![CDATA[Monitorowane punkty końcowe]]></pl>
+        </locale>
+        <locale name="settings.protected_scopes.description" html="true">
+<pl><![CDATA[Tutaj możesz określić, które punkty końcowe wymagają uwierzytelniania OAuth2. <b>Uwaga:</b> Jeśli opcja jest wyłączona dla danego punktu końcowego, może on być swobodnie dostępny z dowolnego miejsca!]]></pl>
+        </locale>
+        <locale name="exception.Handler.resetClientLimits.scope_not_found">
+<pl><![CDATA[Nie znaleziono danych limitów dla tego punktu końcowego.]]></pl>
+        </locale>
+
+<!-- Messages -->
+        <locale name="message.ajax.general_error">
+<pl><![CDATA[Wystąpił nieoczekiwany błąd podczas wykonywania operacji. Skontaktuj się z administratorem lub sprawdź dzienniki błędów.]]></pl>
+        </locale>
+        <locale name="message.ajax.client.resetLimits.error" html="true">
+<pl><![CDATA[Nie udało się zresetować licznika zapytań:<br/><br/>[error]]]></pl>
+        </locale>
+        <locale name="message.ajax.client.resetLimits.success" html="true">
+<pl><![CDATA[Zresetowano licznik zapytań klienta OAuth <b>[clientId]</b> dla punktu końcowego <b>[scope]</b>.]]></pl>
+        </locale>
+        <locale name="message.ajax.client.remove.error" html="true">
+<pl><![CDATA[Nie udało się usunąć klienta OAuth:<br/><br/>[error]]]></pl>
+        </locale>
+        <locale name="message.ajax.client.remove.success" html="true">
+<pl><![CDATA[Usunięto klienta OAuth <b>[clientId]</b>.]]></pl>
+        </locale>
+        <locale name="message.ajax.client.create.error" html="true">
+<pl><![CDATA[Nie udało się utworzyć klienta OAuth:<br/><br/>[error]]]></pl>
+        </locale>
+        <locale name="message.ajax.client.create.success" html="true">
+<pl><![CDATA[Utworzono klienta OAuth <b>[clientId]</b>.]]></pl>
+        </locale>
+        <locale name="message.ajax.client.update.error" html="true">
+<pl><![CDATA[Nie udało się zaktualizować klienta OAuth:<br/><br/>[error]]]></pl>
+        </locale>
+        <locale name="message.ajax.client.update.success" html="true">
+<pl><![CDATA[Zaktualizowano klienta OAuth <b>[clientId]</b>.]]></pl>
+        </locale>
+        <locale name="message.ajax.token.create.error" html="true">
+<pl><![CDATA[Nie udało się utworzyć tokenu API:<br/><br/>[error]]]></pl>
+        </locale>
+        <locale name="message.ajax.token.create.success" html="true">
+<pl><![CDATA[Utworzono token API <b>[title]</b>.]]></pl>
+        </locale>
+        <locale name="message.ajax.token.remove.error" html="true">
+<pl><![CDATA[Nie udało się usunąć tokenu API:<br/><br/>[error]]]></pl>
+        </locale>
+        <locale name="message.ajax.token.remove.success" html="true">
+<pl><![CDATA[Usunięto token API <b>[clientId]</b>.]]></pl>
+        </locale>
+
+    </groups>
+
+    <groups name="quiqqer/oauth-server" datatype="php">
+
+        <locale name="RestProvider.title">
+<pl><![CDATA[API uwierzytelniania OAuth 2.0 QUIQQER]]></pl>
+        </locale>
+
+        <locale name="exception.could.not.create.client">
+<pl><![CDATA[Nie udało się utworzyć klienta OAuth. Spróbuj ponownie lub skontaktuj się z administratorem.]]></pl>
+        </locale>
+        <locale name="exception.client.not.found">
+<pl><![CDATA[Nie znaleziono klienta OAuth.]]></pl>
+        </locale>
+        <locale name="exception.client.could.not.save">
+<pl><![CDATA[Nie udało się zapisać klienta OAuth.]]></pl>
+        </locale>
+        <locale name="oauth.authorize.login.title">
+<pl><![CDATA[Wymagane logowanie]]></pl>
+        </locale>
+        <locale name="oauth.authorize.login.description">
+<pl><![CDATA[Zaloguj się, a następnie kontynuuj tę autoryzację.]]></pl>
+        </locale>
+        <locale name="oauth.authorize.consent.title">
+<pl><![CDATA[Zezwól na dostęp]]></pl>
+        </locale>
+        <locale name="oauth.authorize.consent.description">
+<pl><![CDATA[Aplikacja „[client]” chce uzyskać dostęp do tego projektu w Twoim imieniu.]]></pl>
+        </locale>
+        <locale name="oauth.authorize.consent.scopes">
+<pl><![CDATA[Żądane uprawnienia]]></pl>
+        </locale>
+        <locale name="oauth.authorize.consent.approve">
+<pl><![CDATA[Zezwól na dostęp]]></pl>
+        </locale>
+        <locale name="oauth.authorize.consent.deny">
+<pl><![CDATA[Odmów]]></pl>
+        </locale>
+        <locale name="oauth.authorize.expired.title">
+<pl><![CDATA[Autoryzacja wygasła]]></pl>
+        </locale>
+        <locale name="oauth.authorize.expired.description">
+<pl><![CDATA[To żądanie zostało już przetworzone lub wygasło. Wczytaj ponownie autoryzację, aby kontynuować.]]></pl>
+        </locale>
+        <locale name="oauth.authorize.expired.action">
+<pl><![CDATA[Wczytaj ponownie autoryzację]]></pl>
+        </locale>
+    </groups>
+
+
+    <groups name="quiqqer/oauth-server" datatype="js">
+
+<!-- Controls: backend/controls/ScopeSettings -->
+        <locale name="controls.backend.ScopeSettings.template.headerCalls">
+<pl><![CDATA[Wywołania]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.headerScope">
+<pl><![CDATA[Zakres (punkt końcowy)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelUnlimitedCalls">
+<pl><![CDATA[Bez limitu]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelActive">
+<pl><![CDATA[aktywny]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelMaxCalls">
+<pl><![CDATA[Maks. liczba wywołań]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelMaxCallsType">
+<pl><![CDATA[Przedział czasu]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionAbsolute">
+<pl><![CDATA[łącznie]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionMinute">
+<pl><![CDATA[na minutę]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionHour">
+<pl><![CDATA[na godzinę]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionDay">
+<pl><![CDATA[na dzień]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionMonth">
+<pl><![CDATA[na miesiąc (30 dni)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.maxCallsTypeOptionYear">
+<pl><![CDATA[na rok (365 dni)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelTotalUsageCount">
+<pl><![CDATA[Zapytania (łącznie)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelIntervalUsageCount">
+<pl><![CDATA[Zapytania (przedział czasu)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelReset">
+<pl><![CDATA[Zresetuj licznik zapytań]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelFirstUsage">
+<pl><![CDATA[Pierwsze zapytanie (przedział czasu)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.labelLastUsage">
+<pl><![CDATA[Ostatnie zapytanie (przedział czasu)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.template.limitReached">
+<pl><![CDATA[(Osiągnięto limit zapytań!)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.template.labelNotProtected">
+<pl><![CDATA[(Obecnie niemonitorowany!)]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.reset.title">
+<pl><![CDATA[Zresetuj licznik zapytań]]></pl>
+        </locale>
+        <locale name="controls.backend.ScopeSettings.limits.reset.text" html="true">
+<pl><![CDATA[Czy na pewno chcesz zresetować licznik zapytań klienta OAuth <b>[clientId]</b> dla punktu końcowego <b>[scope]</b>?<br/><br/>Klient zostanie zresetowany tak, jakby nie wykonał jeszcze żadnych zapytań API <b>w skonfigurowanym przedziale czasu</b> dla tego punktu końcowego.]]></pl>
+        </locale>
+
+<!-- Controls: backend/controls/settings/ProtectedScopes -->
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerScope">
+<pl><![CDATA[Zakres (punkt końcowy)]]></pl>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerProtected">
+<pl><![CDATA[Uwierzytelnianie OAuth2]]></pl>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.headerProtectedShort">
+<pl><![CDATA[Uwierzyt.]]></pl>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterLabel">
+<pl><![CDATA[Filtruj punkty końcowe]]></pl>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterPlaceholder">
+<pl><![CDATA[Szukaj punktu końcowego…]]></pl>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.filterResult">
+<pl><![CDATA[Widoczne punkty końcowe: [visible] z [total]]]></pl>
+        </locale>
+        <locale name="controls.backend.settings.ProtectedScopes.template.listLabel">
+<pl><![CDATA[Ochrona OAuth2 punktów końcowych REST]]></pl>
+        </locale>
+
+<!-- Controls: backend/controls/UserClient -->
+        <locale name="controls.backend.UserClient.createClient.popup.close.text">
+<pl><![CDATA[Anuluj]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.confirm.text">
+<pl><![CDATA[Utwórz klienta]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.confirm">
+<pl><![CDATA[Kliknij tutaj, aby utworzyć klienta OAuth2 z powyższymi ustawieniami]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelName">
+<pl><![CDATA[Tytuł]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelScopeSettings">
+<pl><![CDATA[Ustawienia dostępu]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelButtonGenerateSecret">
+<pl><![CDATA[Wygeneruj nowy sekret]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.labelClientSecretIsToken">
+<pl><![CDATA[Sekret klienta jako token]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.textClientSecretIsToken">
+<pl><![CDATA[Sekret klienta może służyć jako stały token dostępu]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClients.createClient.template.descriptionClientSecretIsToken">
+<pl><![CDATA[Ta opcja pozwala używać sekretu klienta jako stałego tokenu dostępu, który nie wymaga odnawiania. Przydaje się usługom potrzebującym dostępu do API wyłącznie za pomocą stałego tokenu.]]></pl>
+        </locale>
+        <locale name="controls.backend.UserClient.createClient.popup.title">
+<pl><![CDATA[Utwórz nowego klienta OAuth2]]></pl>
+        </locale>
+        <locale name="control.user.clients.button.add">
+<pl><![CDATA[Dodaj klienta]]></pl>
+        </locale>
+        <locale name="control.user.clients.button.edit">
+<pl><![CDATA[Edytuj klienta]]></pl>
+        </locale>
+        <locale name="control.user.clients.button.delete">
+<pl><![CDATA[Usuń klienta]]></pl>
+        </locale>
+
+        <locale name="control.user.clients.window.edit.title">
+<pl><![CDATA[Klient: [clientId]]]></pl>
+        </locale>
+
+        <locale name="control.user.clients.window.delete.title">
+<pl><![CDATA[Usuń klienta OAuth]]></pl>
+        </locale>
+        <locale name="control.user.clients.window.delete.text" html="1">
+<pl><![CDATA[Czy na pewno chcesz nieodwracalnie usunąć poniższego klienta OAuth?<br /><br /><b>[name]</b><br /><pre style="white-space: pre-wrap; word-wrap: break-word;">[clientId]</pre>]]></pl>
+        </locale>
+        <locale name="control.user.tokens.button.add">
+<pl><![CDATA[Utwórz token]]></pl>
+        </locale>
+        <locale name="control.user.tokens.button.delete">
+<pl><![CDATA[Usuń token]]></pl>
+        </locale>
+        <locale name="control.user.tokens.window.create.title">
+<pl><![CDATA[Utwórz token API]]></pl>
+        </locale>
+        <locale name="control.user.tokens.window.delete.title">
+<pl><![CDATA[Usuń token API]]></pl>
+        </locale>
+        <locale name="control.user.tokens.window.delete.text" html="1">
+<pl><![CDATA[Czy na pewno chcesz usunąć token API <b>[title]</b>?]]></pl>
+        </locale>
+    </groups>
+</locales>
