@@ -807,10 +807,7 @@ class Handler
                 }
             }
 
-            if (
-                method_exists($user, 'hasPermission')
-                && $isUnlimited($user->hasPermission($permission))
-            ) {
+            if ($isUnlimited($user->hasPermission($permission))) {
                 return null;
             }
 
