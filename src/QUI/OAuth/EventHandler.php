@@ -34,7 +34,7 @@ class EventHandler
     }
 
     /**
-     * quiqqer/quiqqer: onPackageInstall
+     * quiqqer/core: onPackageInstall
      *
      * @param QUI\Package\Package $Package
      */
@@ -72,7 +72,7 @@ class EventHandler
     }
 
     /**
-     * quiqqer/quiqqer: onRequest
+     * quiqqer/core: onRequest
      *
      * Add REST API OAuth2 middleware to validate requests
      *

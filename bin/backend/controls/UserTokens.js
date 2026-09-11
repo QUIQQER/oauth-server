@@ -105,7 +105,7 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserTokens', [
                     dataType : 'string',
                     width    : 500
                 }, {
-                    header   : QUILocale.get('quiqqer/system', 'c_date'),
+                    header   : QUILocale.get('quiqqer/core', 'c_date'),
                     dataIndex: 'createDate',
                     dataType : 'string',
                     width    : 180

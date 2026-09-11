@@ -109,7 +109,7 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                     }
                 }],
                 columnModel: [{
-                    header   : QUILocale.get('quiqqer/system', 'name'),
+                    header   : QUILocale.get('quiqqer/core', 'name'),
                     dataIndex: 'name',
                     dataType : 'string',
                     width    : 200
@@ -343,8 +343,8 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                             Content.set('html', Mustache.render(templateEdit, {
                                 labelClientId                 : QUILocale.get(lg, 'client_id'),
                                 labelClientSecret             : QUILocale.get(lg, 'client_secret'),
-                                labelName                     : QUILocale.get('quiqqer/system', 'name'),
-                                labelCDate                    : QUILocale.get('quiqqer/system', 'c_date'),
+                                labelName                     : QUILocale.get('quiqqer/core', 'name'),
+                                labelCDate                    : QUILocale.get('quiqqer/core', 'c_date'),
                                 labelScopeSettings            : QUILocale.get(lg, lgPrefix + 'labelScopeSettings'),
                                 labelButtonGenerateSecret     : QUILocale.get(lg, lgPrefix + 'labelButtonGenerateSecret'),
                                 labelClientSecretIsToken      : QUILocale.get(lg, lgPrefix + 'labelClientSecretIsToken'),
