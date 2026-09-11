@@ -153,7 +153,7 @@ define('package/quiqqer/oauth-server/bin/frontend/controls/profile/Tokens', [
                 maxWidth: 480,
                 maxHeight: 320,
                 buttonCancel: {
-                    text: QUILocale.get('quiqqer/quiqqer', 'cancel'),
+                    text: QUILocale.get('quiqqer/core', 'cancel'),
                     icon: false,
                     'class': 'btn btn-link-body'
                 },
