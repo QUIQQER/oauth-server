@@ -55,8 +55,24 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
             this.$User  = null;
 
             this.addEvents({
+                onImport: this.$onImport,
                 onInject: this.$onInject
             });
+        },
+
+        /**
+         * Replace the XML settings placeholder with the client list container.
+         */
+        $onImport: function () {
+            const Input = this.getElm();
+            const Table = Input.closest('table');
+            const Container = document.createElement('div');
+
+            Container.setAttribute('data-quiid', this.getId());
+            Container.setAttribute('data-name', 'oauth-clients');
+            (Table || Input).replaceWith(Container);
+            this.$Elm = Container;
+            this.$onInject();
         },
 
         /**
@@ -90,8 +106,6 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                         }
                     }
                 }, {
-                    type: 'seperator'
-                }, {
                     name     : 'edit',
                     text     : QUILocale.get(lg, 'control.user.clients.button.edit'),
                     textimage: 'fa fa-edit',
@@ -101,8 +115,10 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                     }
                 }, {
                     name     : 'delete',
-                    text     : QUILocale.get(lg, 'control.user.clients.button.delete'),
-                    textimage: 'fa fa-trash',
+                    text     : '',
+                    icon     : 'fa fa-trash',
+                    title    : QUILocale.get(lg, 'control.user.clients.button.delete'),
+                    position : 'right',
                     disabled : true,
                     events   : {
                         onClick: this.openDeleteDialog
