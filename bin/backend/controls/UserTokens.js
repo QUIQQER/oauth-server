@@ -49,8 +49,24 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserTokens', [
             this.$User = null;
 
             this.addEvents({
+                onImport: this.$onImport,
                 onInject: this.$onInject
             });
+        },
+
+        /**
+         * Replace the XML settings placeholder with the token list container.
+         */
+        $onImport: function () {
+            const Input = this.getElm();
+            const Table = Input.closest('table');
+            const Container = document.createElement('div');
+
+            Container.setAttribute('data-quiid', this.getId());
+            Container.setAttribute('data-name', 'api-tokens');
+            (Table || Input).replaceWith(Container);
+            this.$Elm = Container;
+            this.$onInject();
         },
 
         /**
