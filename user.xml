@@ -1,19 +1,32 @@
-<user>
-
-    <window>
-        <tab name="APITokens">
-            <text>
-                <locale group="quiqqer/oauth-server" var="user.tab.apiTokens"/>
-            </text>
-            <image>fa fa-key</image>
-            <template>OPT_DIR/quiqqer/oauth-server/template/oauthTokens.html</template>
-        </tab>
-
-        <tab name="OAuthClients">
-            <text>OAuth Clients</text>
-            <image>fa fa-key</image>
-            <template>OPT_DIR/quiqqer/oauth-server/template/oauthClients.html</template>
-        </tab>
-    </window>
-
-</user>
+<?xml version="1.0" encoding="UTF-8"?>
+<quiqqer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://www.quiqqer.com/docs/schemas/2.x/user.xsd">
+    <user>
+        <window>
+            <categories>
+                <category name="APITokens" index="8">
+                    <title>
+                        <locale group="quiqqer/oauth-server" var="user.tab.apiTokens"/>
+                    </title>
+                    <icon>fa fa-key</icon>
+                    <settings name="api-tokens">
+                        <title>
+                            <locale group="quiqqer/oauth-server" var="user.tab.apiTokens"/>
+                        </title>
+                        <input type="hidden" label="false" data-name="api-tokens"
+                               data-qui="package/quiqqer/oauth-server/bin/backend/controls/UserTokens"/>
+                    </settings>
+                </category>
+                <category name="OAuthClients" index="9">
+                    <title>OAuth Clients</title>
+                    <icon>fa fa-key</icon>
+                    <settings name="oauth-clients">
+                        <title>OAuth Clients</title>
+                        <input type="hidden" label="false" data-name="oauth-clients"
+                               data-qui="package/quiqqer/oauth-server/bin/backend/controls/UserClients"/>
+                    </settings>
+                </category>
+            </categories>
+        </window>
+    </user>
+</quiqqer>
