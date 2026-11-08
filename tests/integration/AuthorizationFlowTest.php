@@ -355,6 +355,67 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         ));
     }
 
+    public function testTokenResponsesOmitScopeWhenNoScopeWasGranted(): void
+    {
+        $resource = Metadata::resource(RestServer::getCurrentInstance());
+        $clientId = $this->createAuthorizationClient($resource);
+        $client = Handler::getOAuthClient($clientId);
+        $verifier = str_repeat('c', 64);
+        $authorizationResponse = new OAuth2\Response();
+
+        Server::getInstance()->getOAuth2Server()->handleAuthorizeRequest(
+            $this->authorizationRequest(
+                $clientId,
+                self::challenge($verifier),
+                'state-without-scope',
+                $resource,
+                null
+            ),
+            $authorizationResponse,
+            true,
+            (string)QUI::getUsers()->getSystemUser()->getUUID()
+        );
+        parse_str(
+            (string)parse_url(
+                (string)$authorizationResponse->getHttpHeader('Location'),
+                PHP_URL_QUERY
+            ),
+            $redirectQuery
+        );
+        self::assertNotEmpty($redirectQuery['code']);
+
+        $TokenEndpoint = new QUI\OAuth\TokenEndpoint();
+        $tokenResponse = $TokenEndpoint->handle($this->tokenRequest(
+            $clientId,
+            (string)$client['client_secret'],
+            [
+                'grant_type' => 'authorization_code',
+                'code' => (string)$redirectQuery['code'],
+                'redirect_uri' => self::REDIRECT_URI,
+                'code_verifier' => $verifier
+            ]
+        ));
+        $tokens = json_decode((string)$tokenResponse->getBody(), true);
+
+        self::assertSame(200, $tokenResponse->getStatusCode());
+        self::assertIsArray($tokens);
+        self::assertArrayNotHasKey('scope', $tokens);
+
+        $refreshResponse = $TokenEndpoint->handle($this->tokenRequest(
+            $clientId,
+            (string)$client['client_secret'],
+            [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => (string)$tokens['refresh_token']
+            ]
+        ));
+        $refreshedTokens = json_decode((string)$refreshResponse->getBody(), true);
+
+        self::assertSame(200, $refreshResponse->getStatusCode());
+        self::assertIsArray($refreshedTokens);
+        self::assertArrayNotHasKey('scope', $refreshedTokens);
+    }
+
     public function testAuthorizationRejectsMissingPkceAndUnregisteredResource(): void
     {
         $resource = Metadata::resource(RestServer::getCurrentInstance());
@@ -753,17 +814,21 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         string $clientId,
         ?string $challenge,
         string $state,
-        string $resource
+        string $resource,
+        ?string $scope = '/quiqqer_oauth_test'
     ): OAuth2\Request {
         $query = [
             'response_type' => 'code',
             'client_id' => $clientId,
             'redirect_uri' => self::REDIRECT_URI,
-            'scope' => '/quiqqer_oauth_test',
             'state' => $state,
             'code_challenge_method' => 'S256',
             'resource' => $resource
         ];
+
+        if ($scope !== null) {
+            $query['scope'] = $scope;
+        }
 
         if ($challenge !== null) {
             $query['code_challenge'] = $challenge;
