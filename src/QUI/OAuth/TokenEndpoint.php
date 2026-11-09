@@ -28,6 +28,15 @@ final class TokenEndpoint
             $OAuthResponse
         );
 
+        if ($OAuthResponse->getStatusCode() === 200) {
+            $parameters = $OAuthResponse->getParameters();
+
+            if (array_key_exists('scope', $parameters) && $parameters['scope'] === null) {
+                unset($parameters['scope']);
+                $OAuthResponse->setParameters($parameters);
+            }
+        }
+
         if ($OAuthResponse->getStatusCode() === 200 && is_string($resource) && $resource !== '') {
             $parameters = $OAuthResponse->getParameters();
             $accessToken = $parameters['access_token'] ?? null;
