@@ -5,7 +5,6 @@ namespace QUITest\QUI\OAuth\Integration;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Schema\DefaultExpression\CurrentTimestamp;
 use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Types\DateTimeType;
 use Doctrine\DBAL\Types\Types;
 use GuzzleHttp\Psr7\ServerRequest;
 use QUI;
@@ -236,7 +235,12 @@ class ControllerAndSetupTest extends OAuthDatabaseTestCase
             $Migration->invoke(null, $tableName);
 
             $Column = $SchemaManager->introspectTable($tableName)->getColumn('expires');
-            self::assertInstanceOf(DateTimeType::class, $Column->getType());
+            $Platform = $Connection->getDatabasePlatform();
+            $columnOptions = $Column->toArray();
+            self::assertSame(
+                $Platform->getDateTimeTypeDeclarationSQL($columnOptions),
+                $Column->getType()->getSQLDeclaration($columnOptions, $Platform)
+            );
             self::assertTrue($Column->getNotnull());
             self::assertNull($Column->getDefault());
 
