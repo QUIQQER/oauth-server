@@ -4,6 +4,7 @@ namespace QUITest\QUI\OAuth\Integration;
 
 use GuzzleHttp\Psr7\ServerRequest;
 use OAuth2;
+use Psr\Http\Message\ResponseInterface;
 use QUI;
 use QUI\OAuth\Clients\Handler;
 use QUI\OAuth\Consent\Context;
@@ -552,7 +553,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
 
         self::assertStringContainsString("style-src 'self'", $getResponse->getHeaderLine('Content-Security-Policy'));
         self::assertStringContainsString(
-            "form-action 'self' https://chat.openai.com",
+            "form-action 'self';",
             $getResponse->getHeaderLine('Content-Security-Policy')
         );
         self::assertStringNotContainsString(
@@ -569,10 +570,24 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
             'decision' => 'approve'
         ];
 
+        $invalidPost = $post;
+        $invalidPost['redirect_uri'] = 'https://unregistered.example.test/callback';
+        $invalidResponse = $RestServer->getSlim()->handle(
+            (new ServerRequest('POST', '/api/oauth/authorize'))->withParsedBody($invalidPost)
+        );
+        self::assertSame(400, $invalidResponse->getStatusCode());
+        self::assertFalse($invalidResponse->hasHeader('Location'));
+        self::assertStringContainsString('redirect_uri_mismatch', (string)$invalidResponse->getBody());
+        self::assertStringNotContainsString('http-equiv="refresh"', (string)$invalidResponse->getBody());
+
         $postResponse = $RestServer->getSlim()->handle(
             (new ServerRequest('POST', '/api/oauth/authorize'))->withParsedBody($post)
         );
-        self::assertSame(302, $postResponse->getStatusCode());
+        $callback = self::getContinuationUrl($postResponse);
+        self::assertStringStartsWith(self::REDIRECT_URI . '?', $callback);
+        parse_str((string)parse_url($callback, PHP_URL_QUERY), $redirectQuery);
+        self::assertSame($query['state'], $redirectQuery['state'] ?? null);
+        self::assertNotEmpty($redirectQuery['code']);
 
         $replayResponse = $RestServer->getSlim()->handle(
             (new ServerRequest('POST', '/api/oauth/authorize'))->withParsedBody($post)
@@ -623,7 +638,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         );
         $body = (string)$getResponse->getBody();
         self::assertStringContainsString(
-            "form-action 'self' http://127.0.0.1:43123",
+            "form-action 'self';",
             $getResponse->getHeaderLine('Content-Security-Policy')
         );
         preg_match('/name="_oauth_consent_token" value="([a-f0-9]{64})"/', $body, $matches);
@@ -636,15 +651,9 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
             ])
         );
 
-        self::assertSame(302, $postResponse->getStatusCode());
-        self::assertStringStartsWith(
-            $redirectUri,
-            $postResponse->getHeaderLine('Location')
-        );
-        parse_str(
-            (string)parse_url($postResponse->getHeaderLine('Location'), PHP_URL_QUERY),
-            $redirectQuery
-        );
+        $callback = self::getContinuationUrl($postResponse);
+        self::assertStringStartsWith($redirectUri . '?', $callback);
+        parse_str((string)parse_url($callback, PHP_URL_QUERY), $redirectQuery);
         self::assertSame('access_denied', $redirectQuery['error'] ?? null);
         self::assertSame('denied-consent-state', $redirectQuery['state'] ?? null);
     }
@@ -855,6 +864,25 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
     private static function challenge(string $verifier): string
     {
         return rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+    }
+
+    private static function getContinuationUrl(ResponseInterface $Response): string
+    {
+        self::assertSame(200, $Response->getStatusCode());
+        self::assertFalse($Response->hasHeader('Location'));
+        self::assertSame('text/html; charset=utf-8', $Response->getHeaderLine('Content-Type'));
+        self::assertSame('no-store', $Response->getHeaderLine('Cache-Control'));
+        self::assertSame('no-referrer', $Response->getHeaderLine('Referrer-Policy'));
+        self::assertStringContainsString(
+            "form-action 'self';",
+            $Response->getHeaderLine('Content-Security-Policy')
+        );
+
+        $body = (string)$Response->getBody();
+        self::assertSame(1, preg_match('/http-equiv="refresh" content="0;url=([^"]+)"/', $body, $matches));
+        self::assertStringContainsString('href="' . $matches[1] . '"', $body);
+
+        return html_entity_decode($matches[1], ENT_QUOTES, 'UTF-8');
     }
 
     private static function redirectError(OAuth2\Response $Response): ?string

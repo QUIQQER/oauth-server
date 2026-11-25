@@ -238,6 +238,9 @@
         <locale name="oauth.authorize.consent.deny">
 <pl><![CDATA[Odmów]]></pl>
         </locale>
+        <locale name="oauth.authorize.continue">
+<pl><![CDATA[Wróć do aplikacji]]></pl>
+        </locale>
         <locale name="oauth.authorize.expired.title">
 <pl><![CDATA[Autoryzacja wygasła]]></pl>
         </locale>
