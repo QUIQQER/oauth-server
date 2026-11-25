@@ -31,8 +31,13 @@ final class AuthorizationEndpoint
             $OAuthRequest = RequestFactory::fromPsr($Request);
             $OAuthResponse = new OAuth2\Response();
             $OAuthServer = Server::getInstance()->getOAuth2Server();
+            $isPost = strtoupper($Request->getMethod()) === 'POST';
 
             if (!$OAuthServer->validateAuthorizeRequest($OAuthRequest, $OAuthResponse)) {
+                if ($isPost && is_string($OAuthRequest->request('_oauth_consent_token'))) {
+                    return $this->renderAuthorizationResult($OAuthResponse);
+                }
+
                 return RestProvider::fromOAuthResponse($OAuthResponse);
             }
 
@@ -42,7 +47,7 @@ final class AuthorizationEndpoint
                 return $this->renderLoginRequired($Request);
             }
 
-            if (strtoupper($Request->getMethod()) === 'POST') {
+            if ($isPost) {
                 if (!$this->consumeConsentToken($OAuthRequest, (string)$User->getUUID())) {
                     return $this->renderExpiredConsent($Request, $OAuthRequest);
                 }
@@ -55,7 +60,7 @@ final class AuthorizationEndpoint
                     (string)$User->getUUID()
                 );
 
-                return RestProvider::fromOAuthResponse($OAuthResponse);
+                return $this->renderAuthorizationResult($OAuthResponse);
             }
 
             return $this->renderConsent(
@@ -199,15 +204,34 @@ final class AuthorizationEndpoint
             . self::escape($Locale->get('quiqqer/oauth-server', 'oauth.authorize.consent.approve'))
             . '</button></form></section></article></main></body></html>';
 
-        return $this->htmlResponse(
-            200,
-            $body,
-            false,
-            (string)$OAuthRequest->query(
-                'redirect_uri',
-                $OAuthRequest->request('redirect_uri')
-            )
-        );
+        return $this->htmlResponse(200, $body);
+    }
+
+    private function renderAuthorizationResult(OAuth2\Response $OAuthResponse): Response
+    {
+        $location = $OAuthResponse->getHttpHeader('Location');
+
+        if (!$OAuthResponse->isRedirection() || !is_string($location)) {
+            return RestProvider::fromOAuthResponse($OAuthResponse);
+        }
+
+        try {
+            [$callback] = ClientConfiguration::validateRedirectUris([$location]);
+        } catch (\InvalidArgumentException) {
+            return RestProvider::fromOAuthResponse($OAuthResponse);
+        }
+
+        $title = QUI::getLocale()->get('quiqqer/oauth-server', 'oauth.authorize.continue');
+        $body = $this->renderDocumentStart($title, $callback)
+            . '<body class="quiqqer-oauth-authorization">'
+            . '<main class="quiqqer-oauth-authorization-main">'
+            . '<div class="quiqqer-oauth-authorization-card quiqqer-oauth-authorization-content">'
+            . '<a class="quiqqer-oauth-authorization-button quiqqer-oauth-authorization-button--primary" href="'
+            . self::escape($callback) . '">'
+            . self::escape($title) . '</a></div></main></body></html>';
+
+        // Start a new navigation so the client's redirects are outside the form submission.
+        return $this->htmlResponse(200, $body)->withHeader('Referrer-Policy', 'no-referrer');
     }
 
     private function renderConsentSections(
@@ -283,21 +307,12 @@ final class AuthorizationEndpoint
     private function htmlResponse(
         int $status,
         string $body,
-        bool $loginControl = false,
-        ?string $redirectUri = null
+        bool $loginControl = false
     ): Response {
         $Response = new Response($status);
         $Response->getBody()->write($body);
-        $formAction = ["'self'"];
-        $redirectOrigin = self::getHttpOrigin($redirectUri);
-
-        if ($redirectOrigin !== null) {
-            $formAction[] = $redirectOrigin;
-        }
-
         $contentSecurityPolicy = "default-src 'none'; base-uri 'none'; "
-            . 'form-action ' . implode(' ', $formAction)
-            . "; frame-ancestors 'none'; img-src 'self' data:; "
+            . "form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; "
             . "style-src 'self'";
 
         if ($loginControl) {
@@ -343,43 +358,6 @@ final class AuthorizationEndpoint
         return $Request->getUri()->getPath() . '?' . http_build_query($query);
     }
 
-    private static function getHttpOrigin(?string $uri): ?string
-    {
-        if ($uri === null || $uri === '') {
-            return null;
-        }
-
-        $parts = parse_url($uri);
-
-        if (!is_array($parts)) {
-            return null;
-        }
-
-        $scheme = strtolower((string)($parts['scheme'] ?? ''));
-        $host = (string)($parts['host'] ?? '');
-
-        if (
-            !in_array($scheme, ['http', 'https'], true)
-            || $host === ''
-            || isset($parts['user'])
-            || isset($parts['pass'])
-        ) {
-            return null;
-        }
-
-        if (str_contains($host, ':') && $host[0] !== '[') {
-            $host = '[' . $host . ']';
-        }
-
-        $origin = $scheme . '://' . $host;
-
-        if (isset($parts['port'])) {
-            $origin .= ':' . $parts['port'];
-        }
-
-        return $origin;
-    }
-
     private function renderLoginScripts(string $returnUri): string
     {
         $scriptAttributes = [
@@ -416,10 +394,15 @@ final class AuthorizationEndpoint
             . '"' . $attributes . '></script>';
     }
 
-    private function renderDocumentStart(string $title): string
+    private function renderDocumentStart(string $title, ?string $callback = null): string
     {
+        $refresh = $callback === null
+            ? ''
+            : '<meta http-equiv="refresh" content="0;url=' . self::escape($callback) . '">';
+
         return '<!doctype html><html lang="' . self::escape(QUI::getLocale()->getCurrent()) . '">'
             . '<head><meta charset="utf-8">'
+            . $refresh
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<title>' . self::escape($title) . '</title>'
             . '<link rel="stylesheet" href="'
