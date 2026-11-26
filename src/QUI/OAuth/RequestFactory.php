@@ -7,7 +7,10 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class RequestFactory
 {
-    public static function fromPsr(ServerRequestInterface $Request): OAuth2\Request
+    public static function fromPsr(
+        ServerRequestInterface $Request,
+        ?OAuth2\Storage\ClientCredentialsInterface $ClientStorage = null
+    ): OAuth2\Request
     {
         $server = $Request->getServerParams();
         $server['REQUEST_METHOD'] = $Request->getMethod();
@@ -26,6 +29,24 @@ final class RequestFactory
                     $server['PHP_AUTH_USER'] = $clientId;
                     $server['PHP_AUTH_PW'] = $clientSecret;
                 }
+            }
+        }
+
+        if (
+            $ClientStorage !== null
+            && is_string($server['PHP_AUTH_USER'] ?? null)
+            && is_string($server['PHP_AUTH_PW'] ?? null)
+        ) {
+            $clientId = urldecode($server['PHP_AUTH_USER']);
+            $clientSecret = urldecode($server['PHP_AUTH_PW']);
+
+            // Prefer RFC 6749 form-decoded credentials and retain legacy raw Basic authentication.
+            if (
+                ($clientId !== $server['PHP_AUTH_USER'] || $clientSecret !== $server['PHP_AUTH_PW'])
+                && $ClientStorage->checkClientCredentials($clientId, $clientSecret)
+            ) {
+                $server['PHP_AUTH_USER'] = $clientId;
+                $server['PHP_AUTH_PW'] = $clientSecret;
             }
         }
 

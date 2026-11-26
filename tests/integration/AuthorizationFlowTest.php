@@ -42,7 +42,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
     {
         $resource = Metadata::resource(RestServer::getCurrentInstance());
         $clientId = $this->createAuthorizationClient($resource);
-        $client = Handler::getOAuthClient($clientId);
+        $clientSecret = 'pkce-fixture+%20:ampersand&';
         $verifier = str_repeat('a', 64);
         $challenge = self::challenge($verifier);
         $state = bin2hex(random_bytes(16));
@@ -57,7 +57,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
 
         self::getConnection()->update(
             QUI\Utils\Doctrine::quoteIdentifier(Setup::getTable('oauth_clients')),
-            ['user_id' => 99999999],
+            ['user_id' => 99999999, 'client_secret' => $clientSecret],
             ['client_id' => $clientId]
         );
 
@@ -90,8 +90,8 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         $TokenEndpoint = new QUI\OAuth\TokenEndpoint();
         $issuedAt = time();
         $tokenResponse = $TokenEndpoint->handle($this->tokenRequest(
-            $clientId,
-            (string)$client['client_secret'],
+            urlencode($clientId),
+            urlencode($clientSecret),
             [
                 'grant_type' => 'authorization_code',
                 'code' => $code,
@@ -145,7 +145,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
 
         $refreshResponse = $TokenEndpoint->handle($this->tokenRequest(
             $clientId,
-            (string)$client['client_secret'],
+            $clientSecret,
             [
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $tokens['refresh_token']
@@ -179,7 +179,7 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         $retryResponse = (new QUI\OAuth\TokenEndpoint())->handle(
             $this->tokenRequest(
                 $clientId,
-                (string)$client['client_secret'],
+                $clientSecret,
                 [
                     'grant_type' => 'refresh_token',
                     'refresh_token' => $tokens['refresh_token']
@@ -202,8 +202,8 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         );
 
         $revokeResponse = $TokenEndpoint->revoke($this->tokenRequest(
-            $clientId,
-            (string)$client['client_secret'],
+            urlencode($clientId),
+            urlencode($clientSecret),
             [
                 'token' => $refreshedTokens['access_token'],
                 'token_type_hint' => 'access_token'

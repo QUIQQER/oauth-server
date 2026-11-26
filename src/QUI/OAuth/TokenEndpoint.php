@@ -11,9 +11,9 @@ final class TokenEndpoint
 {
     public function handle(ServerRequestInterface $Request): Response
     {
-        $OAuthRequest = RequestFactory::fromPsr($Request);
-        $OAuthResponse = new OAuth2\Response();
         $Storage = StorageFactory::create();
+        $OAuthRequest = RequestFactory::fromPsr($Request, $Storage);
+        $OAuthResponse = new OAuth2\Response();
 
         try {
             $resource = $this->resolveResource($OAuthRequest, $Storage);
@@ -56,9 +56,9 @@ final class TokenEndpoint
 
     public function revoke(ServerRequestInterface $Request): Response
     {
-        $OAuthRequest = RequestFactory::fromPsr($Request);
-        $OAuthResponse = new OAuth2\Response();
         $Storage = StorageFactory::create();
+        $OAuthRequest = RequestFactory::fromPsr($Request, $Storage);
+        $OAuthResponse = new OAuth2\Response();
         $clientId = $this->getClientId($OAuthRequest);
 
         if (!$this->isAuthenticatedClient($OAuthRequest, $Storage, $clientId)) {
