@@ -10,8 +10,7 @@ final class RequestFactory
     public static function fromPsr(
         ServerRequestInterface $Request,
         ?OAuth2\Storage\ClientCredentialsInterface $ClientStorage = null
-    ): OAuth2\Request
-    {
+    ): OAuth2\Request {
         $server = $Request->getServerParams();
         $server['REQUEST_METHOD'] = $Request->getMethod();
 
