@@ -255,6 +255,31 @@
 
     <groups name="quiqqer/oauth-server" datatype="js">
 
+        <locale name="control.user.clients.authorization.type" context="administration">
+<pt><![CDATA[Tipo de cliente]]></pt>
+        </locale>
+        <locale name="control.user.clients.authorization.rest" context="administration">
+<pt><![CDATA[Cliente da API REST]]></pt>
+        </locale>
+        <locale name="control.user.clients.authorization.pkce" context="administration">
+<pt><![CDATA[Código de autorização (PKCE)]]></pt>
+        </locale>
+        <locale name="control.user.clients.authorization.redirectUris" context="administration">
+<pt><![CDATA[URIs de redirecionamento]]></pt>
+        </locale>
+        <locale name="control.user.clients.authorization.resources" context="administration">
+<pt><![CDATA[Recursos permitidos]]></pt>
+        </locale>
+        <locale name="control.user.clients.authorization.oneUriPerLine" context="administration">
+<pt><![CDATA[Um URI por linha]]></pt>
+        </locale>
+        <locale name="control.user.clients.authorization.dynamicConfiguration" context="administration">
+<pt><![CDATA[Os URIs dos clientes registados dinamicamente são só de leitura.]]></pt>
+        </locale>
+        <locale name="control.user.clients.dialog.saveError" context="administration">
+<pt><![CDATA[Não foi possível guardar o cliente.]]></pt>
+        </locale>
+
 <!-- Controls: backend/controls/ScopeSettings -->
         <locale name="controls.backend.ScopeSettings.template.headerCalls">
 <pt><![CDATA[Chamadas]]></pt>

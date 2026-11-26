@@ -3,12 +3,14 @@
 namespace QUI\OAuth\Clients;
 
 use DateTime;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use QUI;
 use QUI\Cache\LongTermCache;
 use QUI\Interfaces\Users\User as QUIUserInterface;
+use QUI\OAuth\ClientConfiguration;
 use QUI\OAuth\Permission;
 use Ramsey\Uuid\Uuid;
 use Throwable;
@@ -117,8 +119,8 @@ class Handler
      *
      * @param QUIUserInterface $User
      * @param array<string, array<string, mixed>> $scopeSettings
-     * @param array<int, string> $redirectUris
-     * @param array<int, string> $resources
+     * @param array<array-key, mixed> $redirectUris
+     * @param array<array-key, mixed> $resources
      * @throws QUI\Exception
      * @throws QUI\OAuth\Exception
      */
@@ -130,8 +132,44 @@ class Handler
         array $resources,
         bool $publicClient = false
     ): string {
-        $redirectUris = QUI\OAuth\ClientConfiguration::validateRedirectUris($redirectUris);
-        $resources = QUI\OAuth\ClientConfiguration::validateResources($resources);
+        $configuration = self::getAuthorizationUriConfiguration($redirectUris, $resources);
+
+        return QUI::getDataBaseConnection()->transactional(
+            static function (Connection $Connection) use (
+                $User,
+                $scopeSettings,
+                $name,
+                $configuration,
+                $publicClient
+            ): string {
+                $clientId = self::createOAuthClient($User, $scopeSettings, $name);
+
+                $Connection->update(
+                    QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')),
+                    $configuration + [
+                        'client_secret' => $publicClient ? null : self::generatePassword(),
+                        'grant_types' => 'authorization_code refresh_token',
+                        'token_endpoint_auth_method' => $publicClient ? 'none' : 'client_secret_basic'
+                    ],
+                    ['client_id' => $clientId]
+                );
+
+                return $clientId;
+            }
+        );
+    }
+
+    /**
+     * @return array{redirect_uri: string, allowed_resources: string}
+     */
+    private static function getAuthorizationUriConfiguration(mixed $redirectUris, mixed $resources): array
+    {
+        if (!is_array($redirectUris) || !is_array($resources)) {
+            throw new \InvalidArgumentException('Redirect URIs and allowed resources must be lists.');
+        }
+
+        $redirectUris = ClientConfiguration::validateRedirectUris($redirectUris);
+        $resources = ClientConfiguration::validateResources($resources);
 
         if ($redirectUris === [] || $resources === []) {
             throw new \InvalidArgumentException(
@@ -139,30 +177,24 @@ class Handler
             );
         }
 
-        $clientId = self::createOAuthClient($User, $scopeSettings, $name);
+        $redirectUri = implode(' ', $redirectUris);
 
-        try {
-            QUI::getDataBaseConnection()->update(
-                QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients')),
-                [
-                    'client_secret' => $publicClient ? null : self::generatePassword(),
-                    'redirect_uri' => implode(' ', $redirectUris),
-                    'grant_types' => 'authorization_code refresh_token',
-                    'allowed_resources' => QUI\OAuth\ClientConfiguration::encodeResources(
-                        $resources
-                    ),
-                    'token_endpoint_auth_method' => $publicClient
-                        ? 'none'
-                        : 'client_secret_basic'
-                ],
-                ['client_id' => $clientId]
-            );
-        } catch (\Throwable $Exception) {
-            self::removeOAuthClient($clientId);
-            throw $Exception;
+        foreach (array_merge($redirectUris, $resources) as $uri) {
+            if (preg_match('/[\x00-\x20\x7f]/', $uri)) {
+                throw new \InvalidArgumentException(
+                    'OAuth URIs must not contain unencoded whitespace or control characters.'
+                );
+            }
         }
 
-        return $clientId;
+        if (strlen($redirectUri) > 2000) {
+            throw new \InvalidArgumentException('The combined redirect URIs must not exceed 2000 bytes.');
+        }
+
+        return [
+            'redirect_uri' => $redirectUri,
+            'allowed_resources' => ClientConfiguration::encodeResources($resources)
+        ];
     }
 
     /**
@@ -412,6 +444,7 @@ class Handler
      *
      * - name
      * - scope_restrictions
+     * - redirect URIs and resources of manually registered authorization clients
      *
      * @param string $clientId
      * @param array<string, mixed> $data
@@ -422,6 +455,28 @@ class Handler
     public static function updateOAuthClient(string $clientId, array $data = []): void
     {
         $update = [];
+        $previousClientData = self::getOAuthClient($clientId);
+        $usesAuthorizationCode = ClientConfiguration::usesAuthorizationCode($previousClientData['grant_types'] ?? null);
+
+        if (array_key_exists('authorization', $data)) {
+            if (
+                !$usesAuthorizationCode
+                || ClientConfiguration::isDynamicRegistration($previousClientData['allowed_resources'] ?? null)
+            ) {
+                throw new \InvalidArgumentException('Only manually registered authorization clients allow URI changes.');
+            }
+
+            $authorization = $data['authorization'];
+
+            if (!is_array($authorization)) {
+                throw new \InvalidArgumentException('Invalid authorization client configuration.');
+            }
+
+            $update = self::getAuthorizationUriConfiguration(
+                $authorization['redirectUris'] ?? null,
+                $authorization['resources'] ?? null
+            );
+        }
 
         if (!empty($data['title']) && is_string($data['title'])) {
             $update['name'] = $data['title'];
@@ -447,15 +502,28 @@ class Handler
             $update['scope'] = empty($activeScopes) ? null : implode(' ', $activeScopes);
         }
 
-        if (!empty($data['clientSecret'])) {
-            $update['client_secret'] = $data['clientSecret'];
+        $clientSecret = $data['clientSecret'] ?? null;
+
+        if (
+            is_string($clientSecret)
+            && $clientSecret !== ''
+            && ($previousClientData['token_endpoint_auth_method'] ?? null) !== 'none'
+        ) {
+            $update['client_secret'] = $clientSecret;
         }
 
-        $clientSecretIsToken = !empty($data['clientSecretIsToken']);
-        $update['client_secret_is_token'] = $clientSecretIsToken ? 1 : 0;
+        $clientSecretIsToken = !empty($previousClientData['client_secret_is_token']);
+
+        if (!$usesAuthorizationCode) {
+            $clientSecretIsToken = !empty($data['clientSecretIsToken']);
+            $update['client_secret_is_token'] = $clientSecretIsToken ? 1 : 0;
+        }
+
+        if ($update === []) {
+            return;
+        }
 
         $tableClients = QUI\Utils\Doctrine::quoteIdentifier(QUI\OAuth\Setup::getTable('oauth_clients'));
-        $previousClientData = self::getOAuthClient($clientId);
 
         QUI::getDataBaseConnection()->update(
             $tableClients,

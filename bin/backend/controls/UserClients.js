@@ -6,7 +6,6 @@
  */
 define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
 
-    'qui/QUI',
     'qui/controls/Control',
     'qui/controls/windows/Confirm',
     'qui/controls/windows/Popup',
@@ -24,11 +23,42 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
     'text!package/quiqqer/oauth-server/bin/backend/controls/UserClients.Edit.html',
     'css!package/quiqqer/oauth-server/bin/backend/controls/UserClients.css'
 
-], function (QUI, QUIControl, QUIConfirm, QUIPoup, QUIButton, QUILoader, ScopeSettings, OAuthServer, Grid,
+], function (QUIControl, QUIConfirm, QUIPopup, QUIButton, QUILoader, ScopeSettings, OAuthServer, Grid,
     QUILocale, Mustache, templateCreate, templateEdit) {
     "use strict";
 
     var lg = 'quiqqer/oauth-server';
+
+    function getAuthorizationLabels() {
+        const prefix = 'control.user.clients.authorization.';
+
+        return {
+            labelClientType: QUILocale.get(lg, prefix + 'type'),
+            labelRestClient: QUILocale.get(lg, prefix + 'rest'),
+            labelAuthorizationClient: QUILocale.get(lg, prefix + 'pkce'),
+            labelRedirectUris: QUILocale.get(lg, prefix + 'redirectUris'),
+            labelResources: QUILocale.get(lg, prefix + 'resources'),
+            labelOneUriPerLine: QUILocale.get(lg, prefix + 'oneUriPerLine'),
+            labelDynamicConfiguration: QUILocale.get(lg, prefix + 'dynamicConfiguration')
+        };
+    }
+
+    function readAuthorizationSettings(Content) {
+        const readLines = (name) => Content.querySelector(`[data-name="${name}"]`)
+            .value.split(/\r?\n/)
+            .map((uri) => uri.trim())
+            .filter((uri) => uri !== '');
+
+        return {
+            redirectUris: readLines('redirect-uris'),
+            resources: readLines('resources')
+        };
+    }
+
+    function showSaveError(Content, error) {
+        Content.querySelector('[data-name="dialog-error"]').textContent =
+            error?.getMessage?.() || error?.message || QUILocale.get(lg, 'control.user.clients.dialog.saveError');
+    }
 
     return new Class({
 
@@ -216,11 +246,12 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
          * @returns {Promise}
          */
         createClient: function () {
-            var self = this;
-            var ScopeSettingsControl;
+            let ScopeSettingsControl;
+            let ready = false;
+            let saving = false;
 
-            return new Promise(function (resolve) {
-                var Popup = new QUIPoup({
+            return new Promise((resolve) => {
+                const Popup = new QUIPopup({
                     icon           : 'fa fa-plus',
                     title          : QUILocale.get(
                         lg, 'controls.backend.UserClient.createClient.popup.title'
@@ -230,29 +261,38 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                     closeButtonText: QUILocale.get(lg, 'controls.backend.UserClient.createClient.popup.close.text'),
                     events         : {
                         onOpen : function (Popup) {
-                            var lgPrefix = 'controls.backend.UserClients.createClient.template.',
-                                Content  = Popup.getContent();
+                            const lgPrefix = 'controls.backend.UserClients.createClient.template.';
+                            const Content = Popup.getContent();
 
                             Popup.setContent(Mustache.render(templateCreate, {
+                                ...getAuthorizationLabels(),
                                 labelName         : QUILocale.get(lg, lgPrefix + 'labelName'),
                                 labelScopeSettings: QUILocale.get(lg, lgPrefix + 'labelScopeSettings')
                             }));
+
+                            const ClientType = Content.querySelector('[data-name="client-type"]');
+                            const AuthorizationFields = Content.querySelector('[data-name="authorization-fields"]');
+
+                            ClientType.addEventListener('change', () => {
+                                AuthorizationFields.hidden = ClientType.value !== 'authorization_code';
+                                Content.querySelector('[data-name="dialog-error"]').textContent = '';
+                            });
 
                             Popup.Loader.show();
 
                             ScopeSettingsControl = new ScopeSettings({
                                 events: {
                                     onLoaded: function (Control) {
-                                        Control.getElm().addClass('field-container-field');
+                                        Control.getElm().classList.add('field-container-field');
+                                        ready = true;
                                         Popup.Loader.hide();
-                                        self.refresh();
                                     }
                                 }
                             }).inject(
-                                Content.getElement('.scope-settings')
+                                Content.querySelector('[data-name="scope-settings"]')
                             );
 
-                            Content.getElement('input[name="name"]').focus();
+                            Content.querySelector('[data-name="client-name"]').focus();
                         },
                         onClose: function () {
                             resolve();
@@ -267,21 +307,37 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                     alt   : QUILocale.get(lg, 'controls.backend.UserClient.createClient.popup.confirm'),
                     title : QUILocale.get(lg, 'controls.backend.UserClient.createClient.popup.confirm'),
                     events: {
-                        onClick: function () {
-                            var Content = Popup.getContent();
+                        onClick: async () => {
+                            if (!ready || saving) {
+                                return;
+                            }
 
+                            const Content = Popup.getContent();
+                            const clientType = Content.querySelector('[data-name="client-type"]').value;
+                            const authorization = clientType === 'authorization_code'
+                                ? readAuthorizationSettings(Content)
+                                : null;
+
+                            saving = true;
+                            Content.querySelector('[data-name="dialog-error"]').textContent = '';
                             Popup.Loader.show();
 
-                            OAuthServer.createClient(
-                                self.getAttribute('User').getId(),
-                                ScopeSettingsControl.getSettings(),
-                                Content.getElement('input[name="name"]').value
-                            ).then(function () {
-                                Popup.close();
-                                self.refresh();
-                            }, function () {
+                            try {
+                                await OAuthServer.createClient(
+                                    this.getAttribute('User').getId(),
+                                    ScopeSettingsControl.getSettings(),
+                                    Content.querySelector('[data-name="client-name"]').value,
+                                    authorization
+                                );
+                            } catch (error) {
+                                showSaveError(Content, error);
+                                saving = false;
                                 Popup.Loader.hide();
-                            });
+                                return;
+                            }
+
+                            Popup.close();
+                            this.refresh();
                         }
                     }
                 }));
@@ -332,12 +388,13 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
          * Opens the edit dialog
          */
         editClient: function () {
-            var ScopeSettingsControl;
-            var self = this,
-                data = this.$Grid.getSelectedData()[0];
-
+            const data = this.$Grid.getSelectedData()[0];
+            let ScopeSettingsControl;
+            let canEditAuthorization = false;
             let newClientSecret = null;
-            let clientSecretIsTokenCheckbox = null;
+            let ready = false;
+            let saving = false;
+            let rotatingSecret = false;
 
             new QUIConfirm({
                 title    : QUILocale.get(lg, 'control.user.clients.window.edit.title', {
@@ -346,17 +403,22 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                 icon     : 'fa fa-edit',
                 maxHeight: 600,
                 maxWidth : 1000,
+                autoclose: false,
                 events   : {
                     onOpen: (Win) => {
-                        var Content = Win.getContent();
+                        const Content = Win.getContent();
 
                         Win.Loader.show();
-                        Content.set('html', '');
+                        Content.replaceChildren();
 
                         OAuthServer.getClient(data.client_id).then((clientData) => {
-                            var lgPrefix = 'controls.backend.UserClients.createClient.template.';
+                            const lgPrefix = 'controls.backend.UserClients.createClient.template.';
+                            const authorization = clientData.authorization;
 
-                            Content.set('html', Mustache.render(templateEdit, {
+                            canEditAuthorization = authorization?.editable === true;
+
+                            Win.setContent(Mustache.render(templateEdit, {
+                                ...getAuthorizationLabels(),
                                 labelClientId                 : QUILocale.get(lg, 'client_id'),
                                 labelClientSecret             : QUILocale.get(lg, 'client_secret'),
                                 labelName                     : QUILocale.get('quiqqer/core', 'name'),
@@ -367,62 +429,93 @@ define('package/quiqqer/oauth-server/bin/backend/controls/UserClients', [
                                 descriptionClientSecretIsToken: QUILocale.get(lg, lgPrefix + 'descriptionClientSecretIsToken'),
                                 textClientSecretIsToken       : QUILocale.get(lg, lgPrefix + 'textClientSecretIsToken'),
                                 clientId                      : clientData.client_id,
-                                clientSecret                  : clientData.client_secret.trim(),
+                                clientSecret                  : clientData.client_secret ?? '',
                                 name                          : clientData.name,
-                                c_date                        : new Date(parseInt(clientData.c_date * 1000)).toISOString()
+                                c_date                        : new Date(clientData.c_date * 1000).toISOString(),
+                                canRotateSecret               : clientData.token_endpoint_auth_method !== 'none',
+                                authorization                 : authorization && {
+                                    editable: canEditAuthorization,
+                                    redirectUris: authorization.redirectUris.join('\n'),
+                                    resources: authorization.resources.join('\n')
+                                }
                             }));
 
-                            clientSecretIsTokenCheckbox = Content.getElement('[name="client_secret_is_token"]');
-                            clientSecretIsTokenCheckbox.checked = !!clientData.client_secret_is_token;
+                            const SecretIsToken = Content.querySelector('[data-name="secret-is-token"]');
+                            const RotateSecret = Content.querySelector('[data-name="rotate-secret"]');
 
-                            Content.getElement('button.quiqqer-oauth-client-secret-button').addEventListener(
-                                'click',
-                                async () => {
-                                    const clientSecretInput = Content.getElement(
-                                        '.quiqqer-oauth-client-secret > span'
-                                    );
+                            if (SecretIsToken) {
+                                SecretIsToken.checked = Number(clientData.client_secret_is_token) === 1;
+                            }
 
-                                    newClientSecret = await OAuthServer.generateClientSecret();
-                                    clientSecretInput.textContent = newClientSecret;
+                            RotateSecret?.addEventListener('click', async () => {
+                                if (saving || rotatingSecret) {
+                                    return;
                                 }
-                            );
+
+                                rotatingSecret = true;
+                                RotateSecret.disabled = true;
+
+                                try {
+                                    newClientSecret = await OAuthServer.generateClientSecret();
+                                    Content.querySelector('[data-name="client-secret"]').textContent = newClientSecret;
+                                } catch (error) {
+                                    showSaveError(Content, error);
+                                } finally {
+                                    rotatingSecret = false;
+                                    RotateSecret.disabled = false;
+                                }
+                            });
 
                             ScopeSettingsControl = new ScopeSettings({
                                 clientId: data.client_id,
                                 settings: clientData.scope_restrictions,
                                 events  : {
                                     onLoaded: function (Control) {
-                                        Control.getElm().addClass('field-container-field');
+                                        Control.getElm().classList.add('field-container-field');
+                                        ready = true;
                                         Win.Loader.hide();
                                     }
                                 }
                             }).inject(
-                                Content.getElement('.scope-settings')
+                                Content.querySelector('[data-name="scope-settings"]')
                             );
+                        }).catch(() => {
+                            Win.Loader.hide();
                         });
                     },
 
-                    onSubmit: function (Win) {
-                        var Content = Win.getContent();
+                    onSubmit: async (Win) => {
+                        if (!ready || saving || rotatingSecret) {
+                            return;
+                        }
 
+                        const Content = Win.getContent();
+                        const clientSettings = {
+                            title: Content.querySelector('[data-name="client-name"]').value,
+                            scope_restrictions: ScopeSettingsControl.getSettings(),
+                            clientSecretIsToken: Content.querySelector('[data-name="secret-is-token"]')?.checked ?? false,
+                            clientSecret: newClientSecret
+                        };
+
+                        if (canEditAuthorization) {
+                            clientSettings.authorization = readAuthorizationSettings(Content);
+                        }
+
+                        saving = true;
+                        Content.querySelector('[data-name="dialog-error"]').textContent = '';
                         Win.Loader.show();
 
-                        OAuthServer.updateClient(data.client_id, {
-                            title              : Content.getElement('[name="name"]').value,
-                            scope_restrictions : ScopeSettingsControl.getSettings(),
-                            clientSecretIsToken: clientSecretIsTokenCheckbox.checked,
-                            clientSecret       : newClientSecret
-                        }).then(function () {
-                            return self.refresh();
-                        }).then(function () {
-                            Win.close();
-                        }).catch(function (Exception) {
-                            QUI.getMessageHandler().then(function (MH) {
-                                MH.addException(Exception);
-                            });
-
+                        try {
+                            await OAuthServer.updateClient(data.client_id, clientSettings);
+                        } catch (error) {
+                            showSaveError(Content, error);
+                            saving = false;
                             Win.Loader.hide();
-                        });
+                            return;
+                        }
+
+                        Win.close();
+                        this.refresh();
                     }
                 }
             }).open();

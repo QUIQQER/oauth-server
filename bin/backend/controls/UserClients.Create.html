@@ -1,3 +1,4 @@
+<div role="alert" data-name="dialog-error"></div>
 <table class="data-table quiqqer-oauth-server-userclients-edit">
     <tr>
         <td>
@@ -5,17 +6,48 @@
                 <div class="field-container-item" title="{{labelName}}">
                     {{labelName}}
                 </div>
-                <input class="field-container-field" type="text" name="name"/>
+                <input class="field-container-field" type="text" name="name" data-name="client-name"/>
             </label>
         </td>
     </tr>
     <tr>
         <td>
-            <label class="field-container scope-settings">
+            <label class="field-container">
+                <span class="field-container-item">{{labelClientType}}</span>
+                <select class="field-container-field" data-name="client-type">
+                    <option value="rest">{{labelRestClient}}</option>
+                    <option value="authorization_code">{{labelAuthorizationClient}}</option>
+                </select>
+            </label>
+        </td>
+    </tr>
+    <tbody data-name="authorization-fields" hidden>
+        <tr>
+            <td>
+                <label class="field-container">
+                    <span class="field-container-item">{{labelRedirectUris}}</span>
+                    <textarea class="field-container-field" data-name="redirect-uris" rows="3"
+                              placeholder="{{labelOneUriPerLine}}"></textarea>
+                </label>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label class="field-container">
+                    <span class="field-container-item">{{labelResources}}</span>
+                    <textarea class="field-container-field" data-name="resources" rows="3"
+                              placeholder="{{labelOneUriPerLine}}"></textarea>
+                </label>
+            </td>
+        </tr>
+    </tbody>
+    <tr>
+        <td>
+            <div class="field-container scope-settings" data-name="scope-settings">
                 <div class="field-container-item" title="{{labelScopeSettings}}">
                     {{labelScopeSettings}}
                 </div>
-            </label>
+            </div>
         </td>
     </tr>
 </table>
