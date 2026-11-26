@@ -1,3 +1,4 @@
+<div role="alert" data-name="dialog-error"></div>
 <table class="data-table quiqqer-oauth-server-userclients-edit">
     <tr>
         <td>
@@ -11,6 +12,7 @@
             </label>
         </td>
     </tr>
+    {{#canRotateSecret}}
     <tr>
         <td>
             <label class="field-container">
@@ -18,12 +20,17 @@
                     {{labelClientSecret}}
                 </div>
                 <div class="field-container-field quiqqer-oauth-client-secret">
-                    <span>{{clientSecret}}</span>
+                    <span data-name="client-secret">{{clientSecret}}</span>
                 </div>
             </label>
-            <button type="button" class="quiqqer-oauth-client-secret-button" title="{{labelButtonGenerateSecret}}"><span class="fa fa-refresh"></span></button>
+            <button type="button" class="quiqqer-oauth-client-secret-button" data-name="rotate-secret"
+                    title="{{labelButtonGenerateSecret}}" aria-label="{{labelButtonGenerateSecret}}">
+                <span class="fa fa-refresh" aria-hidden="true"></span>
+            </button>
         </td>
     </tr>
+    {{/canRotateSecret}}
+    {{^authorization}}
     <tr>
         <td>
             <label class="field-container">
@@ -31,7 +38,7 @@
                     {{labelClientSecretIsToken}}
                 </div>
                 <div class="field-container-field">
-                    <input type="checkbox" name="client_secret_is_token"/>
+                    <input type="checkbox" name="client_secret_is_token" data-name="secret-is-token"/>
                     <span>{{textClientSecretIsToken}}</span>
                 </div>
             </label>
@@ -40,6 +47,7 @@
             </div>
         </td>
     </tr>
+    {{/authorization}}
     <tr>
         <td>
             <label class="field-container">
@@ -58,13 +66,42 @@
                 <div class="field-container-item" title="{{labelName}}">
                     {{labelName}}
                 </div>
-                <input class="field-container-field" type="text" name="name" value="{{name}}"/>
+                <input class="field-container-field" type="text" name="name" data-name="client-name" value="{{name}}"/>
+            </label>
+        </td>
+    </tr>
+    {{#authorization}}
+    <tr>
+        <td>
+            <div class="field-container">
+                <span class="field-container-item">{{labelClientType}}</span>
+                <span class="field-container-field">{{labelAuthorizationClient}}</span>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <label class="field-container">
+                <span class="field-container-item">{{labelRedirectUris}}</span>
+                <textarea class="field-container-field" data-name="redirect-uris" rows="3"
+                          placeholder="{{labelOneUriPerLine}}" {{^editable}}readonly{{/editable}}>{{redirectUris}}</textarea>
             </label>
         </td>
     </tr>
     <tr>
         <td>
-            <div class="field-container scope-settings">
+            <label class="field-container">
+                <span class="field-container-item">{{labelResources}}</span>
+                <textarea class="field-container-field" data-name="resources" rows="3"
+                          placeholder="{{labelOneUriPerLine}}" {{^editable}}readonly{{/editable}}>{{resources}}</textarea>
+            </label>
+            {{^editable}}<p>{{labelDynamicConfiguration}}</p>{{/editable}}
+        </td>
+    </tr>
+    {{/authorization}}
+    <tr>
+        <td>
+            <div class="field-container scope-settings" data-name="scope-settings">
                 <div class="field-container-item" title="{{labelScopeSettings}}">
                     {{labelScopeSettings}}
                 </div>

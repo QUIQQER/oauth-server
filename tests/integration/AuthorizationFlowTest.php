@@ -14,7 +14,9 @@ use QUI\OAuth\Middleware\ResourceController;
 use QUI\OAuth\RestProvider;
 use QUI\OAuth\Server;
 use QUI\OAuth\Setup;
+use QUI\Permissions\Permission;
 use QUI\REST\Server as RestServer;
+use QUI\Security\CsrfToken;
 use QUITest\QUI\OAuth\Support\OAuthDatabaseTestCase;
 
 class AuthorizationFlowTest extends OAuthDatabaseTestCase
@@ -505,6 +507,162 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
         );
     }
 
+    public function testAdminCreatedPkceClientReachesLoginAndConsentForItsRegisteredResource(): void
+    {
+        $redirectUri = 'https://client.example.test/oauth/callback';
+        $resource = 'https://resource.example.test/mcp';
+        $created = $this->callClientAdminAjax('create', [
+            'userId' => QUI::getUsers()->getSystemUser()->getId(),
+            'scopeSettings' => '{}',
+            'title' => self::TEST_PREFIX . 'manual-pkce',
+            'authorization' => json_encode([
+                'redirectUris' => [$redirectUri],
+                'resources' => [$resource]
+            ], JSON_THROW_ON_ERROR)
+        ]);
+        self::assertArrayNotHasKey('Exception', $created);
+        self::assertIsString($created['result']);
+
+        $query = [
+            'response_type' => 'code',
+            'client_id' => $created['result'],
+            'redirect_uri' => $redirectUri,
+            'state' => 'manual-client-state',
+            'code_challenge' => self::challenge(str_repeat('p', 64)),
+            'code_challenge_method' => 'S256',
+            'resource' => $resource
+        ];
+        $RestServer = RestServer::getCurrentInstance();
+        $Slim = $RestServer->getSlim();
+        $Request = new ServerRequest('GET', self::TEST_BASE_HOST . '/api/oauth/authorize');
+
+        Handler::setSessionUser(QUI::getUsers()->getNobody());
+        $WrongResourceRequest = $Request->withQueryParams(array_replace($query, [
+            'resource' => 'https://resource.example.test/other'
+        ]));
+        $WrongResourceResponse = $Slim->handle($WrongResourceRequest);
+
+        self::assertSame(302, $WrongResourceResponse->getStatusCode());
+        $errorLocation = $WrongResourceResponse->getHeaderLine('Location');
+        parse_str((string)parse_url($errorLocation, PHP_URL_QUERY), $error);
+        self::assertSame('invalid_target', $error['error'] ?? null);
+        self::assertStringNotContainsString('id="quiqqer-oauth-login-control"', (string)$WrongResourceResponse->getBody());
+
+        $Request = $Request->withQueryParams($query);
+        $LoginResponse = $Slim->handle($Request);
+        self::assertSame(200, $LoginResponse->getStatusCode());
+        self::assertStringContainsString('id="quiqqer-oauth-login-control"', (string)$LoginResponse->getBody());
+
+        Handler::setSessionUser(QUI::getUsers()->getSystemUser());
+        $ConsentResponse = $Slim->handle($Request);
+        self::assertSame(200, $ConsentResponse->getStatusCode());
+        $consent = (string)$ConsentResponse->getBody();
+        self::assertStringContainsString('quiqqer-oauth-authorization-card--consent', $consent);
+        self::assertSame(1, preg_match('/name="_oauth_consent_token" value="([a-f0-9]{64})"/', $consent, $matches));
+
+        $ApprovalRequest = (new ServerRequest('POST', '/api/oauth/authorize'))->withParsedBody($query + [
+            '_oauth_consent_token' => $matches[1],
+            'decision' => 'approve'
+        ]);
+        $callback = self::getContinuationUrl($Slim->handle($ApprovalRequest));
+        self::assertStringStartsWith($redirectUri . '?', $callback);
+        parse_str((string)parse_url($callback, PHP_URL_QUERY), $approved);
+        self::assertSame('manual-client-state', $approved['state'] ?? null);
+        self::assertNotEmpty($approved['code']);
+    }
+
+    public function testAdminAjaxShowsValidationErrorsAndSavesExactUrisAndSecret(): void
+    {
+        $configuration = [
+            'redirectUris' => ['https://client.example.test/callback?a=1&b=2'],
+            'resources' => ['https://resource.example.test/mcp?a=1&b=2']
+        ];
+        $invalidConfiguration = array_replace($configuration, ['resources' => ['http://resource.example.test/mcp']]);
+        $createData = [
+            'userId' => QUI::getUsers()->getSystemUser()->getId(),
+            'scopeSettings' => '{}',
+            'title' => self::TEST_PREFIX . 'admin-ajax'
+        ];
+
+        $invalid = $this->callClientAdminAjax('create', $createData + [
+            'authorization' => json_encode($invalidConfiguration, JSON_THROW_ON_ERROR)
+        ]);
+        self::assertSame(400, $invalid['Exception']['code']);
+        self::assertStringContainsString('HTTPS', $invalid['Exception']['message']);
+
+        $created = $this->callClientAdminAjax('create', $createData + [
+            'authorization' => json_encode($configuration, JSON_THROW_ON_ERROR)
+        ]);
+        self::assertArrayNotHasKey('Exception', $created);
+        $client = ['clientId' => $created['result']];
+
+        $before = $this->callClientAdminAjax('get', $client)['result'];
+        self::assertSame($configuration + ['editable' => true], $before['authorization']);
+        self::assertNotEmpty($before['client_secret']);
+
+        $invalid = $this->callClientAdminAjax('update', $client + [
+            'data' => json_encode(['authorization' => $invalidConfiguration], JSON_THROW_ON_ERROR)
+        ]);
+        self::assertSame(400, $invalid['Exception']['code']);
+        self::assertSame($before, $this->callClientAdminAjax('get', $client)['result']);
+
+        $configuration['redirectUris'][] = 'https://client.example.test/second-callback';
+        $configuration['resources'][] = 'https://resource.example.test/second-mcp';
+        $newSecret = 'test&secret';
+        $updated = $this->callClientAdminAjax('update', $client + [
+            'data' => json_encode([
+                'authorization' => $configuration,
+                'clientSecret' => $newSecret,
+                'clientSecretIsToken' => true
+            ], JSON_THROW_ON_ERROR)
+        ]);
+        self::assertArrayNotHasKey('Exception', $updated);
+
+        $after = $this->callClientAdminAjax('get', $client)['result'];
+        self::assertSame($configuration + ['editable' => true], $after['authorization']);
+        self::assertSame('client_secret_basic', $after['token_endpoint_auth_method']);
+        self::assertSame($newSecret, $after['client_secret']);
+        self::assertEmpty($after['client_secret_is_token']);
+    }
+
+    public function testAdminAjaxKeepsRestClientsAndDynamicResourceBindingIntact(): void
+    {
+        $User = QUI::getUsers()->getSystemUser();
+        $created = $this->callClientAdminAjax('create', [
+            'userId' => $User->getId(),
+            'scopeSettings' => '{}',
+            'title' => self::TEST_PREFIX . 'legacy-rest'
+        ]);
+        self::assertArrayNotHasKey('Exception', $created);
+
+        $restClient = $this->callClientAdminAjax('get', ['clientId' => $created['result']])['result'];
+        self::assertNull($restClient['authorization']);
+        self::assertNotEmpty($restClient['client_secret']);
+
+        $dynamicId = Handler::createDynamicAuthorizationClient(
+            $User,
+            [],
+            self::TEST_PREFIX . 'admin-dynamic',
+            [self::REDIRECT_URI],
+            ['authorization_code']
+        );
+        $client = ['clientId' => $dynamicId];
+        $before = $this->callClientAdminAjax('get', $client)['result'];
+        self::assertFalse($before['authorization']['editable']);
+        self::assertNull($before['client_secret']);
+
+        $updated = $this->callClientAdminAjax('update', $client + [
+            'data' => json_encode([
+                'authorization' => [
+                    'redirectUris' => [self::REDIRECT_URI],
+                    'resources' => [Metadata::resource(RestServer::getCurrentInstance())]
+                ]
+            ], JSON_THROW_ON_ERROR)
+        ]);
+        self::assertSame(400, $updated['Exception']['code']);
+        self::assertSame($before, $this->callClientAdminAjax('get', $client)['result']);
+    }
+
     public function testConsentPageEscapesClientDataAndRejectsReplayedConsent(): void
     {
         $RestServer = RestServer::getCurrentInstance();
@@ -816,6 +974,25 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
             $name ?? self::TEST_PREFIX . bin2hex(random_bytes(6)),
             [$redirectUri],
             [$resource]
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $parameters
+     * @return array<array-key, mixed>
+     */
+    private function callClientAdminAjax(string $action, array $parameters): array
+    {
+        require_once __DIR__ . '/../../ajax/client/' . $action . '.php';
+
+        $Admin = QUI::getUsers()->get(QUI::conf('globals', 'rootuser'));
+
+        return Permission::withUser(
+            $Admin,
+            static fn(): array => (new QUI\Ajax())->callRequestFunction(
+                'package_quiqqer_oauth-server_ajax_client_' . $action,
+                $parameters + ['_csrf' => CsrfToken::get()]
+            )
         );
     }
 
