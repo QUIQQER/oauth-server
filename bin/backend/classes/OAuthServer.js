@@ -23,16 +23,19 @@ define('package/quiqqer/oauth-server/bin/backend/classes/OAuthServer', [
          * @param {Number} userId
          * @param {Object} ScopeSettings
          * @param {String} title
+         * @param {Object|null} authorization
          *
          * @return {Promise}
          */
-        createClient: function (userId, ScopeSettings, title) {
+        createClient: function (userId, ScopeSettings, title, authorization = null) {
             return new Promise(function (resolve, reject) {
                 QUIAjax.post('package_quiqqer_oauth-server_ajax_client_create', resolve, {
                     'package'    : pkg,
                     userId       : userId,
                     scopeSettings: JSON.encode(ScopeSettings),
                     title        : title,
+                    authorization: authorization === null ? '' : JSON.stringify(authorization),
+                    showError    : false,
                     onError      : reject
                 });
             });
@@ -41,7 +44,7 @@ define('package/quiqqer/oauth-server/bin/backend/classes/OAuthServer', [
         /**
          * Update an OAuth2 client
          *
-         * @param {Number} clientId
+         * @param {String} clientId
          * @param {Object} Data
          *
          * @return {Promise}
@@ -52,6 +55,7 @@ define('package/quiqqer/oauth-server/bin/backend/classes/OAuthServer', [
                     'package': pkg,
                     clientId : clientId,
                     data     : JSON.encode(Data),
+                    showError: false,
                     onError  : reject
                 });
             });

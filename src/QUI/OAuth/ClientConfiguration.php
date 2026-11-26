@@ -8,7 +8,7 @@ final class ClientConfiguration
     private const RESOURCES_KEY = 'resources';
 
     /**
-     * @param array<int, string> $redirectUris
+     * @param array<array-key, mixed> $redirectUris
      * @return array<int, string>
      */
     public static function validateRedirectUris(array $redirectUris): array
@@ -17,12 +17,17 @@ final class ClientConfiguration
     }
 
     /**
-     * @param array<int, string> $resources
+     * @param array<array-key, mixed> $resources
      * @return array<int, string>
      */
     public static function validateResources(array $resources): array
     {
         return self::validateUris($resources, false);
+    }
+
+    public static function usesAuthorizationCode(mixed $grantTypes): bool
+    {
+        return is_string($grantTypes) && in_array('authorization_code', explode(' ', $grantTypes), true);
     }
 
     /**
@@ -95,7 +100,7 @@ final class ClientConfiguration
     }
 
     /**
-     * @param array<int, string> $uris
+     * @param array<array-key, mixed> $uris
      * @return array<int, string>
      */
     private static function validateUris(array $uris, bool $allowLoopbackHttp): array
