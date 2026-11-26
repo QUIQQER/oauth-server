@@ -15,6 +15,18 @@ final class RequestFactory
         $server['REQUEST_METHOD'] = $Request->getMethod();
 
         $authorization = $Request->getHeaderLine('Authorization');
+
+        if ($authorization === '' && !isset($server['PHP_AUTH_USER'])) {
+            foreach (['HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION'] as $headerName) {
+                $serverAuthorization = $server[$headerName] ?? null;
+
+                if (is_string($serverAuthorization) && $serverAuthorization !== '') {
+                    $authorization = $serverAuthorization;
+                    break;
+                }
+            }
+        }
+
         $contentType = $Request->getHeaderLine('Content-Type');
 
         if ($authorization !== '') {

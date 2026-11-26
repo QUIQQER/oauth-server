@@ -97,7 +97,8 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
                 'code' => $code,
                 'redirect_uri' => self::REDIRECT_URI,
                 'code_verifier' => $verifier
-            ]
+            ],
+            redirectedAuthorization: true
         ));
         $tokens = json_decode((string)$tokenResponse->getBody(), true);
 
@@ -1026,15 +1027,29 @@ class AuthorizationFlowTest extends OAuthDatabaseTestCase
     /**
      * @param array<string, mixed> $body
      */
-    private function tokenRequest(string $clientId, string $clientSecret, array $body): ServerRequest
-    {
+    private function tokenRequest(
+        string $clientId,
+        string $clientSecret,
+        array $body,
+        bool $redirectedAuthorization = false
+    ): ServerRequest {
+        $authorization = 'Basic ' . base64_encode($clientId . ':' . $clientSecret);
+        $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];
+        $server = [];
+
+        if ($redirectedAuthorization) {
+            $server['REDIRECT_HTTP_AUTHORIZATION'] = $authorization;
+        } else {
+            $headers['Authorization'] = $authorization;
+        }
+
         return (new ServerRequest(
             'POST',
             '/api/oauth/token',
-            [
-                'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
-                'Content-Type' => 'application/x-www-form-urlencoded'
-            ]
+            $headers,
+            null,
+            '1.1',
+            $server
         ))->withParsedBody($body);
     }
 
